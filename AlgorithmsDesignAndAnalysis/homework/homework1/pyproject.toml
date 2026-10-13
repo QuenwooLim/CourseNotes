@@ -1,0 +1,12 @@
+[project]
+name = "homework1"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "graphviz>=0.21",
+    "matplotlib>=3.10.7",
+    "networkx>=3.5",
+    "pillow>=11.3.0",
+]
