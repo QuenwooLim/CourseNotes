@@ -1,0 +1,189 @@
+{
+  "version": "1.0",
+  "shapes": [
+    {
+      "type": "Point",
+      "x": 96,
+      "y": 83,
+      "color": "#ff6a4f",
+      "size": 3
+    },
+    {
+      "type": "Point",
+      "x": 103,
+      "y": 120,
+      "color": "#ff6a4f",
+      "size": 3
+    },
+    {
+      "type": "Point",
+      "x": 165,
+      "y": 70,
+      "color": "#ff6a4f",
+      "size": 3
+    },
+    {
+      "type": "Point",
+      "x": 161,
+      "y": 115,
+      "color": "#ff6a4f",
+      "size": 3
+    },
+    {
+      "type": "Point",
+      "x": 138,
+      "y": 85,
+      "color": "#ff6a4f",
+      "size": 3
+    },
+    {
+      "type": "Point",
+      "x": 196,
+      "y": 107,
+      "color": "#ff6a4f",
+      "size": 3
+    },
+    {
+      "type": "Point",
+      "x": 166,
+      "y": 148,
+      "color": "#ff6a4f",
+      "size": 3
+    },
+    {
+      "type": "Point",
+      "x": 313,
+      "y": 124,
+      "color": "#ff6a4f",
+      "size": 3
+    },
+    {
+      "type": "Line",
+      "x1": 106,
+      "y1": 264,
+      "x2": 296,
+      "y2": 256,
+      "color": "#1d0e84",
+      "line_width": 6
+    },
+    {
+      "type": "Line",
+      "x1": 111,
+      "y1": 409,
+      "x2": 287,
+      "y2": 315,
+      "color": "#1d0e84",
+      "line_width": 10
+    },
+    {
+      "type": "Line",
+      "x1": 50,
+      "y1": 258,
+      "x2": 105,
+      "y2": 515,
+      "color": "#1d0e84",
+      "line_width": 2
+    },
+    {
+      "type": "Rectangle",
+      "x": 455,
+      "y": 56,
+      "width": 145,
+      "height": 74,
+      "color": "#000001",
+      "line_width": 2,
+      "fill_color": "#d24549"
+    },
+    {
+      "type": "Rectangle",
+      "x": 535,
+      "y": 29,
+      "width": 273,
+      "height": 140,
+      "color": "#000001",
+      "line_width": 2,
+      "fill_color": "#d24549"
+    },
+    {
+      "type": "Circle",
+      "x": 464,
+      "y": 319,
+      "radius": 43.965895873961216,
+      "color": "#000001",
+      "line_width": 2,
+      "fill_color": "#3b42ca"
+    },
+    {
+      "type": "Circle",
+      "x": 561,
+      "y": 296,
+      "radius": 27.85677655436824,
+      "color": "#000001",
+      "line_width": 2,
+      "fill_color": "#3b42ca"
+    },
+    {
+      "type": "Circle",
+      "x": 553,
+      "y": 457,
+      "radius": 86.81589716175259,
+      "color": "#000001",
+      "line_width": 2,
+      "fill_color": null
+    },
+    {
+      "type": "Circle",
+      "x": 530,
+      "y": 438,
+      "radius": 28.0178514522438,
+      "color": "#000001",
+      "line_width": 2,
+      "fill_color": null
+    },
+    {
+      "type": "Circle",
+      "x": 539,
+      "y": 491,
+      "radius": 11.045361017187261,
+      "color": "#000001",
+      "line_width": 2,
+      "fill_color": null
+    },
+    {
+      "type": "Polygon",
+      "points": [
+        [
+          834,
+          252
+        ],
+        [
+          872,
+          354
+        ],
+        [
+          1064,
+          332
+        ],
+        [
+          1033,
+          208
+        ],
+        [
+          835,
+          254
+        ],
+        [
+          834,
+          253
+        ]
+      ],
+      "color": "#000001",
+      "line_width": 2,
+      "fill_color": "#d23f21"
+    }
+  ],
+  "metadata": {
+    "created_by": "图形绘制系统",
+    "total_shapes": 19
+  }
+}

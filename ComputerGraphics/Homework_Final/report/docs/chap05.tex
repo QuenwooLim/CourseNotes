@@ -1,0 +1,42 @@
+\chapter{综合对比与分析}
+\label{cha:comparison}
+
+为了更直观地理解 Gaussian-Flow、PhysGaussian、PhysDreamer 三种技术的定位与差异，我们从核心目标、数据驱动方式、形变机制等多个维度进行对比。
+
+\section{技术特性对比表}
+\begin{table}[h]
+\centering
+\caption{三种技术的特性对比}
+\renewcommand{\arraystretch}{1.2}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|c|c|c|}
+\hline
+	extbf{特性维度} & \textbf{Gaussian-Flow} & \textbf{PhysGaussian} & \textbf{PhysDreamer} \\
+\hline
+核心任务 & 4D重建（记录与回放） & 物理仿真（交互与计算） & 参数估计（感知与推理） \\
+输入数据 & 视频序列（多目或单目） & 静态3DGS + 物理参数设定 & 静态3DGS + 视频生成模型 \\
+驱动机制 & 观测数据驱动（拟合） & 牛顿力学驱动（MPM解算） & 生成式先验驱动（蒸馏） \\
+形变表达 & 显式数学基（多项式+傅里叶） & 连续介质力学（$F\Sigma F^T$） & 材质场优化（神经场） \\
+神经网络依赖 & 无（纯数学优化，极快） & 无（物理方程求解，实时） & 重度（依赖视频扩散模型，离线慢） \\
+可微性 & 可微渲染 & 可微仿真 + 可微渲染 & 可微仿真 + 可微渲染 + 扩散先验 \\
+交互性 & 低（仅支持编辑/合成） & 高（支持碰撞/外力） & 高（支持未知物体的交互） \\
+物理真实性 & 视觉真实，未必物理正确 & 物理正确，依赖参数准确性 & 感知真实，符合人类直觉 \\
+\hline
+\end{tabular}
+}
+\label{tab:tech-comparison}
+\end{table}
+
+\section{深入分析：精度与合理性的权衡}
+\begin{itemize}
+	\item \textbf{Gaussian-Flow}\cite{lin2024gaussianflow_cvpr} 追求的是“度量精度”（Metric Accuracy）。它的目标是尽可能减小重建视频与输入视频之间的像素误差（PSNR）。它并不关心运动是否符合牛顿定律，只要视觉上与原片一致即可。这使得它非常适合体育赛事回放、4D全息视频等应用。
+	\item \textbf{PhysGaussian}\cite{xie2024physgaussian_cvpr} 追求的是“物理精度”（Physical Accuracy）。它严格遵循能量守恒和动量守恒。如果输入的物理参数是准确的，它能提供工程级的仿真结果。但如果参数错误，仿真结果可能与其视觉外观完全不符（例如看起来像石头的物体像果冻一样弹跳）。
+	\item \textbf{PhysDreamer}\cite{li2024physdreamer_arxiv,li2024physdreamer_eccv} 追求的是“感知合理性”（Perceptual Plausibility）。它解决的是“看起来像真的”的问题。对于娱乐、游戏和元宇宙应用，用户通常不关心花的杨氏模量是 $10^6$ Pa 还是 $10^9$ Pa，只关心它在风中摇曳的姿态是否自然。PhysDreamer 通过引入AI先验，填补了严格物理测量与视觉感知之间的空白。
+\end{itemize}
+
+\section{效率与计算成本的考量}
+\begin{itemize}
+	\item \textbf{Gaussian-Flow}\cite{lin2024gaussianflow_cvpr} 展示了非深度学习方法在4D表达上的惊人潜力。通过回归经典的多项式和傅里叶分析，它证明了并非所有问题都需要庞大的神经网络来解决。这种“轻量化”趋势对于移动端AR/VR应用至关重要。
+	\item \textbf{PhysGaussian}\cite{xie2024physgaussian_cvpr} 的统一管线节省了大量的数据转换开销。但在处理极端复杂的场景（如数百万粒子）时，MPM的计算量依然是瓶颈。未来的优化方向可能包括多分辨率仿真或GPU加速的进一步挖掘。
+	\item \textbf{PhysDreamer}\cite{li2024physdreamer_arxiv,li2024physdreamer_eccv} 的蒸馏过程目前非常缓慢，因为需要反复运行可微渲染和扩散模型推理。但这是一次性的预计算成本。一旦材质被学习好，运行时的推理可以由PhysGaussian这样的高效求解器接管，实现实时的交互。
+\end{itemize}

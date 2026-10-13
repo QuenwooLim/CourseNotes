@@ -1,0 +1,18 @@
+
+\chapter{未来展望与结论}
+\label{cha:conclusion}
+
+\section{物理基础模型（Physical Foundation Models）}
+PhysDreamer 的成功暗示了一个宏大的未来：物理基础模型。目前的视频生成模型（如 Sora、Runway）本质上是在学习像素的运动规律。未来，我们可能会看到直接在物理参数空间训练的基础模型，它们能够直接预测物体的质量、摩擦力和弹性，而无需通过视频像素作为中介。这将彻底改变机器人学习（Robot Learning）和虚拟环境的构建方式。
+
+\section{实时数字孪生（Real-time Digital Twins）}
+结合 Gaussian-Flow 的高效重建能力和 PhysGaussian 的实时仿真能力，我们正通过实时数字孪生的最后一道门槛。未来的远程会议或虚拟社交，将不仅仅是传输视频流，而是传输一个可交互的、物理属性完备的4D场景。用户不仅能看到对方的空间，还能“碰触”其中的物体，产生符合物理规律的互动。
+
+\section{结论}
+从 Gaussian-Flow 的高效数学表达，到 PhysGaussian 的物理-视觉统一，再到 PhysDreamer 的生成式参数推理，这三项工作勾勒出了计算机图形学在后3DGS时代的清晰发展脉络。
+\begin{enumerate}
+\item \textbf{Gaussian-Flow} 告诉我们：显式的、解析的表达是实现4D实时性能的关键，甚至可以超越隐式神经表示\cite{lin2023gaussianflow_arxiv,lin2024gaussianflow_cvpr}。
+\item \textbf{PhysGaussian} 证明了：打破渲染与仿真的界限，直接在视觉基元上进行物理计算，是提升仿真保真度和效率的必由之路\cite{xie2023physgaussian_arxiv,xie2024physgaussian_cvpr}。
+\item \textbf{PhysDreamer} 启示我们：当物理数据匮乏时，生成式AI沉淀的“世界知识”是连接视觉与物理的最佳桥梁\cite{li2024physdreamer_arxiv,li2024physdreamer_eccv}。
+\end{enumerate}
+这三者的融合，正在将静态、被动的3D世界，转化为动态、交互、智能的4D元宇宙。对于研究者而言，关注点将从单纯的“画质提升”转向“动态行为建模”与“物理语义理解”；对于工业界而言，这些技术将催生出全新的内容创作工具，让非专业用户也能轻松创造出既好看又好玩（符合物理直觉）的3D交互内容。

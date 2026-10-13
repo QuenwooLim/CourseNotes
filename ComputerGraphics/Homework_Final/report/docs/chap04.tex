@@ -1,0 +1,34 @@
+\chapter{PhysDreamer与生成式先验：从视频中“蒸馏”物理}
+\label{cha:physdreamer}
+
+Gaussian-Flow 处理的是“已知运动”，PhysGaussian 处理的是“已知参数的仿真”。但在现实世界的数字化过程中，最大的痛点在于未知参数。当我们拍摄一个毛绒玩具或一盆植物时，我们无法通过视觉直接获得它的杨氏模量或泊松比。
+
+PhysDreamer\cite{li2024physdreamer_arxiv,li2024physdreamer_eccv,li2024physdreamer_researchgate} 和 Generative Image Dynamics\cite{li2024generative_cvpr,li2024generative_pdf,generative_dynamics_homepage} 开创了一个全新的方向：利用在海量视频数据上预训练的视频生成模型作为“世界模型”，从中提取物理先验。
+
+\section{Generative Image Dynamics：频域中的运动先验}
+在探讨 PhysDreamer 之前，必须提及 Generative Image Dynamics\cite{li2024generative_cvpr,li2024generative_pdf}，它为从单图预测运动奠定了基础。
+\begin{itemize}
+    \item \textbf{核心假设}：自然界中物体的微小震荡（如风吹树动）遵循特定的频谱规律。
+    \item \textbf{频谱体 (Spectral Volume)}：该方法从单张RGB图像预测一个“频谱体”，该体积在傅里叶域中表示密集的、长期的像素轨迹\cite{li2024generative_pdf,generative_dynamics_homepage}。
+    \item \textbf{频率协同扩散 (Frequency-Coordinated Diffusion)}：为了生成协调一致的运动，该研究训练了一个潜在扩散模型（Latent Diffusion Model, LDM）。该模型的采样过程是“频率协同”的，意味着它在生成过程中会协调不同频率分量的相位和幅度，防止各像素独立运动导致的画面撕裂或果冻效应\cite{li2024generative_cvpr}。
+    \item \textbf{交互应用}：生成的频谱体不仅可以产生循环视频，还可以作为图像空间模态基（Image-space Modal Bases）。用户点击图像某处，系统可以通过模态分析模拟出物体对该激励的响应\cite{li2024generative_pdf,generative_dynamics_homepage}。
+\end{itemize}
+
+\section{PhysDreamer：视频生成模型作为物理模拟器}
+PhysDreamer 将这一理念推向了全3D物理空间。其核心思想是：视频生成模型（如Sora, SVD）虽然不懂物理公式，但通过观看数亿小时的视频，它们“凭直觉”知道物体应该如何运动。如果一个模拟的窗帘像钢板一样硬，视频模型会认为这“看起来不真实”。
+
+\subsection{物理材质场估计（Material Field Estimation）}
+PhysDreamer 首先将静态3D物体表示为3D高斯，并初始化一个神经场来表示空间变化的物理材质参数（如每一点的刚度）\cite{li2024physdreamer_arxiv,li2024physdreamer_eccv}。由于现实物体的材质往往是不均匀的（如一盆花，茎和叶的硬度不同），这种空间变化的场至关重要。
+
+\subsection{蒸馏过程（Distillation Process）}
+PhysDreamer 采用了一种类似于分数蒸馏采样（Score Distillation Sampling, SDS）的机制，但作用于物理参数而非几何形状\cite{wang2024dreamphysics_arxiv}：
+\begin{enumerate}
+    \item \textbf{前向模拟}：利用当前的物理参数猜测值，通过可微分MPM模拟物体在随机微扰力下的运动。
+    \item \textbf{渲染}：将模拟出的粒子轨迹渲染成视频序列。
+    \item \textbf{视频先验反馈}：将渲染出的视频输入到预训练的视频扩散模型中。该模型会计算一个分数（Score）或梯度，指示“如何修改像素能让视频看起来更符合自然规律”\cite{li2024physdreamer_arxiv2}。
+    \item \textbf{反向传播}：由于渲染器和模拟器（MPM）都是可微分的，这个像素级的梯度可以直接反向传播回物理参数（材质场）。
+    \item \textbf{迭代优化}：通过反复循环，物体的物理参数被不断修正，直到其模拟出的运动在视频生成模型看来是“高度真实”的。
+\end{enumerate}
+
+\subsection{动作条件动力学（Action-Conditioned Dynamics）}
+与仅生成无条件运动的方法不同，PhysDreamer 能够实现动作条件的动态生成。一旦材质场被“蒸馏”出来，用户就可以施加任意的新外力（如推、拉、风吹），物体会根据学到的物理属性做出逼真的响应\cite{li2024physdreamer_arxiv,li2024physdreamer_eccv}。这使得静态的3D资产瞬间变成了可交互的动态资产（Interactive 3D Assets）。

@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "shapes": [
+    {
+      "type": "Rectangle",
+      "x": 100,
+      "y": 100,
+      "width": 200,
+      "height": 150,
+      "color": "blue",
+      "line_width": 2,
+      "fill_color": "lightblue"
+    },
+    {
+      "type": "Circle",
+      "x": 300,
+      "y": 200,
+      "radius": 80,
+      "color": "red",
+      "line_width": 3,
+      "fill_color": "pink"
+    },
+    {
+      "type": "Line",
+      "x1": 50,
+      "y1": 50,
+      "x2": 400,
+      "y2": 300,
+      "color": "green",
+      "line_width": 2
+    },
+    {
+      "type": "Point",
+      "x": 150,
+      "y": 250,
+      "color": "purple",
+      "size": 5
+    },
+    {
+      "type": "Polygon",
+      "points": [[450, 100], [500, 50], [550, 100], [525, 150], [475, 150]],
+      "color": "orange",
+      "line_width": 2,
+      "fill_color": "yellow"
+    }
+  ],
+  "metadata": {
+    "created_by": "图形绘制系统",
+    "total_shapes": 5
+  }
+}

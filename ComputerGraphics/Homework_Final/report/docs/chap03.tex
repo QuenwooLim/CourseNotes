@@ -1,0 +1,70 @@
+
+\chapter{PhysGaussian：物理仿真与视觉渲染的统一}
+\label{cha:physgaussian}
+
+如果说 Gaussian-Flow 解决了“如何记录运动”的问题，那么 PhysGaussian 则致力于解决“如何产生运动”的问题。传统的图形学管线中，物理仿真和图形渲染是割裂的。这种割裂不仅增加了资产制作的成本，还限制了实时交互的可能性。
+
+PhysGaussian 提出了一种基于“所见即所仿”原则的全新思路\cite{xie2023physgaussian_arxiv,xie2024physgaussian_cvpr,xie2024physgaussian_github}，将3D高斯核直接作为物理仿真的离散粒子。
+
+\section{物质点法（MPM）的集成}
+PhysGaussian 选择\textbf{物质点法（Material Point Method, MPM）}作为其物理引擎的核心。MPM 是一种混合了拉格朗日（Lagrangian，基于粒子）和欧拉（Eulerian，基于网格）观点的数值模拟方法。
+
+\subsection{为什么选择MPM？}
+\begin{itemize}
+	\item \textbf{粒子天然对应}：3DGS 本质上是一个点云（粒子集合），这与 MPM 的拉格朗日粒子完美对应。
+	\item \textbf{处理大变形}：MPM 擅长处理拓扑结构的剧烈变化，如液体的飞溅、材料的断裂和融合，这使得 PhysGaussian 能够模拟极其复杂的物理现象（如融化的雪、破碎的果冻）\cite{xie2024physgaussian_cvpr,li2024physdreamer_eccv}。
+	\item \textbf{无网格束缚}：无需像有限元法（FEM）那样维护复杂的四面体网格连接关系，避免了网格纠缠和重划分的难题。
+\end{itemize}
+
+\subsection{统一管线流程}
+PhysGaussian 的工作流程实现了无缝的数据流转：
+\begin{enumerate}
+	\item \textbf{初始化}：通过标准3DGS重建静态场景，获得高斯粒子的位置、协方差等属性。
+	\item \textbf{物理属性富集（Enrichment）}：为每个高斯粒子附加物理属性，包括质量、体积 $V$、速度、变形梯度（Deformation Gradient）以及应力张量\cite{xie2024physgaussian_cvpr}。
+	\item \textbf{仿真循环（Time Stepping）}：
+	\begin{itemize}
+		\item \textbf{P2G (Particle to Grid)}：将粒子的质量和动量传递到背景的稀疏欧拉网格上。
+		\item \textbf{Grid Solve}：在网格节点上求解动量方程，计算重力、碰撞力和内部应力，更新节点速度。
+		\item \textbf{G2P (Grid to Particle)}：将更新后的速度和变形梯度回传给高斯粒子。
+	\end{itemize}
+	\item \textbf{运动学更新（Kinematic Update）}：根据物理计算出的位移和变形梯度，更新用于渲染的高斯参数（位置和旋转/缩放）。
+\end{enumerate}
+
+\section{高斯核的运动学演化}
+PhysGaussian 的一大技术亮点是推导了高斯核在连续介质力学下的演化规律。仅仅更新粒子的位置是不够的；当一个弹性球体被压扁时，组成它的高斯椭球体也必须相应地变扁，否则渲染结果会出现空洞或锯齿。
+
+PhysGaussian 利用 MPM 计算出的变形梯度 $\mathbf{F}$ 来更新高斯核的协方差矩阵：
+\begin{equation}
+\Sigma' = \mathbf{F} \Sigma \mathbf{F}^T
+\end{equation}
+
+这一公式直接将物理层的形变映射到了视觉层的几何属性上。
+\begin{itemize}
+	\item \textbf{旋转跟随}：当物体旋转时，$\mathbf{F}$ 包含旋转分量，高斯核随之旋转。
+	\item \textbf{挤压拉伸}：当物体受压时，$\mathbf{F}$ 包含缩放分量，高斯核随之变形。
+\end{itemize}
+
+同时，为了保证光照效果的正确性，球谐系数（Spherical Harmonics, SH）所表示的方向性颜色场也需要根据物体的局部旋转进行相应的旋转变换\cite{xie2023physgaussian_arxiv,xie2024physgaussian_cvpr}。这种深度的耦合确保了在剧烈物理形变下，纹理和光照依然保持高度真实，无撕裂感。
+
+\section{内部填充与各向异性正则化}
+3DGS 是一种表面表示法（Surface Representation）。由于是从照片重建，内部不可见的区域通常没有高斯点。然而，物理仿真需要体积（Volume）。一个空心的气球和一个实心的橡胶球在物理行为上截然不同。
+
+为了解决这一矛盾，PhysGaussian 引入了高斯核内部填充（Gaussian Kernel Internal Filling）技术\cite{xie2023physgaussian_arxiv,xie2024physgaussian_cvpr}：
+\begin{enumerate}
+	\item \textbf{体素化}：在预处理阶段，将重建的物体表面体素化，识别内部空腔。
+	\item \textbf{粒子注入}：在内部填充不可见的高斯粒子（Opacity设为0或在渲染时跳过）。
+	\item \textbf{参与仿真}：这些内部粒子拥有质量和弹性模量，参与MPM计算，支撑物体的结构刚度，但在渲染时不可见\cite{wu2025survey}。
+\end{enumerate}
+
+此外，为了防止生成过于扁平的高斯核（这会导致物理模拟数值不稳定），PhysGaussian 在重建阶段引入了各向异性正则化损失（Anisotropic Loss），鼓励高斯核保持相对均匀的形状\cite{lin2023gaussianflow_arxiv}。
+
+\section{材质多样性与应用}
+得益于 MPM 的通用性，PhysGaussian 展示了广泛的材质模拟能力，包括：
+\begin{itemize}
+	\item \textbf{弹性体（Elastic entities）}：如橡胶、果冻。
+	\item \textbf{塑性金属（Metals）}：发生永久形变。
+	\item \textbf{非牛顿流体（Non-Newtonian fluids）}：如泡沫、甚至橡皮泥。
+	\item \textbf{颗粒材料（Granular materials）}：如沙子\cite{xie2024physgaussian_cvpr}。
+\end{itemize}
+
+实验表明，该系统在消费级硬件（Nvidia RTX 3090）上能够对简单动力学场景实现实时的仿真与渲染\cite{wu2025survey}，这为未来的交互式游戏和虚拟现实应用奠定了坚实基础。

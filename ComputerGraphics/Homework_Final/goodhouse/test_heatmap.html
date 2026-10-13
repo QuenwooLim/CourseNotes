@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>热力图可视化测试</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+        #container { width: 100vw; height: 100vh; }
+        #controls {
+            position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.95);
+            padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            min-width: 250px; max-height: 90vh; overflow-y: auto;
+        }
+        .control-group { margin-bottom: 20px; }
+        .control-group h3 {
+            margin: 0 0 10px 0; font-size: 14px; color: #333;
+            border-bottom: 2px solid #4CAF50; padding-bottom: 5px;
+        }
+        button {
+            width: 100%; padding: 10px; margin: 5px 0; border: none;
+            border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.3s;
+        }
+        button.primary { background: #4CAF50; color: white; }
+        button.primary:hover { background: #45a049; }
+        button.secondary { background: #2196F3; color: white; }
+        button.secondary:hover { background: #0b7dda; }
+        button.active { background: #ff9800; color: white; }
+        .slider-group { margin: 10px 0; }
+        .slider-group label { display: block; margin-bottom: 5px; font-size: 12px; color: #666; }
+        .slider-group input[type="range"] { width: 100%; }
+        .slider-value { display: inline-block; margin-left: 10px; font-weight: bold; color: #4CAF50; }
+        #legend { margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+        #legend h4 { margin: 0 0 10px 0; font-size: 12px; color: #666; }
+        .legend-gradient { height: 20px; border-radius: 3px; margin-bottom: 5px; }
+        .legend-labels { display: flex; justify-content: space-between; font-size: 11px; color: #666; }
+        #info {
+            position: absolute; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.7);
+            color: white; padding: 10px 15px; border-radius: 4px; font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="controls">
+        <div class="control-group">
+            <h3>🏠 平面视图</h3>
+            <button id="togglePlaneBtn" class="primary">启用平面视角</button>
+            <div class="slider-group">
+                <label>切割高度: <span id="heightValue" class="slider-value">2.7</span></label>
+                <input type="range" id="heightSlider" min="0" max="10" step="0.1" value="2.7">
+            </div>
+        </div>
+        <div class="control-group">
+            <h3>📊 热力图类型</h3>
+            <button id="activityBtn" class="secondary">活动热力图</button>
+            <button id="tempBtn" class="secondary">温度热力图</button>
+            <button id="humidityBtn" class="secondary">湿度热力图</button>
+            <button id="pm25Btn" class="secondary">PM2.5热力图</button>
+            <button id="hideHeatmapBtn" class="secondary">隐藏热力图</button>
+        </div>
+        <div class="control-group">
+            <h3>� 楼层选择</h3>
+            <button id="floor1HeatmapBtn" class="primary">一楼热力图</button>
+            <button id="floor2HeatmapBtn" class="primary">二楼热力图</button>
+        </div>
+        <div class="control-group">
+            <h3>🎨 热力图设置</h3>
+            <div class="slider-group">
+                <label>不透明度: <span id="opacityValue" class="slider-value">0.60</span></label>
+                <input type="range" id="opacitySlider" min="0" max="1" step="0.05" value="0.60">
+            </div>
+            <div class="slider-group">
+                <label>热力图高度: <span id="heatmapHeightValue" class="slider-value">2.7</span>m</label>
+                <input type="range" id="heatmapHeightSlider" min="0" max="10" step="0.1" value="2.7">
+            </div>
+            <p style="font-size: 12px; color: #666; margin: 5px 0;">
+                💡 使用 ↑↓ 键调整热力图高度
+            </p>
+        </div>
+        <div class="control-group" style="display: none;">
+            <h3>✏️ 网格编辑</h3>
+            <button id="toggleGridEditBtn" class="primary">切换网格编辑模式</button>
+            <button id="invertGridBtn" class="secondary">反选区域</button>
+            <button id="exportGridBtn" class="secondary">📥 导出位置信息</button>
+            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                <p>在平面视角中直接点击网格选择区域</p>
+                <p id="editModeStatus">编辑模式：关闭</p>
+            </div>
+        </div>
+        <div id="legend">
+            <h4>图例</h4>
+            <div class="legend-gradient" id="legendGradient"></div>
+            <div class="legend-labels">
+                <span id="minLabel">0</span>
+                <span id="maxLabel">100</span>
+            </div>
+        </div>
+    </div>
+    <div id="info">
+        <div>操作提示：↑↓ 调整高度 | 鼠标拖拽旋转视角</div>
+    </div>
+
+    <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }}
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf0f0f0);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(5, 5, 5);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.localClippingEnabled = true;
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 20, 10);
+        scene.add(directionalLight);
+
+        const gridHelper = new THREE.GridHelper(20, 20);
+        scene.add(gridHelper);
+
+        let clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 2.7);
+        let planeViewEnabled = false;
+        let loadedModel = null;
+        let heatmapType = null;
+        let heatmapMesh = null;
+        let gridDensity = 50;
+        let heatmapOpacity = 0.6; // 更透明一些
+        let heatmapHeight = 1.2; // 一楼热力图高度，会根据楼层自动调整
+        
+        // 一楼预定义配置（从用户导出的数据固定）
+        const FLOOR1_PREDEFINED_CELLS = [[29,13],[29,14],[29,15],[29,25],[29,26],[29,27],[29,28],[29,29],[29,30],[29,31],[29,32],[29,33],[30,7],[30,8],[30,9],[30,10],[30,11],[30,12],[30,13],[30,14],[30,15],[30,17],[30,18],[30,19],[30,20],[30,21],[30,22],[30,23],[30,24],[30,25],[30,26],[30,27],[30,28],[30,29],[30,30],[30,31],[30,32],[30,33],[30,34],[30,36],[30,37],[30,38],[30,39],[30,40],[30,41],[30,42],[31,7],[31,8],[31,9],[31,10],[31,11],[31,12],[31,13],[31,14],[31,15],[31,17],[31,18],[31,19],[31,20],[31,21],[31,22],[31,23],[31,24],[31,25],[31,26],[31,27],[31,28],[31,29],[31,30],[31,31],[31,32],[31,33],[31,34],[31,36],[31,37],[31,38],[31,39],[31,40],[31,41],[31,42],[32,7],[32,8],[32,9],[32,10],[32,11],[32,12],[32,13],[32,14],[32,15],[32,17],[32,18],[32,19],[32,20],[32,21],[32,22],[32,23],[32,24],[32,25],[32,26],[32,27],[32,28],[32,29],[32,30],[32,31],[32,32],[32,33],[32,34],[32,36],[32,37],[32,38],[32,39],[32,40],[32,41],[32,42],[33,7],[33,8],[33,9],[33,10],[33,11],[33,12],[33,13],[33,14],[33,15],[33,17],[33,18],[33,19],[33,20],[33,21],[33,22],[33,23],[33,24],[33,25],[33,26],[33,27],[33,28],[33,29],[33,30],[33,36],[33,37],[33,38],[33,39],[33,40],[33,41],[33,42],[34,7],[34,8],[34,9],[34,10],[34,11],[34,12],[34,13],[34,14],[34,15],[34,17],[34,18],[34,19],[34,20],[34,21],[34,22],[34,23],[34,24],[34,25],[34,26],[34,27],[34,28],[34,29],[34,30],[34,36],[34,37],[34,38],[34,39],[34,40],[34,41],[34,42],[35,7],[35,8],[35,9],[35,10],[35,11],[35,12],[35,13],[35,14],[35,15],[35,17],[35,18],[35,19],[35,20],[35,21],[35,22],[35,23],[35,24],[35,25],[35,26],[35,27],[35,28],[35,29],[35,30],[35,36],[35,37],[35,38],[35,39],[35,40],[35,41],[35,42],[36,7],[36,8],[36,9],[36,10],[36,11],[36,12],[36,13],[36,14],[36,15],[36,17],[36,18],[36,19],[36,20],[36,21],[36,22],[36,23],[36,24],[36,25],[36,26],[36,27],[36,28],[36,29],[36,30],[36,36],[36,37],[36,38],[36,39],[36,40],[36,41],[36,42],[37,7],[37,8],[37,9],[37,10],[37,11],[37,12],[37,13],[37,14],[37,15],[37,17],[37,18],[37,19],[37,20],[37,21],[37,22],[37,23],[37,24],[37,25],[37,26],[37,27],[37,28],[37,29],[37,30],[37,36],[37,37],[37,38],[37,39],[37,40],[37,41],[37,42],[38,7],[38,8],[38,9],[38,10],[38,11],[38,12],[38,13],[38,14],[38,15],[38,17],[38,18],[38,19],[38,20],[38,21],[38,22],[38,23],[38,24],[38,25],[38,26],[38,27],[38,28],[38,29],[38,30],[38,36],[38,37],[38,38],[38,39],[38,40],[38,41],[38,42],[39,7],[39,8],[39,9],[39,10],[39,11],[39,12],[39,13],[39,14],[39,15],[39,17],[39,18],[39,19],[39,20],[39,21],[39,22],[39,23],[39,24],[39,25],[39,26],[39,27],[39,28],[39,29],[39,30],[39,31],[39,32],[39,33],[39,34],[39,36],[39,37],[39,38],[39,39],[39,40],[39,41],[39,42],[40,7],[40,8],[40,9],[40,10],[40,11],[40,12],[40,13],[40,14],[40,15],[40,17],[40,18],[40,19],[40,20],[40,21],[40,22],[40,23],[40,24],[40,25],[40,26],[40,27],[40,28],[40,29],[40,30],[40,31],[40,32],[40,33],[40,34],[40,36],[40,37],[40,38],[40,39],[40,40],[40,41],[40,42],[41,7],[41,8],[41,9],[41,10],[41,11],[41,12],[41,13],[41,14],[41,15],[41,17],[41,18],[41,19],[41,20],[41,21],[41,22],[41,23],[41,24],[41,25],[41,26],[41,27],[41,28],[41,29],[41,30],[41,31],[41,32],[41,33],[41,34],[41,36],[41,37],[41,38],[41,39],[41,40],[41,41],[41,42],[42,7],[42,8],[42,9],[42,10],[42,11],[42,12],[42,13],[42,14],[42,15],[42,17],[42,18],[42,19],[42,20],[42,21],[42,22],[42,23],[42,24],[42,25],[42,26],[42,27],[42,28],[42,29],[42,30],[42,31],[42,32],[42,33],[42,34],[42,36],[42,37],[42,38],[42,39],[42,40],[42,41],[42,42],[43,7],[43,8],[43,9],[43,10],[43,11],[43,12],[43,13],[43,14],[43,15],[43,17],[43,18],[43,19],[43,20],[43,21],[43,22],[43,23],[43,24],[43,25],[43,26],[43,27],[43,28],[43,29],[43,30],[43,31],[43,32],[43,33],[43,34],[43,36],[43,37],[43,38],[43,39],[43,40],[43,41],[43,42]];
+        
+        // 二楼预定义配置（从用户导出的数据固定）
+        const FLOOR2_PREDEFINED_CELLS = [[28,4],[28,5],[28,6],[28,7],[28,8],[28,9],[28,10],[28,11],[28,12],[28,13],[29,4],[29,5],[29,6],[29,7],[29,8],[29,9],[29,10],[29,11],[29,12],[29,13],[29,14],[29,15],[29,16],[29,17],[29,18],[29,19],[29,20],[29,21],[29,22],[29,23],[30,4],[30,5],[30,6],[30,7],[30,8],[30,9],[30,10],[30,11],[30,12],[30,13],[30,14],[30,15],[30,16],[30,17],[30,18],[30,19],[30,20],[30,21],[30,22],[30,23],[30,36],[30,37],[30,38],[30,39],[30,40],[30,41],[30,42],[31,4],[31,5],[31,6],[31,7],[31,8],[31,9],[31,10],[31,11],[31,12],[31,13],[31,14],[31,15],[31,16],[31,17],[31,18],[31,19],[31,20],[31,21],[31,22],[31,23],[31,36],[31,37],[31,38],[31,39],[31,40],[31,41],[31,42],[32,4],[32,5],[32,6],[32,7],[32,8],[32,9],[32,10],[32,11],[32,12],[32,13],[32,14],[32,15],[32,16],[32,17],[32,18],[32,19],[32,20],[32,21],[32,22],[32,23],[32,36],[32,37],[32,38],[32,39],[32,40],[32,41],[32,42],[33,4],[33,5],[33,6],[33,7],[33,8],[33,9],[33,10],[33,11],[33,12],[33,13],[33,14],[33,15],[33,16],[33,17],[33,18],[33,19],[33,20],[33,21],[33,22],[33,23],[33,36],[33,37],[33,38],[33,39],[33,40],[33,41],[33,42],[34,14],[34,15],[34,16],[34,17],[34,18],[34,19],[34,20],[34,21],[34,22],[34,23],[34,36],[34,37],[34,38],[34,39],[34,40],[34,41],[34,42],[35,7],[35,8],[35,9],[35,10],[35,11],[35,12],[35,13],[35,14],[35,15],[35,16],[35,17],[35,18],[35,19],[35,20],[35,21],[35,22],[35,23],[35,36],[35,37],[35,38],[35,39],[35,40],[35,41],[35,42],[36,7],[36,8],[36,9],[36,10],[36,11],[36,12],[36,13],[36,14],[36,15],[36,16],[36,17],[36,18],[36,19],[36,20],[36,21],[36,22],[36,23],[36,24],[36,25],[36,26],[36,27],[36,28],[36,29],[36,30],[36,31],[36,36],[36,37],[36,38],[36,39],[36,40],[36,41],[36,42],[37,7],[37,8],[37,9],[37,10],[37,11],[37,12],[37,13],[37,14],[37,15],[37,16],[37,17],[37,18],[37,19],[37,20],[37,21],[37,22],[37,23],[37,24],[37,25],[37,26],[37,27],[37,28],[37,29],[37,30],[37,31],[37,36],[37,37],[37,38],[37,39],[37,40],[37,41],[37,42],[38,7],[38,8],[38,9],[38,10],[38,11],[38,12],[38,13],[38,14],[38,15],[38,16],[38,17],[38,18],[38,19],[38,20],[38,21],[38,22],[38,23],[38,24],[38,25],[38,26],[38,27],[38,28],[38,29],[38,30],[38,31],[38,36],[38,37],[38,38],[38,39],[38,40],[38,41],[38,42],[39,7],[39,8],[39,9],[39,10],[39,11],[39,12],[39,13],[39,14],[39,15],[39,16],[39,17],[39,18],[39,19],[39,20],[39,21],[39,22],[39,23],[39,24],[39,25],[39,26],[39,27],[39,28],[39,29],[39,30],[39,31],[39,32],[39,33],[39,34],[39,36],[39,37],[39,38],[39,39],[39,40],[39,41],[39,42],[40,7],[40,8],[40,9],[40,10],[40,11],[40,12],[40,13],[40,14],[40,15],[40,16],[40,17],[40,18],[40,19],[40,20],[40,21],[40,22],[40,23],[40,24],[40,25],[40,26],[40,27],[40,28],[40,29],[40,30],[40,31],[40,32],[40,33],[40,34],[40,36],[40,37],[40,38],[40,39],[40,40],[40,41],[40,42],[41,7],[41,8],[41,9],[41,10],[41,11],[41,12],[41,13],[41,14],[41,15],[41,16],[41,17],[41,18],[41,19],[41,20],[41,21],[41,22],[41,23],[41,24],[41,25],[41,26],[41,27],[41,28],[41,29],[41,30],[41,31],[41,32],[41,33],[41,34],[41,36],[41,37],[41,38],[41,39],[41,40],[41,41],[41,42],[42,7],[42,8],[42,9],[42,10],[42,11],[42,12],[42,13],[42,14],[42,15],[42,16],[42,17],[42,18],[42,19],[42,20],[42,21],[42,22],[42,23],[42,24],[42,25],[42,26],[42,27],[42,28],[42,29],[42,30],[42,31],[42,32],[42,33],[42,34],[42,36],[42,37],[42,38],[42,39],[42,40],[42,41],[42,42],[43,7],[43,8],[43,9],[43,10],[43,11],[43,12],[43,13],[43,14],[43,15],[43,16],[43,17],[43,18],[43,19],[43,20],[43,21],[43,22],[43,23],[43,24],[43,25],[43,26],[43,27],[43,28],[43,29],[43,30],[43,31],[43,32],[43,33],[43,34],[43,36],[43,37],[43,38],[43,39],[43,40],[43,41],[43,42]];
+        
+        function initFloor1Config() {
+            const config = [];
+            for (let i = 0; i < 50; i++) {
+                config[i] = [];
+                for (let j = 0; j < 50; j++) {
+                    config[i][j] = false;
+                }
+            }
+            // 设置预定义的选中区域
+            for (const [i, j] of FLOOR1_PREDEFINED_CELLS) {
+                config[i][j] = true;
+            }
+            return config;
+        }
+        
+        function initFloor2Config() {
+            const config = [];
+            for (let i = 0; i < 50; i++) {
+                config[i] = [];
+                for (let j = 0; j < 50; j++) {
+                    config[i][j] = false;
+                }
+            }
+            // 设置预定义的选中区域
+            for (const [i, j] of FLOOR2_PREDEFINED_CELLS) {
+                config[i][j] = true;
+            }
+            return config;
+        }
+        
+        let gridConfig = { floor1: initFloor1Config(), floor2: initFloor2Config(), currentFloor: 'floor1' };
+
+        // 3D网格编辑相关
+        let gridEditMode = false;
+        let gridMesh = null;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+
+        function generateHeatmapData(type, width, height, density) {
+            const data = [];
+            
+            // Perlin噪声模拟函数（简化版）
+            function noise2D(x, y) {
+                const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+                return (n - Math.floor(n));
+            }
+            
+            // 多层噪声生成更自然的分布
+            function multiNoise(x, y) {
+                return noise2D(x, y) * 0.5 + 
+                       noise2D(x * 2, y * 2) * 0.25 + 
+                       noise2D(x * 4, y * 4) * 0.125 +
+                       noise2D(x * 8, y * 8) * 0.0625;
+            }
+            
+            for (let i = 0; i < density; i++) {
+                data[i] = [];
+                for (let j = 0; j < density; j++) {
+                    let value;
+                    const x = i / density;
+                    const z = j / density;
+                    const noise = multiNoise(x * 3, z * 3);
+                    
+                    switch(type) {
+                        case 'activity':
+                            // 多个热点区域模拟真实活动，确保有红色高值
+                            const center1 = Math.sqrt(Math.pow(x - 0.3, 2) + Math.pow(z - 0.4, 2));
+                            const center2 = Math.sqrt(Math.pow(x - 0.7, 2) + Math.pow(z - 0.6, 2));
+                            const center3 = Math.sqrt(Math.pow(x - 0.5, 2) + Math.pow(z - 0.7, 2));
+                            const hotspot = 25 * Math.exp(-((x - 0.8) ** 2 + (z - 0.2) ** 2) * 60);
+                            value = Math.max(0, (1 - center1 * 2.5) * 60, (1 - center2 * 3) * 55, (1 - center3 * 2) * 50);
+                            value += noise * 25 + Math.random() * 10 + hotspot;
+                            break;
+                        case 'temperature':
+                            // 从一侧到另一侧的渐变 + 局部热源，增加红区
+                            const hotspot1 = 1 / (1 + Math.pow(x - 0.2, 2) + Math.pow(z - 0.3, 2)) * 10;
+                            const hotspot2 = 1 / (1 + Math.pow(x - 0.8, 2) + Math.pow(z - 0.7, 2)) * 10;
+                            const hotspot3 = 18 * Math.exp(-((x - 0.75) ** 2 + (z - 0.25) ** 2) * 50);
+                            value = 18 + 5 * (1 - x) + hotspot1 + hotspot2 + hotspot3 + noise * 3;
+                            break;
+                        case 'humidity':
+                            // 模拟湿度分布 - 角落较高，并加入热点
+                            const corner1 = Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2));
+                            const corner2 = Math.sqrt(Math.pow(x - 1, 2) + Math.pow(z, 2));
+                            const humidBase = (corner1 + corner2) / 2;
+                            const hotspotHum = 15 * Math.exp(-((x - 0.7) ** 2 + (z - 0.2) ** 2) * 40);
+                            value = 40 + humidBase * 20 + noise * 8 + Math.random() * 3 + hotspotHum;
+                            break;
+                        case 'pm25':
+                            // 空气质量波动模式 + 热点
+                            const wave1 = Math.sin(x * Math.PI * 3 + z * Math.PI * 2);
+                            const wave2 = Math.cos(x * Math.PI * 2 - z * Math.PI * 3);
+                            const hotspotPm = 25 * Math.exp(-((x - 0.65) ** 2 + (z - 0.3) ** 2) * 50);
+                            value = 30 + wave1 * 20 + wave2 * 15 + noise * 20 + Math.random() * 10 + hotspotPm;
+                            break;
+                        default:
+                            value = 0;
+                    }
+                    data[i][j] = Math.max(0, Math.min(100, value));
+                }
+            }
+            return data;
+        }
+
+        function getHeatmapColor(value, type) {
+            // 统一使用绿-黄-红三色渐变
+            let t;
+            switch(type) {
+                case 'activity':
+                    t = value / 100; // 0-100
+                    break;
+                case 'temperature':
+                    t = (value - 16) / 14; // 16-30 ℃ 映射到 0-1
+                    break;
+                case 'humidity':
+                    t = (value - 35) / 40; // 35-75% 映射到 0-1
+                    break;
+                case 'pm25':
+                    t = value / 150; // 0-150 ug/m3 映射到 0-1
+                    break;
+                default:
+                    t = value / 100;
+            }
+            t = Math.min(1, Math.max(0, t));
+            
+            const green = new THREE.Color(0x00ff00);
+            const yellow = new THREE.Color(0xffff00);
+            const red = new THREE.Color(0xff0000);
+            if (t < 0.5) {
+                return new THREE.Color().lerpColors(green, yellow, t * 2);
+            }
+            return new THREE.Color().lerpColors(yellow, red, (t - 0.5) * 2);
+        }
+
+        function generateWallMask(height, bounds, density) {
+            const mask = [];
+            const raycaster = new THREE.Raycaster();
+            for (let i = 0; i < density; i++) {
+                mask[i] = [];
+                for (let j = 0; j < density; j++) {
+                    const x = bounds.centerX - bounds.width / 2 + (i / density) * bounds.width;
+                    const z = bounds.centerZ - bounds.depth / 2 + (j / density) * bounds.depth;
+                    let hitCount = 0;
+                    const directions = [new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, 1, 0)];
+                    for (const dir of directions) {
+                        raycaster.set(new THREE.Vector3(x, height, z), dir);
+                        const intersects = raycaster.intersectObject(loadedModel, true);
+                        if (intersects.length > 0 && intersects[0].distance < 2) hitCount++;
+                    }
+                    mask[i][j] = (hitCount === 0 || hitCount === directions.length);
+                }
+            }
+            return mask;
+        }
+
+        function getCurrentFloorConfig() {
+            const height = clippingPlane.constant;
+            const floorKey = height < 4 ? 'floor1' : 'floor2';
+            if (!gridConfig[floorKey]) {
+                if (floorKey === 'floor1') {
+                    gridConfig[floorKey] = initFloor1Config();
+                } else {
+                    gridConfig[floorKey] = initFloor2Config();
+                }
+            }
+            return gridConfig[floorKey];
+        }
+
+        function applyUserMask(wallMask, density) {
+            const userConfig = getCurrentFloorConfig();
+            const combinedMask = [];
+            for (let i = 0; i < density; i++) {
+                combinedMask[i] = [];
+                for (let j = 0; j < density; j++) {
+                    // 只使用用户选择，忽略wallMask的复杂检测
+                    combinedMask[i][j] = !userConfig[i][j]; // true=不显示，false=显示
+                }
+            }
+            return combinedMask;
+        }
+
+        function createHeatmap(type, height, bounds) {
+            if (heatmapMesh) {
+                scene.remove(heatmapMesh);
+                heatmapMesh.geometry.dispose();
+                heatmapMesh.material.dispose();
+            }
+
+            const data = generateHeatmapData(type, bounds.width, bounds.depth, gridDensity);
+            const wallMask = generateWallMask(height, bounds, gridDensity);
+            const finalMask = applyUserMask(wallMask, gridDensity);
+            
+            // 超高分辨率渲染，实现平滑连续的热力图
+            const canvas = document.createElement('canvas');
+            const size = 2048; // 高分辨率实现平滑效果
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // 清空画布
+            ctx.clearRect(0, 0, size, size);
+            
+            // 双线性插值函数 - 实现像素级平滑
+            function bilinearInterpolate(data, mask, x, y, density) {
+                const ix = Math.floor(x);
+                const iy = Math.floor(y);
+                const fx = x - ix;
+                const fy = y - iy;
+                
+                const ix1 = Math.min(ix + 1, density - 1);
+                const iy1 = Math.min(iy + 1, density - 1);
+                
+                // 如果任何角点被遮罩，返回null表示透明
+                if (mask[ix][iy] || mask[ix1][iy] || mask[ix][iy1] || mask[ix1][iy1]) {
+                    return null;
+                }
+                
+                // 双线性插值
+                const v00 = data[ix][iy];
+                const v10 = data[ix1][iy];
+                const v01 = data[ix][iy1];
+                const v11 = data[ix1][iy1];
+                
+                const v0 = v00 * (1 - fx) + v10 * fx;
+                const v1 = v01 * (1 - fx) + v11 * fx;
+                
+                return v0 * (1 - fy) + v1 * fy;
+            }
+            
+            // 逐像素绘制，实现完全平滑的热力图
+            const imageData = ctx.createImageData(size, size);
+            const pixels = imageData.data;
+            
+            for (let py = 0; py < size; py++) {
+                for (let px = 0; px < size; px++) {
+                    // 映射到网格坐标，覆盖完整范围
+                    const gx = (px / (size - 1)) * (gridDensity - 1);
+                    const gy = (py / (size - 1)) * (gridDensity - 1);
+                    
+                    const value = bilinearInterpolate(data, finalMask, gx, gy, gridDensity);
+                    
+                    const index = (py * size + px) * 4;
+                    
+                    if (value !== null) {
+                        const color = getHeatmapColor(value, type);
+                        pixels[index] = Math.round(color.r * 255);     // R
+                        pixels[index + 1] = Math.round(color.g * 255); // G
+                        pixels[index + 2] = Math.round(color.b * 255); // B
+                        pixels[index + 3] = 255;                        // A (完全不透明，透明度由材质控制)
+                    } else {
+                        pixels[index + 3] = 0; // 完全透明
+                    }
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+            
+            // 应用高斯模糊实现更平滑的效果
+            ctx.filter = 'blur(3px)';
+            ctx.drawImage(canvas, 0, 0);
+            ctx.filter = 'none';
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            texture.magFilter = THREE.LinearFilter;
+            texture.minFilter = THREE.LinearFilter;
+            texture.wrapS = THREE.ClampToEdgeWrapping;
+            texture.wrapT = THREE.ClampToEdgeWrapping;
+            
+            const geometry = new THREE.PlaneGeometry(bounds.width, bounds.depth);
+            const material = new THREE.MeshBasicMaterial({
+                map: texture, 
+                transparent: true, 
+                opacity: heatmapOpacity,
+                side: THREE.DoubleSide,
+                depthWrite: false  // 提升透明度效果
+            });
+
+            heatmapMesh = new THREE.Mesh(geometry, material);
+            heatmapMesh.rotation.x = -Math.PI / 2;
+            heatmapMesh.position.set(bounds.centerX, heatmapHeight, bounds.centerZ);
+            scene.add(heatmapMesh);
+            console.log(`✓ 创建${type}热力图 - 高分辨率平滑渲染`);
+        }
+
+        function updateLegend(type) {
+            const gradient = document.getElementById('legendGradient');
+            const minLabel = document.getElementById('minLabel');
+            const maxLabel = document.getElementById('maxLabel');
+            let gradientCSS, min, max;
+            switch(type) {
+                case 'activity': gradientCSS = 'linear-gradient(to right, #00ff00, #ffff00, #ff0000)'; min = '低活动'; max = '高活动'; break;
+                case 'temperature': gradientCSS = 'linear-gradient(to right, #00ff00, #ffff00, #ff0000)'; min = '偏冷'; max = '偏热'; break;
+                case 'humidity': gradientCSS = 'linear-gradient(to right, #00ff00, #ffff00, #ff0000)'; min = '干燥'; max = '潮湿'; break;
+                case 'pm25': gradientCSS = 'linear-gradient(to right, #00ff00, #ffff00, #ff0000)'; min = '优'; max = '差'; break;
+                default: gradientCSS = 'transparent'; min = ''; max = '';
+            }
+            gradient.style.background = gradientCSS;
+            minLabel.textContent = min;
+            maxLabel.textContent = max;
+        }
+
+        function enableClipping() {
+            if (!loadedModel) return;
+            loadedModel.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => { mat.clippingPlanes = [clippingPlane]; });
+                    } else {
+                        child.material.clippingPlanes = [clippingPlane];
+                    }
+                }
+            });
+        }
+
+        function disableClipping() {
+            if (!loadedModel) return;
+            loadedModel.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(mat => { mat.clippingPlanes = []; });
+                    } else {
+                        child.material.clippingPlanes = [];
+                    }
+                }
+            });
+        }
+
+        function togglePlaneView() {
+            planeViewEnabled = !planeViewEnabled;
+            const btn = document.getElementById('togglePlaneBtn');
+            if (planeViewEnabled) {
+                btn.textContent = '关闭平面视角';
+                btn.classList.add('active');
+                enableClipping();
+                if (loadedModel) {
+                    const box = new THREE.Box3().setFromObject(loadedModel);
+                    const center = new THREE.Vector3();
+                    box.getCenter(center);
+                    const size = new THREE.Vector3();
+                    box.getSize(size);
+                    // 俯视高度保持不变
+                    camera.position.set(center.x, center.y + size.y * 1.2, center.z);
+                    controls.target.set(center.x, center.y, center.z);
+                    // 设置up向量来实现顺时针90°旋转（绕视线方向滚转）
+                    camera.up.set(-1, 0, 0); // 从(0,1,0)改为(-1,0,0)实现顺时针90°
+                    camera.lookAt(center);
+                    camera.updateProjectionMatrix();
+                    controls.update();
+                }
+            } else {
+                btn.textContent = '启用平面视角';
+                btn.classList.remove('active');
+                disableClipping();
+                hideHeatmap();
+                // 恢复默认朝向
+                camera.up.set(0, 1, 0);
+                camera.updateProjectionMatrix();
+            }
+        }
+
+        function setPlaneHeight(height) {
+            clippingPlane.constant = height;
+            if (planeViewEnabled) {
+                enableClipping();
+                if (heatmapMesh && heatmapType) {
+                    const bounds = getModelBounds();
+                    heatmapMesh.position.y = height + 0.01;
+                }
+            }
+        }
+
+        function getModelBounds() {
+            if (!loadedModel) return { width: 10, depth: 10, centerX: 0, centerZ: 0 };
+            const box = new THREE.Box3().setFromObject(loadedModel);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            return { width: size.x, depth: size.z, centerX: center.x, centerZ: center.z };
+        }
+
+        function showHeatmap(type) {
+            if (!planeViewEnabled) { alert('请先启用平面视角！'); return; }
+            heatmapType = type;
+            const height = clippingPlane.constant;
+            const bounds = getModelBounds();
+            createHeatmap(type, height, bounds);
+            updateLegend(type);
+            document.querySelectorAll('#controls button.secondary').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function hideHeatmap() {
+            if (heatmapMesh) {
+                scene.remove(heatmapMesh);
+                heatmapMesh.geometry.dispose();
+                heatmapMesh.material.dispose();
+                heatmapMesh = null;
+            }
+            heatmapType = null;
+            updateLegend(null);
+            document.querySelectorAll('#controls button.secondary').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+
+        function updateHeatmapSettings() {
+            if (heatmapMesh && heatmapType) {
+                const height = clippingPlane.constant;
+                const bounds = getModelBounds();
+                createHeatmap(heatmapType, height, bounds);
+            }
+        }
+
+        function createGridMesh(bounds, height, density) {
+            // 删除旧的网格
+            if (gridMesh) {
+                scene.remove(gridMesh);
+                gridMesh.geometry.dispose();
+                gridMesh.material.dispose();
+            }
+
+            // 创建网格纹理
+            const canvas = document.createElement('canvas');
+            const size = 512;
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            const config = getCurrentFloorConfig();
+            const cellSize = size / density;
+
+            // 绘制网格单元
+            for (let i = 0; i < density; i++) {
+                for (let j = 0; j < density; j++) {
+                    if (config[i][j]) {
+                        ctx.fillStyle = 'rgba(76, 175, 80, 0.6)'; // 绿色半透明
+                    } else {
+                        ctx.fillStyle = 'rgba(153, 153, 153, 0.3)'; // 灰色半透明
+                    }
+                    ctx.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
+                    
+                    // 网格线
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(i * cellSize, j * cellSize, cellSize, cellSize);
+                }
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            const geometry = new THREE.PlaneGeometry(bounds.width, bounds.depth);
+            const material = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+
+            gridMesh = new THREE.Mesh(geometry, material);
+            gridMesh.rotation.x = -Math.PI / 2;
+            gridMesh.position.set(bounds.centerX, height + 0.02, bounds.centerZ);
+            gridMesh.userData.isGridMesh = true;
+            gridMesh.userData.density = density;
+            gridMesh.userData.bounds = bounds;
+            scene.add(gridMesh);
+        }
+
+        function toggleGridEditMode() {
+            if (!planeViewEnabled) {
+                alert('请先启用平面视角！');
+                return;
+            }
+
+            gridEditMode = !gridEditMode;
+            const btn = document.getElementById('toggleGridEditBtn');
+            const status = document.getElementById('editModeStatus');
+
+            if (gridEditMode) {
+                btn.classList.add('active');
+                status.textContent = '编辑模式：开启 - 点击网格选择区域';
+                status.style.color = '#4CAF50';
+                
+                // 显示网格
+                const height = clippingPlane.constant;
+                const bounds = getModelBounds();
+                createGridMesh(bounds, height, gridDensity);
+            } else {
+                btn.classList.remove('active');
+                status.textContent = '编辑模式：关闭';
+                status.style.color = '#666';
+                
+                // 隐藏网格
+                if (gridMesh) {
+                    scene.remove(gridMesh);
+                    gridMesh = null;
+                }
+            }
+        }
+
+        function invertGridSelection() {
+            if (!planeViewEnabled) {
+                alert('请先启用平面视角！');
+                return;
+            }
+            const config = getCurrentFloorConfig();
+            for (let i = 0; i < gridDensity; i++) {
+                for (let j = 0; j < gridDensity; j++) {
+                    config[i][j] = !config[i][j];
+                }
+            }
+            // 更新网格显示
+            if (gridEditMode && gridMesh) {
+                const height = clippingPlane.constant;
+                const bounds = getModelBounds();
+                createGridMesh(bounds, height, gridDensity);
+            }
+            // 更新热力图
+            if (heatmapMesh && heatmapType) {
+                updateHeatmapSettings();
+            }
+            console.log('✓ 已反选当前楼层的所有区域');
+        }
+
+        function exportGridData() {
+            if (!planeViewEnabled) {
+                alert('请先启用平面视角！');
+                return;
+            }
+
+            const height = clippingPlane.constant;
+            const currentFloor = height < 4 ? 'floor1' : 'floor2';
+            const config = getCurrentFloorConfig();
+
+            // 计算选中的区域数量
+            let selectedCount = 0;
+            const selectedCells = [];
+            for (let i = 0; i < gridDensity; i++) {
+                for (let j = 0; j < gridDensity; j++) {
+                    if (config[i][j]) {
+                        selectedCount++;
+                        selectedCells.push([i, j]);
+                    }
+                }
+            }
+
+            // 构建导出数据
+            const exportData = {
+                buildingInfo: {
+                    name: '现代房屋',
+                    floors: {
+                        floor1: { height: 2.7, name: '一楼' },
+                        floor2: { height: 5.2, name: '二楼' }
+                    }
+                },
+                gridConfig: {
+                    currentFloor: currentFloor,
+                    floorHeight: height,
+                    gridDensity: gridDensity,
+                    selectedCellCount: selectedCount,
+                    totalCells: gridDensity * gridDensity,
+                    selectedPercentage: ((selectedCount / (gridDensity * gridDensity)) * 100).toFixed(1) + '%',
+                    selectedCells: selectedCells
+                },
+                timestamp: new Date().toISOString(),
+                note: '绿色区域（true）表示需要显示热力图的区域'
+            };
+
+            // 转换为美化的JSON
+            const jsonString = JSON.stringify(exportData, null, 2);
+
+            // 复制到剪贴板
+            navigator.clipboard.writeText(jsonString).then(() => {
+                console.log('✓ 位置信息已复制到剪贴板');
+                const message = `已导出 ${currentFloor}（高度${height}m）的位置信息\n\n` +
+                    `✓ 选中区域: ${selectedCount}/${gridDensity * gridDensity} (${exportData.gridConfig.selectedPercentage})\n\n` +
+                    `✓ 已复制到剪贴板，可直接分享给我`;
+                alert(message);
+            }).catch(err => {
+                console.error('复制失败:', err);
+                alert('导出数据：\n\n' + jsonString);
+            });
+        }
+
+        function onCanvasClick(event) {
+            if (!gridEditMode || !gridMesh) return;
+
+            // 计算鼠标在画布中的位置
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // 进行射线检测
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(gridMesh);
+
+            if (intersects.length > 0) {
+                const point = intersects[0].point;
+                const bounds = gridMesh.userData.bounds;
+                const density = gridMesh.userData.density;
+
+                // 将世界坐标转换为网格坐标
+                const relX = point.x - (bounds.centerX - bounds.width / 2);
+                const relZ = point.z - (bounds.centerZ - bounds.depth / 2);
+
+                const i = Math.floor((relX / bounds.width) * density);
+                const j = Math.floor((relZ / bounds.depth) * density);
+
+                // 修改网格配置
+                if (i >= 0 && i < density && j >= 0 && j < density) {
+                    const config = getCurrentFloorConfig();
+                    config[i][j] = !config[i][j];
+                    
+                    // 更新显示
+                    const height = clippingPlane.constant;
+                    createGridMesh(bounds, height, density);
+                    
+                    console.log(`✓ 选中网格 [${i}, ${j}]`);
+                }
+            }
+        }
+
+
+
+        function saveConfig() {
+            localStorage.setItem('heatmapGridConfig', JSON.stringify({
+                floor1: gridConfig.floor1,
+                floor2: gridConfig.floor2,
+                density: gridDensity
+            }));
+            alert('配置已保存到本地！');
+        }
+
+        function loadConfig() {
+            const saved = localStorage.getItem('heatmapGridConfig');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.density === gridDensity) {
+                    gridConfig.floor1 = data.floor1;
+                    gridConfig.floor2 = data.floor2;
+                    console.log('✓ 已加载保存的配置');
+                }
+            }
+        }
+
+        function exportConfig() {
+            const config = {
+                floor1: gridConfig.floor1,
+                floor2: gridConfig.floor2,
+                density: gridDensity,
+                timestamp: new Date().toISOString()
+            };
+            const json = JSON.stringify(config, null, 2);
+            alert('配置已复制到剪贴板！\n' + json);
+            navigator.clipboard.writeText(json);
+        }
+
+        // 事件监听
+        document.getElementById('togglePlaneBtn').addEventListener('click', togglePlaneView);
+        document.getElementById('heightSlider').addEventListener('input', (e) => {
+            const height = parseFloat(e.target.value);
+            document.getElementById('heightValue').textContent = height.toFixed(1);
+            setPlaneHeight(height);
+        });
+        document.getElementById('activityBtn').addEventListener('click', () => showHeatmap('activity'));
+        document.getElementById('tempBtn').addEventListener('click', () => showHeatmap('temperature'));
+        document.getElementById('humidityBtn').addEventListener('click', () => showHeatmap('humidity'));
+        document.getElementById('pm25Btn').addEventListener('click', () => showHeatmap('pm25'));
+        document.getElementById('hideHeatmapBtn').addEventListener('click', hideHeatmap);
+        document.getElementById('opacitySlider').addEventListener('input', (e) => {
+            heatmapOpacity = parseFloat(e.target.value);
+            document.getElementById('opacityValue').textContent = heatmapOpacity.toFixed(1);
+            if (heatmapMesh) {
+                heatmapMesh.material.opacity = heatmapOpacity;
+            }
+        });
+
+        // 热力图高度调整
+        document.getElementById('heatmapHeightSlider').addEventListener('input', (e) => {
+            heatmapHeight = parseFloat(e.target.value);
+            document.getElementById('heatmapHeightValue').textContent = heatmapHeight.toFixed(1);
+            if (heatmapMesh) {
+                heatmapMesh.position.y = heatmapHeight;
+            }
+        });
+
+        // 楼层热力图选择
+        document.getElementById('floor1HeatmapBtn').addEventListener('click', () => {
+            clippingPlane.constant = 2.7;
+            document.getElementById('heightSlider').value = 2.7;
+            document.getElementById('heightValue').textContent = '2.7';
+            // 自动设置热力图高度为1.2（一楼）
+            heatmapHeight = 1.2;
+            document.getElementById('heatmapHeightSlider').value = 1.2;
+            document.getElementById('heatmapHeightValue').textContent = '1.2';
+            if (heatmapMesh) {
+                heatmapMesh.position.y = 1.2;
+            }
+            if (planeViewEnabled) enableClipping();
+        });
+        
+        document.getElementById('floor2HeatmapBtn').addEventListener('click', () => {
+            clippingPlane.constant = 5.2;
+            document.getElementById('heightSlider').value = 5.2;
+            document.getElementById('heightValue').textContent = '5.2';
+            // 自动设置热力图高度为3.4（二楼）
+            heatmapHeight = 3.4;
+            document.getElementById('heatmapHeightSlider').value = 3.4;
+            document.getElementById('heatmapHeightValue').textContent = '3.4';
+            if (heatmapMesh) {
+                heatmapMesh.position.y = 3.4;
+            }
+            if (planeViewEnabled) enableClipping();
+        });
+
+        // 3D网格编辑模式切换
+        document.getElementById('toggleGridEditBtn').addEventListener('click', toggleGridEditMode);
+        
+        // 反选区域
+        document.getElementById('invertGridBtn').addEventListener('click', invertGridSelection);
+        
+        // 导出位置信息
+        document.getElementById('exportGridBtn').addEventListener('click', exportGridData);
+        
+        // 3D场景中的网格点击事件
+        renderer.domElement.addEventListener('click', onCanvasClick);
+
+        document.addEventListener('keydown', (e) => {
+            if (!planeViewEnabled) return;
+            const slider = document.getElementById('heatmapHeightSlider');
+            let height = parseFloat(slider.value);
+            if (e.key === 'ArrowUp') {
+                height = Math.min(10, height + 0.1);
+                slider.value = height;
+                heatmapHeight = height;
+                document.getElementById('heatmapHeightValue').textContent = height.toFixed(1);
+                if (heatmapMesh) {
+                    heatmapMesh.position.y = heatmapHeight;
+                }
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown') {
+                height = Math.max(0, height - 0.1);
+                slider.value = height;
+                heatmapHeight = height;
+                document.getElementById('heatmapHeightValue').textContent = height.toFixed(1);
+                if (heatmapMesh) {
+                    heatmapMesh.position.y = heatmapHeight;
+                }
+                e.preventDefault();
+            } else {
+                return;
+            }
+        });
+
+        loadConfig();
+
+        const loader = new FBXLoader();
+        loader.load('model/source/Modern House.fbx', (fbx) => {
+            fbx.scale.set(0.001, 0.001, 0.001);
+            fbx.position.set(-2, 0, 0);
+            fbx.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+            scene.add(fbx);
+            loadedModel = fbx;
+            console.log('✓ 模型加载成功');
+
+            const box = new THREE.Box3().setFromObject(fbx);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+
+            camera.position.set(center.x + size.x, center.y + size.y, center.z + size.z);
+            controls.target.copy(center);
+            controls.update();
+        }, undefined, (error) => {
+            console.error('模型加载失败:', error);
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,2182 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>好房子三维可视化系统 - WebGL大作业</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-family: '微软雅黑', sans-serif;
+            pointer-events: none; /* 让鼠标事件穿透文字 */
+            text-shadow: 1px 1px 2px black;
+            z-index: 100;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            font-family: sans-serif;
+            display: none; /* 默认隐藏，加载开始时显示 */
+        }
+        #fpsMonitor {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #0f0;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 1000;
+            min-width: 80px;
+            text-align: center;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        }
+        #fpsMonitor .label {
+            font-size: 12px;
+            color: #999;
+            display: block;
+            margin-bottom: 2px;
+        }
+    </style>
+    <!-- 引入 Three.js 和 FBXLoader -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <!-- 热力图旧配置文件已移除 -->
+</head>
+<body>
+    <div id="info">
+        <h2>"好房子"三维可视化系统</h2>
+        <p>操作说明：左键旋转 | 右键平移 | 滚轮缩放 | <span style="color:#00ffff">WASD键移动镜头</span> | <span style="color:#ff00ff">V键切换第一视角</span></p>
+        <p style="color: #ffff00; font-size: 0.9em;">📝 编辑模式：点击模型选中 | W:移动 | E:旋转 | R:缩放 | Delete:删除 | Esc:取消选中</p>
+        <p style="color: #00ff00; font-size: 0.85em;">🔀 Tab键:切换选择模式 | <span id="selectionMode">单个家具</span> | ⚡已启用模型缓存优化</p>
+    </div>
+    <div id="loading">正在加载模型... 0%</div>
+    
+    <!-- FPS监控器 -->
+    <div id="fpsMonitor">
+        <span class="label">FPS</span>
+        <span id="fpsValue">60</span>
+    </div>
+    
+    <!-- 模型选择面板 -->
+    <div id="modelPanel" style="position:fixed;top:10px;left:10px;background:rgba(0,0,0,0.7);padding:12px;border-radius:8px;color:#fff;z-index:200;font-family:sans-serif;max-height:80vh;overflow-y:auto;">
+        <h3 style="margin:0 0 10px 0;font-size:14px;">📦 模型库</h3>
+        <div id="modelList" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <hr style="border-color:#555;margin:10px 0;">
+        <div style="font-size:12px;color:#aaa;">
+            <p style="margin:4px 0;">点击按钮添加模型到场景</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+        import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+        import { TransformControls } from 'three/addons/controls/TransformControls.js';
+        import { TextureLoader } from 'three';
+        import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+
+        // ==========================================
+        // 1. 基础场景初始化 (符合：基础3D场景构建)
+        // ==========================================
+        const scene = new THREE.Scene();
+        
+        // 创建渐变天空背景（程序化生成，性能友好）
+        const vertexShader = `
+            varying vec3 vWorldPosition;
+            void main() {
+                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                vWorldPosition = worldPosition.xyz;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `;
+        
+        const fragmentShader = `
+            uniform vec3 topColor;
+            uniform vec3 bottomColor;
+            uniform float offset;
+            uniform float exponent;
+            varying vec3 vWorldPosition;
+            
+            void main() {
+                float h = normalize(vWorldPosition + offset).y;
+                gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+            }
+        `;
+        
+        const skyGeo = new THREE.SphereGeometry(500, 32, 15);
+        const skyMat = new THREE.ShaderMaterial({
+            uniforms: {
+                topColor: { value: new THREE.Color(0x87ceeb) },      // 天蓝色
+                bottomColor: { value: new THREE.Color(0xffffff) },   // 白色（地平线）
+                offset: { value: 33 },
+                exponent: { value: 0.6 }
+            },
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader,
+            side: THREE.BackSide
+        });
+        
+        const sky = new THREE.Mesh(skyGeo, skyMat);
+        scene.add(sky);
+        
+        // 添加雾效，与天空颜色匹配
+        scene.fog = new THREE.Fog(0xd4e9f7, 10, 200);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 2, 5); // 设置相机初始位置
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // 开启抗锯齿和alpha
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true; // 开启阴影渲染 (符合：正确呈现基本遮挡)
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap; // 软阴影
+        renderer.sortObjects = true; // 确保对象按深度排序渲染
+        renderer.localClippingEnabled = true; // 启用局部裁剪平面
+        document.body.appendChild(renderer.domElement);
+
+        // ==========================================
+        // 2. 光照系统 (符合：基础光照 - Blinn-Phong模型)
+        // ==========================================
+        // 环境光：照亮暗部
+        const ambientLight = new THREE.AmbientLight(0x404040, 1.5); 
+        scene.add(ambientLight);
+
+        // 平行光：模拟太阳，产生阴影
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2.0); // 强度2.0
+        dirLight.position.set(5, 10, 7);
+        dirLight.castShadow = true; // 产生阴影
+
+        // 优化阴影参数（避免阴影锯齿）
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        dirLight.shadow.camera.near = 0.1;
+        dirLight.shadow.camera.far = 50;
+        scene.add(dirLight);
+
+        // ==========================================
+        // 3. 基础几何体 (保底方案)
+        // ==========================================
+        
+        // 地板 (Ground)
+        const mesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(100, 100),
+            new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false }) // 使用 Phong 材质
+        );
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.receiveShadow = true; // 接收阴影
+        scene.add(mesh);
+
+        // 参考网格 (GridHelper) - 方便你看坐标
+        const grid = new THREE.GridHelper(100, 100, 0x000000, 0x000000);
+        grid.material.opacity = 0.2;
+        grid.material.transparent = true;
+        scene.add(grid);
+
+
+        // ==========================================
+        // 4. 多模型加载系统
+        // ==========================================
+        
+        // 全局变量
+        let topDownMode = false; // 俯视模式状态
+
+        // 环境传感器基准值和抖动范围
+        let tempBase = 28.0;
+        let humBase = 50;
+        let pmBase = 20;
+        const tempNoiseRange = 0.9;
+        const humNoiseRange = 1;
+        const pmNoiseRange = 5;
+
+        // 缓存的随机噪声（每秒更新）
+        let lastSecond = 0;
+        let cachedTempNoise = 0;
+        let cachedHumNoise = 0;
+        let cachedPmNoise = 0;
+
+        // 模型配置列表 - 在这里添加你的模型
+        // 每个模型一个文件夹，包含 fbx 文件和 textures 子文件夹
+        const modelConfigs = [
+            {
+                name: '家具套装',
+                folder: 'model/source',           // 模型所在文件夹
+                file: 'allirassettar.fbx',        // FBX文件名
+                textureFolder: 'model/textures',  // 纹理文件夹
+                scale: 0.01,                      // 缩放比例
+                position: [0, 0, 0]               // 默认位置
+            },
+            {
+                name: '房子',
+                folder: 'model/source',
+                file: 'Modern House.fbx',
+                textureFolder: 'model/textures',
+                scale: 0.001,
+                position: [-2, 0, 0]
+            },
+            {
+                name: '空调',
+                folder: 'model/source',
+                file: 'low.fbx',
+                textureFolder: 'model/textures',
+                scale: 0.01,
+                position: [-4, 0, 0]
+            },
+            {
+                name: '电视',
+                folder: 'model/source',
+                file: 'TV.fbx',
+                textureFolder: 'model/textures',
+                scale: 0.01,
+                position: [-6, 0, 0]
+            },
+            {
+                name: '床',
+                folder: 'model/source',
+                file: 'Bed.fbx',
+                textureFolder: 'model/textures',
+                scale: 0.01,
+                position: [0, 0, 0]
+            }
+        ];
+
+        // 已加载的模型列表
+        const loadedModels = [];
+        let loadedModel = null; // 保持兼容性，指向最后加载的模型
+
+        // 模型缓存系统 - 避免重复加载相同的FBX文件
+        const modelCache = new Map(); // key: modelPath, value: loaded FBX object
+        const textureCache = new Map(); // key: texturePath, value: loaded texture
+        
+        // 调试模式开关（关闭可提升性能）
+        const DEBUG_MODE = false;
+
+        // 创建纹理加载器
+        const textureLoader = new THREE.TextureLoader();
+        const loader = new FBXLoader();
+        const loadingElem = document.getElementById('loading');
+        
+        // 通用模型加载函数（带缓存优化）
+        async function loadModel(config, addToScene = true, skipDefaultTransform = false) {
+            const modelPath = `${config.folder}/${config.file}`;
+            const textureFolder = config.textureFolder || config.folder + '/textures';
+            
+            loadingElem.style.display = 'block';
+            loadingElem.innerText = `正在加载: ${config.name}...`;
+            
+            // 检查缓存，如果已加载过相同的模型，直接克隆
+            if (modelCache.has(modelPath)) {
+                if (DEBUG_MODE) console.log(`♻️ 从缓存克隆模型: ${config.name}`);
+                const cachedModel = modelCache.get(modelPath);
+                const object = cachedModel.clone();
+                
+                // 克隆材质，避免共享材质导致的问题
+                object.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material = child.material.map(m => m.clone());
+                        } else {
+                            child.material = child.material.clone();
+                        }
+                    }
+                });
+                
+                // 设置名称和用户数据
+                object.name = config.name || config.file;
+                object.userData.config = config;
+                
+                // 应用变换
+                if (!skipDefaultTransform) {
+                    const scale = config.scale || 0.01;
+                    object.scale.set(scale, scale, scale);
+                    if (config.position) {
+                        object.position.set(...config.position);
+                    }
+                }
+                
+                if (addToScene) {
+                    scene.add(object);
+                    loadedModels.push(object);
+                    loadedModel = object;
+                }
+                
+                loadingElem.style.display = 'none';
+                return object;
+            }
+            
+            // 如果缓存中没有，则加载模型
+            return new Promise((resolve, reject) => {
+                const manager = new THREE.LoadingManager();
+                
+                loadTextureListForModel(textureFolder).then(textures => {
+                    if (DEBUG_MODE) console.log(`📁 纹理文件夹 "${textureFolder}" 包含 ${textures.length} 个纹理文件`);
+                    
+                    // 设置纹理路径修改器 - 改进版智能匹配
+                    manager.setURLModifier((url) => {
+                        const fileName = url.split('/').pop().split('\\').pop();
+                        
+                        // 处理 KTX 文件：尝试找到对应的 PNG/JPG 替代
+                        if (fileName && /\.(ktx|ktx2)$/i.test(fileName)) {
+                            const baseName = fileName.replace(/\.(ktx|ktx2)$/i, '').toLowerCase();
+                            if (DEBUG_MODE) console.log(`🔍 查找 KTX 文件的替代纹理: "${fileName}"`);
+                            
+                            // 查找相似名称的 PNG/JPG 文件
+                            for (const tex of textures) {
+                                const texLower = tex.name.toLowerCase();
+                                if (texLower.includes('wood') || texLower.includes('texture') || 
+                                    baseName.includes('wood') && (texLower.includes('basecolor') || texLower.includes('diffuse'))) {
+                                    if (DEBUG_MODE) console.log(`🎨 KTX 替代纹理: "${fileName}" -> "${tex.name}"`);
+                                    return tex.path;
+                                }
+                            }
+                            
+                            // 如果没找到，返回一个默认纹理或原路径
+                            const defaultTex = textures.find(tex => tex.name.toLowerCase().includes('basecolor'));
+                            if (defaultTex) {
+                                if (DEBUG_MODE) console.log(`🎨 KTX 使用默认纹理: "${fileName}" -> "${defaultTex.name}"`);
+                                return defaultTex.path;
+                            }
+                            
+                            return url; // 返回原路径，会产生 404 但不影响模型显示
+                        }
+                        
+                        if (fileName && /\.(png|jpg|jpeg)$/i.test(fileName)) {
+                            const baseName = fileName.replace(/\.(png|jpg|jpeg)$/gi, '').toLowerCase();
+                            
+                            // 1. 首先尝试精确匹配
+                            for (const tex of textures) {
+                                const texBaseName = tex.name.replace(/\.(png|jpg|jpeg|tga)$/gi, '').toLowerCase();
+                                if (texBaseName === baseName || texBaseName.includes(baseName) || baseName.includes(texBaseName)) {
+                                    if (DEBUG_MODE) console.log(`🎯 纹理精确匹配: "${fileName}" -> "${tex.name}"`);
+                                    return tex.path;
+                                }
+                            }
+                            
+                            // 2. 模糊匹配：提取关键词进行匹配
+                            const keywords = baseName.split(/[_\-\s]+/).filter(k => k.length > 2);
+                            for (const tex of textures) {
+                                const texLower = tex.name.toLowerCase();
+                                for (const keyword of keywords) {
+                                    if (texLower.includes(keyword)) {
+                                        if (DEBUG_MODE) console.log(`🔍 纹理关键词匹配: "${fileName}" (${keyword}) -> "${tex.name}"`);
+                                        return tex.path;
+                                    }
+                                }
+                            }
+                            
+                            // 3. 如果是 BaseColor/Normal 类型，尝试匹配类型
+                            const textureType = fileName.toLowerCase().includes('basecolor') ? 'basecolor' :
+                                               fileName.toLowerCase().includes('normal') ? 'normal' :
+                                               fileName.toLowerCase().includes('roughness') ? 'roughness' : null;
+                                               
+                            if (textureType) {
+                                const matchedTex = textures.find(tex => tex.name.toLowerCase().includes(textureType));
+                                if (matchedTex) {
+                                    if (DEBUG_MODE) console.log(`🎨 纹理类型匹配: "${fileName}" (${textureType}) -> "${matchedTex.name}"`);
+                                    return matchedTex.path;
+                                }
+                            }
+                            
+                            // 4. 最后返回原路径（会产生 404，但不影响模型加载）
+                            return `${textureFolder}/${fileName}`;
+                        }
+                        return url;
+                    });
+                    
+                    const modelLoader = new FBXLoader(manager);
+                    
+                    modelLoader.load(modelPath, (object) => {
+                        loadingElem.style.display = 'none';
+                        
+                        // 设置名称
+                        object.name = config.name || config.file;
+                        object.userData.config = config;
+                        
+                        // 只有在不跳过默认变换时才应用配置中的缩放和位置
+                        if (!skipDefaultTransform) {
+                            // 缩放
+                            const scale = config.scale || 0.01;
+                            object.scale.set(scale, scale, scale);
+                            
+                            // 位置
+                            if (config.position) {
+                                object.position.set(...config.position);
+                            }
+                        }
+                        
+                        // 处理材质和阴影
+                        object.traverse((child) => {
+                            // 确保所有子对象可见
+                            child.visible = true;
+                            
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                                
+                                if (child.material) {
+                                    const materials = Array.isArray(child.material) ? child.material : [child.material];
+                                    const newMaterials = materials.map((material, matIdx) => {
+                                        // 检测并启用透明材质（窗户/玻璃）
+                                        const matName = (material.name || '').toLowerCase();
+                                        const childName = (child.name || '').toLowerCase();
+                                        const isGlass = matName.includes('glass') || matName.includes('窗') || 
+                                                       matName.includes('玻璃') || matName.includes('window') ||
+                                                       matName.includes('transparent') || matName.includes('alpha') ||
+                                                       childName.includes('glass') || childName.includes('窗') ||
+                                                       childName.includes('玻璃') || childName.includes('window');
+                                        
+                                        // 如果是玻璃，创建专用的玻璃材质
+                                        if (isGlass || material.opacity < 1.0 || material.transparent) {
+                                            if (DEBUG_MODE) console.log(`🪟 检测到玻璃材质: ${material.name || child.name}`);
+                                            
+                                            // 创建玻璃专用材质 (MeshPhysicalMaterial 支持 transmission)
+                                            const glassMat = new THREE.MeshPhysicalMaterial({
+                                                color: 0x88ccff,           // 淡蓝色
+                                                metalness: 0.0,            // 非金属
+                                                roughness: 0.1,            // 光滑表面
+                                                transmission: 1.0,         // 高透光率（关键！）
+                                                transparent: true,
+                                                opacity: 0.6,
+                                                thickness: 0.5,            // 玻璃厚度
+                                                ior: 1.5,                  // 折射率（玻璃约1.5）
+                                                side: THREE.DoubleSide,
+                                                depthWrite: false,
+                                                depthTest: true,
+                                            });
+                                            glassMat.name = material.name || 'glass';
+                                            
+                                            // 设置渲染顺序
+                                            child.renderOrder = 999;
+                                            
+                                            return glassMat;
+                                        }
+                                        
+                                        // 非玻璃材质的正常处理
+                                        material.side = THREE.DoubleSide;
+                                        material.needsUpdate = true;
+                                        
+                                        if (material.map) {
+                                            material.map.colorSpace = THREE.SRGBColorSpace;
+                                        } else {
+                                            // 尝试匹配纹理（带缓存）
+                                            const texturePath = findTextureInList(material.name, textures);
+                                            if (texturePath) {
+                                                // 检查纹理缓存
+                                                let texture;
+                                                if (textureCache.has(texturePath)) {
+                                                    texture = textureCache.get(texturePath);
+                                                } else {
+                                                    texture = textureLoader.load(texturePath);
+                                                    texture.colorSpace = THREE.SRGBColorSpace;
+                                                    texture.flipY = false;
+                                                    textureCache.set(texturePath, texture);
+                                                }
+                                                material.map = texture;
+                                            }
+                                        }
+                                        
+                                        // 修正过暗的颜色
+                                        if (material.color && material.color.r < 0.1 && material.color.g < 0.1 && material.color.b < 0.1) {
+                                            material.color.setHex(0xcccccc);
+                                        }
+                                        
+                                        return material;
+                                    });
+                                    
+                                    // 应用新材质
+                                    child.material = newMaterials.length === 1 ? newMaterials[0] : newMaterials;
+                                }
+                            }
+                        });
+                        
+                        if (addToScene) {
+                            scene.add(object);
+                            loadedModels.push(object);
+                            loadedModel = object;
+                            console.log(`✓ 模型加载成功: ${config.name}`);
+                            
+                            // 调试：输出模型结构信息
+                            console.log('📦 模型结构分析:');
+                            let meshCount = 0;
+                            let transparentCount = 0;
+                            let totalVertices = 0;
+                            object.traverse((child) => {
+                                if (child.isMesh) {
+                                    meshCount++;
+                                    const vertexCount = child.geometry?.attributes?.position?.count || 0;
+                                    totalVertices += vertexCount;
+                                    const mats = Array.isArray(child.material) ? child.material : [child.material];
+                                    mats.forEach(m => {
+                                        if (m.transparent) transparentCount++;
+                                        const colorHex = m.color ? '#' + m.color.getHexString() : 'N/A';
+                                        console.log(`  - Mesh: "${child.name}" | 顶点: ${vertexCount} | Material: "${m.name}" | color: ${colorHex} | transparent: ${m.transparent}, opacity: ${m.opacity.toFixed(2)}, visible: ${child.visible}`);
+                                    });
+                                }
+                            });
+                            console.log(`📊 总计: ${meshCount} 个网格, ${totalVertices} 顶点, ${transparentCount} 个透明材质`);
+                            
+                            // 打印模型边界框，检查位置是否正确
+                            const box = new THREE.Box3().setFromObject(object);
+                            const size = new THREE.Vector3();
+                            const center = new THREE.Vector3();
+                            box.getSize(size);
+                            box.getCenter(center);
+                            console.log(`📐 边界框 - 中心: (${center.x.toFixed(2)}, ${center.y.toFixed(2)}, ${center.z.toFixed(2)}) | 尺寸: (${size.x.toFixed(2)}, ${size.y.toFixed(2)}, ${size.z.toFixed(2)})`);
+                        }
+                        
+                        resolve(object);
+                        
+                    }, (xhr) => {
+                        if (xhr.total > 0) {
+                            const percent = (xhr.loaded / xhr.total * 100).toFixed(0);
+                            loadingElem.innerText = `正在加载 ${config.name}... ${percent}%`;
+                        } else {
+                            loadingElem.innerText = `正在加载 ${config.name}... ${(xhr.loaded / 1024).toFixed(0)} KB`;
+                        }
+                    }, (error) => {
+                        loadingElem.style.display = 'none';
+                        console.error(`❌ 模型加载失败: ${config.name}`);
+                        console.error(`   文件路径: ${modelPath}`);
+                        console.error(`   错误信息:`, error);
+                        alert(`模型加载失败: ${config.name}\n路径: ${modelPath}\n错误: ${error.message || error}`);
+                        reject(error);
+                    });
+                }); // 闭合 .then()
+            }); // 闭合 Promise
+        }
+        
+        // 加载指定文件夹的纹理清单
+        async function loadTextureListForModel(textureFolder) {
+            try {
+                // 尝试加载 textures.json
+                const response = await fetch(`${textureFolder}/textures.json`);
+                const textureFiles = await response.json();
+                return textureFiles.map(file => ({
+                    name: file,
+                    path: `${textureFolder}/${file}`
+                }));
+            } catch (error) {
+                if (DEBUG_MODE) console.warn(`⚠ ${textureFolder}/textures.json 不存在，将尝试自动匹配`);
+                return [];
+            }
+        }
+        
+        // 在纹理列表中查找匹配 - 改进版智能匹配
+        function findTextureInList(materialName, textures) {
+            if (!materialName || textures.length === 0) return null;
+            const matLower = materialName.toLowerCase();
+            
+            // 首先尝试精确匹配
+            for (const tex of textures) {
+                const texLower = tex.name.toLowerCase();
+                if (texLower.includes(matLower) && texLower.includes('basecolor')) {
+                    return tex.path;
+                }
+            }
+            
+            // 如果精确匹配失败，尝试模糊匹配
+            // 提取材质名中的关键词
+            const keywords = matLower.split(/[_\-\s]+/).filter(k => k.length > 2);
+            
+            for (const tex of textures) {
+                const texLower = tex.name.toLowerCase();
+                if (texLower.includes('basecolor') || texLower.includes('diffuse') || texLower.includes('albedo')) {
+                    // 检查是否包含任何关键词
+                    for (const keyword of keywords) {
+                        if (texLower.includes(keyword)) {
+                            if (DEBUG_MODE) console.log(`🔍 纹理模糊匹配: "${materialName}" -> "${tex.name}"`);
+                            return tex.path;
+                        }
+                    }
+                }
+            }
+            
+            // 最后尝试返回任意一个 BaseColor 贴图作为默认
+            const defaultTex = textures.find(tex => 
+                tex.name.toLowerCase().includes('basecolor') || 
+                tex.name.toLowerCase().includes('diffuse') ||
+                tex.name.toLowerCase().includes('albedo')
+            );
+            
+            if (defaultTex) {
+                if (DEBUG_MODE) console.log(`🎨 使用默认纹理: "${materialName}" -> "${defaultTex.name}"`);
+                return defaultTex.path;
+            }
+            
+            return null;
+        }
+        
+        // 创建模型选择UI
+        function createModelListUI() {
+            const listContainer = document.getElementById('modelList');
+            listContainer.innerHTML = '';
+            
+            modelConfigs.forEach((config, index) => {
+                const btn = document.createElement('button');
+                btn.style.cssText = 'padding:8px 12px;background:#4a90d9;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:12px;text-align:left;';
+                btn.innerHTML = `➕ ${config.name}`;
+                btn.title = `点击添加 ${config.name} 到场景`;
+                btn.addEventListener('click', () => {
+                    loadModel(config);
+                });
+                btn.addEventListener('mouseenter', () => btn.style.background = '#5aa0e9');
+                btn.addEventListener('mouseleave', () => btn.style.background = '#4a90d9');
+                listContainer.appendChild(btn);
+            });
+            
+            // 添加"加载全部"按钮
+            if (modelConfigs.length > 1) {
+                const loadAllBtn = document.createElement('button');
+                loadAllBtn.style.cssText = 'padding:8px 12px;background:#2a7a2a;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:12px;margin-top:6px;';
+                loadAllBtn.innerHTML = '📥 加载全部模型';
+                loadAllBtn.addEventListener('click', async () => {
+                    for (const config of modelConfigs) {
+                        await loadModel(config);
+                    }
+                });
+                listContainer.appendChild(loadAllBtn);
+            }
+        }
+        
+        // 初始化
+        createModelListUI();
+        
+        // 自动加载第一个模型（可选）
+        if (modelConfigs.length > 0) {
+            loadModel(modelConfigs[0]);
+        }
+
+        // ==========================================
+        // 5. 交互控制 (符合：动态视角)
+        // ==========================================
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 1, 0); // 设置旋转中心点为上方一点
+        controls.screenSpacePanning = true; // 启用屏幕空间平移，使移动距离与缩放无关
+        controls.update();
+
+        // 第一视角控制
+        const pointerLockControls = new PointerLockControls(camera, document.body);
+        let firstPersonMode = false;
+        // 第一视角运动变量
+        const fpClock = new THREE.Clock();
+        const fpVelocity = new THREE.Vector3();
+        const fpDirection = new THREE.Vector3();
+        const fpMove = { forward: false, backward: false, left: false, right: false };
+        const FP_SPEED = 6.0; // 米/秒
+        const FP_DAMPING = 10.0; // 阻尼系数
+        const FP_EYE_HEIGHT = 2.3; // 第一视角眼高（米），可调整
+
+        // 第一视角切换函数
+        function toggleFirstPerson() {
+            firstPersonMode = !firstPersonMode;
+            if (firstPersonMode) {
+                // 进入第一视角
+                controls.enabled = false; // 禁用OrbitControls
+                // 将 pointerLockControls 的对象位置与当前相机位置同步，然后请求锁定
+                pointerLockControls.getObject().position.copy(camera.position);
+                pointerLockControls.lock(); // 锁定鼠标
+                // 设置相机到地面高度（第一视角）
+                pointerLockControls.getObject().position.y = FP_EYE_HEIGHT; // 第一视角眼高
+                camera.position.copy(pointerLockControls.getObject().position);
+                // 清除移动状态
+                fpMove.forward = fpMove.backward = fpMove.left = fpMove.right = false;
+                console.log('进入第一视角模式');
+            } else {
+                // 退出第一视角
+                pointerLockControls.unlock(); // 解锁鼠标
+                controls.enabled = true; // 启用OrbitControls
+                console.log('退出第一视角模式');
+            }
+        }
+
+        // PointerLockControls事件监听
+        pointerLockControls.addEventListener('lock', function () {
+            // 强制同步第一视角高度，防止锁定过程改变位置
+            try {
+                pointerLockControls.getObject().position.y = FP_EYE_HEIGHT;
+                camera.position.copy(pointerLockControls.getObject().position);
+            } catch (e) {}
+            console.log('鼠标已锁定，第一视角激活 (eye height enforced:', FP_EYE_HEIGHT, ')');
+        });
+
+        pointerLockControls.addEventListener('unlock', function () {
+            // 用户按 ESC 或取消锁定时，退出第一视角模式并恢复 OrbitControls
+            if (firstPersonMode) {
+                firstPersonMode = false;
+                controls.enabled = true;
+                // 将 camera 位置与 pointerLock 对象同步（保持视角）
+                camera.position.copy(pointerLockControls.getObject().position);
+                console.log('用户取消鼠标锁定，退出第一视角');
+            }
+        });
+
+        // ==========================================
+        // 辅助函数：打印对象层级结构
+        // ==========================================
+        function printObjectHierarchy(object, depth = 0) {
+            const indent = '  '.repeat(depth);
+            const type = object.type || 'Unknown';
+            const name = object.name || '(unnamed)';
+            const childCount = object.children ? object.children.length : 0;
+            
+            console.log(`${indent}├─ [${type}] ${name} (${childCount} children)`);
+            
+            if (object.children) {
+                object.children.forEach(child => {
+                    printObjectHierarchy(child, depth + 1);
+                });
+            }
+        }
+
+        // ==========================================
+        // 6. 模型编辑功能 (TransformControls)
+        // ==========================================
+        let selectedObject = null;
+        let selectionMode = 'individual'; // 'individual' 或 'whole' - 选择单个家具或整个模型
+        let viewMode = 'edit'; // 'view' 或 'edit' - 观察模式或编辑模式
+        const selectionModeElem = document.getElementById('selectionMode');
+        
+        // WASD 键状态跟踪（用于连续移动）
+        const keysPressed = {
+            w: false,
+            a: false,
+            s: false,
+            d: false
+        };
+        
+        // 用于存储原始材质颜色（用于高亮效果）
+        const originalColors = new Map();
+        
+        const transformControls = new TransformControls(camera, renderer.domElement);
+        scene.add(transformControls);
+
+        // 当使用 TransformControls 时，禁用 OrbitControls
+        transformControls.addEventListener('dragging-changed', (event) => {
+            controls.enabled = !event.value;
+        });
+
+        // 鼠标点击选中模型
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        window.addEventListener('click', onMouseClick, false);
+
+        function onMouseClick(event) {
+            // 如果正在拖拽 TransformControls，不处理点击
+            if (transformControls.dragging) return;
+            
+            // 如果处于观察模式，不处理点击选择
+            if (viewMode === 'view') return;
+
+            // 计算鼠标位置（归一化设备坐标）
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // 更新射线
+            raycaster.setFromCamera(mouse, camera);
+
+            // 只检测所有已加载模型中的可点击对象
+            let intersectableObjects = [];
+            loadedModels.forEach(model => {
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        intersectableObjects.push(child);
+                    }
+                });
+            });
+
+            const intersects = raycaster.intersectObjects(intersectableObjects, false);
+
+            if (intersects.length > 0) {
+                // 选中对象 - 根据选择模式决定选择范围
+                const clickedMesh = intersects[0].object;
+                let targetObject;
+                
+                if (selectionMode === 'whole') {
+                    // 整体模式：选择整个FBX模型
+                    targetObject = clickedMesh;
+                    while (targetObject.parent && targetObject.parent !== scene) {
+                        targetObject = targetObject.parent;
+                    }
+                    if (DEBUG_MODE) console.log('✓ 已选中（整体模式）:', targetObject.name || '未命名对象');
+                } else {
+                    // 单个家具模式：选择单个家具组或mesh
+                    targetObject = clickedMesh;
+                    
+                    // 查找该mesh属于哪个加载的模型
+                    let parentModel = null;
+                    for (const model of loadedModels) {
+                        let found = false;
+                        model.traverse(child => {
+                            if (child === clickedMesh) found = true;
+                        });
+                        if (found) {
+                            parentModel = model;
+                            break;
+                        }
+                    }
+                    
+                    // 如果mesh的父级不是整个模型，选择父级（即单个家具组）
+                    if (clickedMesh.parent && clickedMesh.parent !== parentModel && clickedMesh.parent !== scene) {
+                        targetObject = clickedMesh.parent;
+                    }
+                    
+                    if (DEBUG_MODE) console.log('✓ 已选中（单个家具）:', targetObject.name || '未命名对象', '| 类型:', targetObject.type);
+                }
+                
+                selectObject(targetObject);
+            } else {
+                // 点击空白处取消选中
+                deselectObject();
+            }
+        }
+
+        function selectObject(object) {
+            // 先取消之前的选中
+            if (selectedObject) {
+                deselectObject();
+            }
+            
+            selectedObject = object;
+            transformControls.attach(object);
+            
+            // 添加高亮效果
+            object.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    const materials = Array.isArray(child.material) ? child.material : [child.material];
+                    materials.forEach((mat, idx) => {
+                        // 保存原始颜色
+                        const key = `${child.uuid}_${idx}`;
+                        if (!originalColors.has(key)) {
+                            originalColors.set(key, {
+                                emissive: mat.emissive ? mat.emissive.clone() : new THREE.Color(0x000000),
+                                emissiveIntensity: mat.emissiveIntensity || 0
+                            });
+                        }
+                        // 添加高亮（发光效果）
+                        if (mat.emissive) {
+                            mat.emissive.setHex(0x444400);
+                            mat.emissiveIntensity = 0.3;
+                        }
+                    });
+                }
+            });
+            
+            if (DEBUG_MODE) console.log(`已选中对象，当前模式: ${transformControls.mode}`);
+        }
+
+        function deselectObject() {
+            if (selectedObject) {
+                // 恢复原始颜色
+                selectedObject.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        const materials = Array.isArray(child.material) ? child.material : [child.material];
+                        materials.forEach((mat, idx) => {
+                            const key = `${child.uuid}_${idx}`;
+                            const original = originalColors.get(key);
+                            if (original && mat.emissive) {
+                                mat.emissive.copy(original.emissive);
+                                mat.emissiveIntensity = original.emissiveIntensity;
+                            }
+                        });
+                    }
+                });
+                
+                transformControls.detach();
+                selectedObject = null;
+                if (DEBUG_MODE) console.log('✓ 已取消选中');
+            }
+        }
+
+        // 键盘快捷键控制
+        window.addEventListener('keydown', onKeyDown, false);
+        window.addEventListener('keyup', onKeyUp, false);
+
+        function onKeyDown(event) {
+            const key = event.key.toLowerCase();
+            
+            // 数字键：调整环境基准值
+            if (key === '1') {
+                event.preventDefault();
+                tempBase += 1;
+                document.getElementById('tempBase').textContent = tempBase.toFixed(1);
+                console.log(`温度基准: ${tempBase}°C`);
+                return;
+            }
+            if (key === '2') {
+                event.preventDefault();
+                tempBase -= 1;
+                document.getElementById('tempBase').textContent = tempBase.toFixed(1);
+                console.log(`温度基准: ${tempBase}°C`);
+                return;
+            }
+            if (key === '3') {
+                event.preventDefault();
+                humBase += 1;
+                document.getElementById('humBase').textContent = humBase;
+                console.log(`湿度基准: ${humBase}%`);
+                return;
+            }
+            if (key === '4') {
+                event.preventDefault();
+                humBase -= 1;
+                document.getElementById('humBase').textContent = humBase;
+                console.log(`湿度基准: ${humBase}%`);
+                return;
+            }
+            if (key === '5') {
+                event.preventDefault();
+                pmBase += 1;
+                document.getElementById('pmBase').textContent = pmBase;
+                console.log(`PM2.5基准: ${pmBase}`);
+                return;
+            }
+            if (key === '6') {
+                event.preventDefault();
+                pmBase -= 1;
+                document.getElementById('pmBase').textContent = pmBase;
+                console.log(`PM2.5基准: ${pmBase}`);
+                return;
+            }
+            
+            // V键：切换第一视角模式
+            if (key === 'v') {
+                event.preventDefault();
+                toggleFirstPerson();
+                return;
+            }
+            
+            // Tab键：切换选择模式（仅编辑模式有效）
+            if (event.key === 'Tab') {
+                event.preventDefault();
+                if (viewMode === 'edit') {
+                    selectionMode = selectionMode === 'individual' ? 'whole' : 'individual';
+                    selectionModeElem.textContent = selectionMode === 'individual' ? '单个家具' : '整体模型';
+                    console.log(`切换选择模式: ${selectionMode === 'individual' ? '单个家具' : '整体模型'}`);
+                    
+                    // 切换模式时取消当前选中
+                    deselectObject();
+                }
+                return;
+            }
+            
+            // WASD 镜头移动控制（记录按键状态，在动画循环中处理）
+            if (['w', 'a', 's', 'd'].includes(key) && (viewMode === 'view' || !selectedObject || firstPersonMode)) {
+                event.preventDefault();
+                keysPressed[key] = true;
+                // 如果在第一视角, 同步第一视角移动标志
+                if (firstPersonMode) {
+                    if (key === 'w') fpMove.forward = true;
+                    if (key === 's') fpMove.backward = true;
+                    if (key === 'a') fpMove.left = true;
+                    if (key === 'd') fpMove.right = true;
+                }
+                return;
+            }
+            
+            if (!selectedObject || viewMode === 'view') return;
+
+            switch (event.key.toLowerCase()) {
+                case 'w': // 移动模式
+                    transformControls.setMode('translate');
+                    if (DEBUG_MODE) console.log('切换到移动模式 (W)');
+                    break;
+                case 'e': // 旋转模式
+                    transformControls.setMode('rotate');
+                    if (DEBUG_MODE) console.log('切换到旋转模式 (E)');
+                    break;
+                case 'r': // 缩放模式
+                    transformControls.setMode('scale');
+                    if (DEBUG_MODE) console.log('切换到缩放模式 (R)');
+                    break;
+                case 'escape': // 取消选中
+                    deselectObject();
+                    break;
+                case 'delete': // 删除对象
+                case 'backspace': // Mac 上的删除键
+                    if (selectedObject) {
+                        const toRemove = selectedObject;
+                        transformControls.detach();
+
+                        // 从父节点移除对象
+                        if (toRemove.parent) toRemove.parent.remove(toRemove);
+                        else scene.remove(toRemove);
+
+                        // 递归释放资源
+                        function disposeRecursively(obj) {
+                            obj.traverse(child => {
+                                if (child.isMesh) {
+                                    if (child.geometry) child.geometry.dispose();
+                                    if (child.material) {
+                                        const mats = Array.isArray(child.material) ? child.material : [child.material];
+                                        mats.forEach(mat => {
+                                            if (mat.map && mat.map.dispose) mat.map.dispose();
+                                            if (mat.dispose) mat.dispose();
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                        disposeRecursively(toRemove);
+
+                        console.log('✓ 已删除对象:', toRemove.name || toRemove.uuid);
+
+                        // 从 loadedModels 数组中移除
+                        const idx = loadedModels.indexOf(toRemove);
+                        if (idx > -1) loadedModels.splice(idx, 1);
+                        
+                        if (toRemove === loadedModel) loadedModel = null;
+                        selectedObject = null;
+                    }
+                    break;
+                case '+': // 放大
+                case '=':
+                    if (selectedObject) {
+                        selectedObject.scale.multiplyScalar(1.1);
+                        console.log('放大模型');
+                    }
+                    break;
+                case '-': // 缩小
+                case '_':
+                    if (selectedObject) {
+                        selectedObject.scale.multiplyScalar(0.9);
+                        console.log('缩小模型');
+                    }
+                    break;
+            }
+        }
+        
+        // 键盘松开事件
+        function onKeyUp(event) {
+            const key = event.key.toLowerCase();
+            if (['w', 'a', 's', 'd'].includes(key)) {
+                    keysPressed[key] = false;
+                    if (firstPersonMode) {
+                        if (key === 'w') fpMove.forward = false;
+                        if (key === 's') fpMove.backward = false;
+                        if (key === 'a') fpMove.left = false;
+                        if (key === 'd') fpMove.right = false;
+                    }
+                }
+        }
+        
+        // 更新模式UI
+        function updateModeUI() {
+            const infoDiv = document.getElementById('info');
+            const modeIndicator = document.getElementById('modeIndicator') || (() => {
+                const span = document.createElement('span');
+                span.id = 'modeIndicator';
+                span.style.cssText = 'color: #00ff00; font-weight: bold;';
+                infoDiv.querySelector('p:first-of-type').appendChild(document.createTextNode(' | '));
+                infoDiv.querySelector('p:first-of-type').appendChild(span);
+                return span;
+            })();
+            
+            if (viewMode === 'view') {
+                modeIndicator.textContent = '👁️ 观察模式 (按V切换)';
+                modeIndicator.style.color = '#00ffff';
+            } else {
+                modeIndicator.textContent = '✏️ 编辑模式 (按V切换)';
+                modeIndicator.style.color = '#ffff00';
+            }
+        }
+        
+        // 初始化模式UI
+        updateModeUI();
+
+        // 辅助：下载 Blob
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        // 辅助：下载字符串
+        function downloadString(text, filename, type = 'application/json') {
+            const blob = new Blob([text], { type });
+            downloadBlob(blob, filename);
+        }
+
+        // 收集所有已加载模型的变换数据
+        function collectAllTransforms() {
+            const items = [];
+            
+            loadedModels.forEach(model => {
+                // 调试输出
+                console.log(`📍 保存模型: ${model.name}`);
+                console.log(`   位置: (${model.position.x.toFixed(3)}, ${model.position.y.toFixed(3)}, ${model.position.z.toFixed(3)})`);
+                console.log(`   缩放: (${model.scale.x.toFixed(4)}, ${model.scale.y.toFixed(4)}, ${model.scale.z.toFixed(4)})`);
+                
+                // 保存模型本身的变换
+                const modelData = {
+                    name: model.name || '',
+                    configName: model.userData.config?.name || model.name,
+                    position: [model.position.x, model.position.y, model.position.z],
+                    rotation: [model.rotation.x, model.rotation.y, model.rotation.z],
+                    quaternion: [model.quaternion.x, model.quaternion.y, model.quaternion.z, model.quaternion.w],
+                    scale: [model.scale.x, model.scale.y, model.scale.z],
+                    children: []
+                };
+                
+                // 递归保存所有子对象的变换（包括深层嵌套的家具）
+                function collectChildTransforms(parent, depth = 0) {
+                    parent.children.forEach(child => {
+                        if (child.visible && (child.isGroup || child.isMesh || child.isObject3D)) {
+                            const childData = {
+                                name: child.name || '',
+                                type: child.type,
+                                position: [child.position.x, child.position.y, child.position.z],
+                                rotation: [child.rotation.x, child.rotation.y, child.rotation.z],
+                                quaternion: [child.quaternion.x, child.quaternion.y, child.quaternion.z, child.quaternion.w],
+                                scale: [child.scale.x, child.scale.y, child.scale.z],
+                                children: []
+                            };
+                            
+                            // 递归收集子对象
+                            if (child.children && child.children.length > 0) {
+                                collectChildTransforms(child, depth + 1).forEach(c => childData.children.push(c));
+                            }
+                            
+                            modelData.children.push(childData);
+                        }
+                    });
+                    return modelData.children;
+                }
+                
+                collectChildTransforms(model);
+                items.push(modelData);
+            });
+            
+            return items;
+        }
+
+        // 保存场景状态到 JSON 并下载
+        function saveTransforms() {
+            const data = {
+                timestamp: Date.now(),
+                version: '2.0',  // 新版本格式
+                modelCount: loadedModels.length,
+                models: collectAllTransforms()
+            };
+            const json = JSON.stringify(data, null, 2);
+            downloadString(json, 'scene_transforms.json', 'application/json');
+            console.log(`✓ 已保存场景状态，包含 ${loadedModels.length} 个模型`);
+        }
+
+        // 从文件导入场景状态
+        function loadTransformsFromFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    await applyTransformsData(data);
+                    if (DEBUG_MODE) console.log('✓ 已导入场景状态');
+                } catch (err) {
+                    console.error('✗ 导入失败:', err);
+                    alert('导入失败：' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // 将导入的数据应用到场景
+        async function applyTransformsData(data) {
+            if (!data) return;
+            
+            // 新版本格式 (v2.0)
+            if (data.version === '2.0' && Array.isArray(data.models)) {
+                if (DEBUG_MODE) console.log(`📥 导入场景：${data.models.length} 个模型 (并行加载)`);
+                else console.log(`加载场景: ${data.models.length} 个模型...`);
+                
+                // 清空当前场景中的所有模型
+                while (loadedModels.length > 0) {
+                    const model = loadedModels.pop();
+                    scene.remove(model);
+                }
+                loadedModel = null;
+                
+                // 递归应用子对象的变换（提取为独立函数）
+                function applyChildTransforms(parent, childrenData) {
+                    if (!childrenData || childrenData.length === 0) return;
+                    
+                    childrenData.forEach(childData => {
+                        // 通过名称查找子对象
+                        let child = null;
+                        parent.children.forEach(c => {
+                            if (c.name === childData.name && !child) {
+                                child = c;
+                            }
+                        });
+                        
+                        if (child) {
+                            child.position.set(childData.position[0], childData.position[1], childData.position[2]);
+                            child.scale.set(childData.scale[0], childData.scale[1], childData.scale[2]);
+                            
+                            if (childData.quaternion && childData.quaternion.length === 4) {
+                                child.quaternion.set(childData.quaternion[0], childData.quaternion[1], childData.quaternion[2], childData.quaternion[3]);
+                            } else if (childData.rotation) {
+                                child.rotation.set(childData.rotation[0], childData.rotation[1], childData.rotation[2]);
+                            }
+                            
+                            // 递归处理嵌套子对象
+                            if (childData.children && childData.children.length > 0) {
+                                applyChildTransforms(child, childData.children);
+                            }
+                            
+                            child.updateMatrixWorld(true);
+                        }
+                    });
+                }
+                
+                // 并行加载所有模型
+                const loadStartTime = performance.now();
+                const loadPromises = data.models.map(async (modelData, index) => {
+                    // 查找对应的模型配置
+                    const config = modelConfigs.find(c => c.name === modelData.configName);
+                    if (!config) {
+                        console.warn(`⚠ 找不到模型配置: ${modelData.configName}`);
+                        return null;
+                    }
+                    
+                    // 加载模型（跳过默认变换，因为我们要应用保存的变换）
+                    try {
+                        const object = await loadModel(config, true, true);  // skipDefaultTransform = true
+                        
+                        if (DEBUG_MODE) {
+                            console.log(`📍 恢复模型: ${modelData.configName}`);
+                            console.log(`   目标位置: (${modelData.position[0].toFixed(3)}, ${modelData.position[1].toFixed(3)}, ${modelData.position[2].toFixed(3)})`);
+                            console.log(`   目标缩放: (${modelData.scale[0].toFixed(4)}, ${modelData.scale[1].toFixed(4)}, ${modelData.scale[2].toFixed(4)})`);
+                        }
+                        
+                        // 应用保存的变换
+                        object.position.set(modelData.position[0], modelData.position[1], modelData.position[2]);
+                        object.scale.set(modelData.scale[0], modelData.scale[1], modelData.scale[2]);
+                        
+                        if (modelData.quaternion && modelData.quaternion.length === 4) {
+                            object.quaternion.set(modelData.quaternion[0], modelData.quaternion[1], modelData.quaternion[2], modelData.quaternion[3]);
+                        } else if (modelData.rotation) {
+                            object.rotation.set(modelData.rotation[0], modelData.rotation[1], modelData.rotation[2]);
+                        }
+                        
+                        // 应用子对象的变换
+                        if (modelData.children && modelData.children.length > 0) {
+                            applyChildTransforms(object, modelData.children);
+                        }
+                        
+                        object.updateMatrixWorld(true);
+                        
+                        if (DEBUG_MODE) {
+                            console.log(`   实际位置: (${object.position.x.toFixed(3)}, ${object.position.y.toFixed(3)}, ${object.position.z.toFixed(3)})`);
+                            console.log(`✓ 已恢复模型: ${modelData.configName}`);
+                        }
+                        
+                        return { object, index };
+                    } catch (err) {
+                        console.error(`✗ 加载模型失败: ${modelData.configName}`, err);
+                        return null;
+                    }
+                });
+                
+                // 等待所有模型加载完成
+                const results = await Promise.all(loadPromises);
+                const loadEndTime = performance.now();
+                const successCount = results.filter(r => r !== null).length;
+                const loadTimeSeconds = ((loadEndTime - loadStartTime) / 1000).toFixed(2);
+                console.log(`✅ 场景加载完成: ${successCount}/${data.models.length} 个模型，耗时 ${loadTimeSeconds} 秒`);
+                console.log(`📊 缓存统计: ${modelCache.size} 个模型缓存, ${textureCache.size} 个纹理缓存`);
+                
+                return;
+            }
+            
+            // 旧版本格式兼容 (v1.0)
+            if (Array.isArray(data.items)) {
+                console.log('📥 检测到旧版本格式，尝试兼容导入...');
+                data.items.forEach(it => {
+                    let obj = scene.getObjectByProperty('uuid', it.uuid);
+                    if (!obj && it.name) obj = scene.getObjectByName(it.name);
+                    if (obj) {
+                        if (it.position) obj.position.fromArray(it.position);
+                        if (it.quaternion) obj.quaternion.fromArray(it.quaternion);
+                        else if (it.rotation) obj.rotation.set(it.rotation[0], it.rotation[1], it.rotation[2]);
+                        if (it.scale) obj.scale.fromArray(it.scale);
+                        obj.updateMatrixWorld(true);
+                    } else {
+                        console.warn('无法找到对象:', it.name || it.uuid);
+                    }
+                });
+            }
+        }
+
+        // 导出 glTF（支持导出整个场景或选中对象）
+        function exportGLTF(objects, binary = false) {
+            if (!objects || (Array.isArray(objects) && objects.length === 0)) {
+                alert('没有要导出的对象');
+                return;
+            }
+            
+            const exporter = new GLTFExporter();
+            
+            // 如果是数组，创建一个临时组来包含所有对象
+            let exportTarget;
+            if (Array.isArray(objects)) {
+                exportTarget = new THREE.Group();
+                exportTarget.name = 'ExportedScene';
+                objects.forEach(obj => {
+                    exportTarget.add(obj.clone());
+                });
+            } else {
+                exportTarget = objects;
+            }
+            
+            exporter.parse(exportTarget, function (result) {
+                if (result instanceof ArrayBuffer) {
+                    const blob = new Blob([result], { type: 'application/octet-stream' });
+                    downloadBlob(blob, 'scene.glb');
+                } else {
+                    const json = JSON.stringify(result, null, 2);
+                    downloadString(json, 'scene.gltf', 'application/json');
+                }
+                console.log('✓ glTF 导出成功');
+            }, { binary });
+        }
+
+        // 创建界面按钮
+        function createSaveUI() {
+            const panel = document.createElement('div');
+            panel.style.cssText = 'position:fixed;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:8px;border-radius:6px;color:#fff;z-index:200;font-family:sans-serif;display:flex;flex-direction:column;gap:6px;';
+
+            panel.innerHTML = `
+                <button id="saveJsonBtn">💾 保存场景 (JSON)</button>
+                <button id="loadJsonBtn">📂 导入场景 (JSON)</button>
+                <input id="loadJsonInput" type="file" accept=".json" style="display:none" />
+                <button id="exportGltfBtn">导出整个场景 (glTF)</button>
+                <button id="exportSelectedGltfBtn">导出选中对象 (glTF)</button>
+                <hr style="border-color:#555;margin:6px 0;">
+                    <button id="togglePlaneViewBtn" style="background:#2a7a2a;">📐 平面视角</button>
+                    <!-- 活动热力图与平面视图并列的按钮 -->
+                    <button id="activityHeatmapBtn" style="font-size:11px;background:#ff5722;color:white;margin-left:6px;">活动轨迹热力图</button>
+                    <div id="planeViewControls" style="display:none;margin-top:6px;">
+                        <button id="floor1PlaneBtn" style="font-size:12px;">1️⃣ 一楼平面图</button>
+                        <button id="floor2PlaneBtn" style="font-size:12px;">2️⃣ 二楼平面图</button>
+                        <button id="customPlaneBtn" style="font-size:12px;">🎚️ 自由高度</button>
+                        <div id="customHeightControl" style="display:none;margin-top:6px;font-size:11px;">
+                            <label style="display:block;margin-bottom:4px;">高度: <span id="planeHeightValue">2.70</span></label>
+                            <input type="range" id="planeHeightSlider" min="0" max="10" step="0.1" value="2.7" style="width:100%;">
+                            <div style="margin-top:4px;color:#888;">⌨️ ↑↓ 键盘调节</div>
+                        </div>
+                    </div>
+                    <!-- 活动热力图控制面板（并列位置，仅在开启时显示） -->
+                    <div id="activityHeatmapControls" style="display:none;margin-top:8px;font-size:11px;">
+                        <canvas id="activityHeatmapCanvas" width="512" height="512" style="width:100%;border:1px solid #ccc;border-radius:4px;display:block;background:#fff;margin-bottom:6px;"></canvas>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                            <button id="activityHeatmapClearBtn" style="font-size:11px;">清除</button>
+                            <button id="activityHeatmapExportBtn" style="font-size:11px;">导出PNG</button>
+                            <label style="font-size:11px;margin-left:auto;">透明度: <input id="activityHeatmapOpacity" type="range" min="0" max="1" step="0.05" value="0.7"></label>
+                        </div>
+                        <div style="font-size:10px;color:#666;margin-top:6px;">说明：按 V 进入第一视角并移动，系统会记录位置并在此生成活动轨迹热力图。热力图会依据房屋墙体尝试生成遮罩。</div>
+                    </div>
+            `;
+
+            document.body.appendChild(panel);
+
+            document.getElementById('saveJsonBtn').addEventListener('click', saveTransforms);
+            document.getElementById('exportGltfBtn').addEventListener('click', () => exportGLTF(loadedModels, false));
+            document.getElementById('exportSelectedGltfBtn').addEventListener('click', () => exportGLTF(selectedObject, false));
+
+            const loadInput = document.getElementById('loadJsonInput');
+            document.getElementById('loadJsonBtn').addEventListener('click', () => loadInput.click());
+            loadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) loadTransformsFromFile(file);
+                e.target.value = null;
+            });
+            
+            // 平面视角控制
+            // document.getElementById('togglePlaneViewBtn').addEventListener('click', togglePlaneView); // 移除，因为现在在setupTopDownToggle中处理
+            document.getElementById('floor1PlaneBtn').addEventListener('click', () => {
+                setPlaneHeight(5.3);
+            });
+            document.getElementById('floor2PlaneBtn').addEventListener('click', () => {
+                setPlaneHeight(10.0);
+            });
+            document.getElementById('customPlaneBtn').addEventListener('click', toggleCustomHeight);
+            document.getElementById('planeHeightSlider').addEventListener('input', (e) => {
+                setPlaneHeight(parseFloat(e.target.value));
+            });
+
+            // 活动热力图控制（使用新实现）
+            const ahBtn = document.getElementById('activityHeatmapBtn');
+            if (ahBtn) ahBtn.addEventListener('click', toggleActivityHeatmap);
+        }
+
+        // 在初始化完成后创建 UI（模型加载、相机调整等逻辑之后）
+        createSaveUI();
+
+        // ==========================================
+        // 仪表盘：温度 / 湿度 / PM2.5（第一视角实时显示）
+        // ==========================================
+        let dashboardDiv = null;
+        let gaugeTempCanvas, gaugeHumCanvas, gaugePmCanvas;
+
+        function createDashboardUI() {
+            dashboardDiv = document.createElement('div');
+            dashboardDiv.id = 'dashboard';
+            dashboardDiv.style.cssText = 'position:fixed;right:12px;bottom:70px;z-index:1001;background:rgba(0,0,0,0.55);padding:8px;border-radius:8px;color:#fff;font-family:sans-serif;';
+            dashboardDiv.innerHTML = `
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <div style="text-align:center;font-size:12px;">温度<br><canvas id="gaugeTemp" width="120" height="80"></canvas></div>
+                    <div style="text-align:center;font-size:12px;">湿度<br><canvas id="gaugeHum" width="120" height="80"></canvas></div>
+                    <div style="text-align:center;font-size:12px;">PM2.5<br><canvas id="gaugePm" width="120" height="80"></canvas></div>
+                </div>
+                <div style="font-size:10px;margin-top:4px;text-align:center;">
+                    温度基准: <span id="tempBase">${tempBase.toFixed(1)}</span> |
+                    湿度基准: <span id="humBase">${humBase}</span> |
+                    PM2.5基准: <span id="pmBase">${pmBase}</span>
+                </div>
+            `;
+            document.body.appendChild(dashboardDiv);
+            gaugeTempCanvas = document.getElementById('gaugeTemp');
+            gaugeHumCanvas = document.getElementById('gaugeHum');
+            gaugePmCanvas = document.getElementById('gaugePm');
+        }
+
+        // 模拟传感器数据：基于世界坐标 x,z 生成平滑可变值
+        function sampleEnvironmentAt(x, z, now) {
+            // 每秒更新一次随机噪声
+            const currentSecond = Math.floor(now);
+            if (currentSecond !== lastSecond) {
+                lastSecond = currentSecond;
+                cachedTempNoise = (Math.random() - 0.5) * 2 * tempNoiseRange;
+                cachedHumNoise = (Math.random() - 0.5) * 2 * humNoiseRange;
+                cachedPmNoise = (Math.random() - 0.5) * 2 * pmNoiseRange;
+            }
+
+            // 温度：基准 + 随机抖动，粒度0.1
+            const temp = Math.round((tempBase + cachedTempNoise) * 10) / 10;
+
+            // 湿度：基准 + 随机抖动
+            const hum = Math.round(humBase + cachedHumNoise);
+
+            // PM2.5：基准 + 随机抖动
+            const pm = Math.round(pmBase + cachedPmNoise);
+
+            return { temp, hum, pm };
+        }
+
+        function drawGauge(canvas, value, min, max, unit, color) {
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            // 圆弧位置
+            const cx = w / 2;
+            const cy = h * 0.9;
+            const r = Math.min(w, h) * 0.45;
+
+            // 背景弧
+            ctx.lineWidth = 8;
+            ctx.strokeStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI, false);
+            ctx.stroke();
+
+            // 值弧
+            const t = Math.max(0, Math.min(1, (value - min) / (max - min)));
+            const end = Math.PI + t * Math.PI;
+            ctx.strokeStyle = color;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, Math.PI, end, false);
+            ctx.stroke();
+
+            // 指针
+            const ang = Math.PI + t * Math.PI;
+            const px = cx + Math.cos(ang) * (r - 6);
+            const py = cy + Math.sin(ang) * (r - 6);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(px, py);
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // 文本
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${value}${unit}`, cx, cy - r * 0.45);
+        }
+
+        function updateDashboard() {
+            if (!dashboardDiv) createDashboardUI();
+            // 仅在第一视角时显示仪表盘
+            dashboardDiv.style.display = firstPersonMode ? 'block' : 'none';
+            if (!firstPersonMode) return;
+            const now = performance.now() / 1000;
+            const pos = camera.position;
+            const s = sampleEnvironmentAt(pos.x, pos.z, now);
+            drawGauge(gaugeTempCanvas, s.temp, 0, 40, '°C', '#ff7043');
+            drawGauge(gaugeHumCanvas, s.hum, 0, 100, '%', '#29b6f6');
+            drawGauge(gaugePmCanvas, s.pm, 0, 150, '', '#9c27b0');
+        }
+
+        // ==========================================
+        // 平面视角系统（切割平面）
+        // ==========================================
+        // 使用向上法线并用负值表示高度（Plane: normal.dot(x) + constant = 0）
+        let clippingPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -5.3);
+        let planeViewEnabled = false;
+        let customHeightMode = false;
+        let savedCameraPosition = null;
+        let savedControlsTarget = null;
+
+        // ==========================================
+        // 简单的俯视切换实现：点击按钮切换到场景顶部视角并保存/恢复相机
+        // ==========================================
+        (function setupTopDownToggle() {
+            // topDownMode 现在是全局变量
+            let savedCameraPosition = null;
+            let savedControlsTarget = null;
+            let savedCameraUp = null;
+
+            // 动态输出相机信息的事件监听器
+            const logCameraInfo = () => {
+                console.log('📍 实时相机信息:');
+                console.log(`   相机位置: (${camera.position.x.toFixed(2)}, ${camera.position.y.toFixed(2)}, ${camera.position.z.toFixed(2)})`);
+                console.log(`   相机旋转 (欧拉角): (${(camera.rotation.x * 180 / Math.PI).toFixed(2)}°, ${(camera.rotation.y * 180 / Math.PI).toFixed(2)}°, ${(camera.rotation.z * 180 / Math.PI).toFixed(2)}°)`);
+                console.log(`   相机四元数: (${camera.quaternion.x.toFixed(4)}, ${camera.quaternion.y.toFixed(4)}, ${camera.quaternion.z.toFixed(4)}, ${camera.quaternion.w.toFixed(4)})`);
+                console.log(`   相机上向量: (${camera.up.x.toFixed(2)}, ${camera.up.y.toFixed(2)}, ${camera.up.z.toFixed(2)})`);
+                console.log(`   控制目标: (${controls.target.x.toFixed(2)}, ${controls.target.y.toFixed(2)}, ${controls.target.z.toFixed(2)})`);
+            };
+
+            // 监听 OrbitControls 的变化，动态输出
+            controls.addEventListener('change', logCameraInfo);
+
+            function computeSceneBounds() {
+                console.log('🔎 computeSceneBounds called — using mesh-only traversal with height filter');
+                const box = new THREE.Box3();
+                if (loadedModels.length === 0) {
+                    // 默认范围
+                    box.setFromCenterAndSize(new THREE.Vector3(0, 0, 0), new THREE.Vector3(10, 10, 10));
+                    return box;
+                }
+
+                // 仅基于网格(Mesh)来计算边界，排除相机、灯光或其他非几何体对象，且过滤掉过高的网格
+                loadedModels.forEach(m => {
+                    m.traverse(child => {
+                        if (child.isMesh) {
+                            try {
+                                // 计算该mesh的世界包围盒
+                                const meshBox = new THREE.Box3().setFromObject(child);
+                                // 如果mesh的最高点超过50单位，跳过（过滤异常高位置的几何体）
+                                if (meshBox.max.y <= 50) {
+                                    box.expandByObject(child);
+                                } else {
+                                    console.log(`⚠ 跳过高位置网格: ${child.name || 'unnamed'} | max.y: ${meshBox.max.y.toFixed(2)}`);
+                                }
+                            } catch (e) {
+                                // 某些几何体可能缺少 geometry，这里保护性捕获
+                            }
+                        }
+                    });
+                });
+
+                // 如果没有任何网格，回退到默认范围
+                if (box.isEmpty()) box.setFromCenterAndSize(new THREE.Vector3(0, 0, 0), new THREE.Vector3(10, 10, 10));
+                return box;
+            }
+
+            function enterTopDown() {
+                savedCameraPosition = camera.position.clone();
+                savedControlsTarget = controls.target.clone();
+                savedCameraUp = camera.up.clone();
+
+                const box = computeSceneBounds();
+                const center = new THREE.Vector3();
+                const size = new THREE.Vector3();
+                box.getCenter(center);
+                box.getSize(size);
+
+                // 计算每个已加载模型的包围盒并输出，帮助定位哪个模型导致尺寸异常
+                let maxModelY = 0;
+                loadedModels.forEach(m => {
+                    try {
+                        const mb = new THREE.Box3().setFromObject(m);
+                        const msize = new THREE.Vector3();
+                        const mcenter = new THREE.Vector3();
+                        mb.getSize(msize);
+                        mb.getCenter(mcenter);
+                        console.log(`📦 模型边界: ${m.name || '(unnamed)'} | center: (${mcenter.x.toFixed(2)}, ${mcenter.y.toFixed(2)}, ${mcenter.z.toFixed(2)}) | size: (${msize.x.toFixed(2)}, ${msize.y.toFixed(2)}, ${msize.z.toFixed(2)})`);
+                        if (msize.y > maxModelY) maxModelY = msize.y;
+                    } catch (e) {
+                        console.warn('⚠ 无法计算模型包围盒:', m.name, e);
+                    }
+                });
+
+                // 基于整体尺寸计算高度，但对单个异常模型做上限保护
+                const rawHeight = Math.max(size.y * 1.5, 6);
+                const cap = Math.max(60, maxModelY * 3); // 最小上限 60 或根据最大模型高度动态决定
+                const height = Math.min(rawHeight, cap);
+
+                // 使用手动调整的最佳俯视视角
+                camera.position.set(5.61, 26.64, -24.06);
+                camera.quaternion.set(-0.5031, -0.4969, -0.4969, 0.5031);
+                camera.up.set(0.00, 1.00, 0.00);
+                controls.target.set(5.61, 6.56, -24.06);
+                controls.update();
+                // 重新设置四元数，因为 controls.update() 会覆盖它
+                camera.quaternion.set(-0.5031, -0.4969, -0.4969, 0.5031);
+
+                // 启用平面视角（默认一楼高度）
+                setPlaneHeight(5.3);
+                const controlsPanel = document.getElementById('planeViewControls');
+                if (controlsPanel) controlsPanel.style.display = 'block';
+
+                const btn = document.getElementById('togglePlaneViewBtn');
+                if (btn) { btn.textContent = '🔼 退出俯视'; btn.style.background = '#4a90d9'; }
+                topDownMode = true;
+            }
+
+            function exitTopDown() {
+                if (savedCameraPosition) camera.position.copy(savedCameraPosition);
+                if (savedControlsTarget) controls.target.copy(savedControlsTarget);
+                if (savedCameraUp) camera.up.copy(savedCameraUp);
+                controls.update();
+
+                // 禁用平面视角
+                disableClipping();
+                const controlsPanel = document.getElementById('planeViewControls');
+                if (controlsPanel) controlsPanel.style.display = 'none';
+
+                const btn = document.getElementById('togglePlaneViewBtn');
+                if (btn) { btn.textContent = '📐 平面视角'; btn.style.background = '#2a7a2a'; }
+                topDownMode = false;
+            }
+
+            const btn = document.getElementById('togglePlaneViewBtn');
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    try {
+                        if (!topDownMode) enterTopDown(); else exitTopDown();
+                    } catch (e) {
+                        console.error('切换俯视失败:', e);
+                    }
+                });
+            }
+        })();
+
+        // 设置平面高度
+        function setPlaneHeight(height) {
+            // 更新裁剪平面（使用负值与向上法线配合表示高度）
+            clippingPlane.constant = -height;
+
+            // 归一化法线以防变换带来缩放
+            clippingPlane.normal.normalize();
+
+            // 应用裁剪到所有模型
+            enableClipping();
+            
+            // 更新UI
+            document.getElementById('planeHeightValue').textContent = height.toFixed(2);
+            const slider = document.getElementById('planeHeightSlider');
+            slider.value = height;
+            
+            console.log(`✓ 切割平面高度: ${height.toFixed(2)}`);
+        }
+
+        // 启用裁剪
+        function enableClipping() {
+            // 使用反向平面（确保显示平面下方的几何体）并同时设置 renderer 的全局裁剪平面
+            const appliedPlane = clippingPlane.clone().negate();
+            console.log('启用裁剪: plane normal=', appliedPlane.normal.toArray(), 'constant=', appliedPlane.constant);
+
+            // 记录各模型的边界高度，帮助排查裁剪方向问题
+            loadedModels.forEach(model => {
+                const box = new THREE.Box3().setFromObject(model);
+                const minY = box.min.y;
+                const maxY = box.max.y;
+                console.log(`模型: ${model.name || model.userData?.config?.name || '(unnamed)'} | minY=${minY.toFixed(2)} maxY=${maxY.toFixed(2)}`);
+            });
+
+            // 将裁剪平面应用到每个材质
+            loadedModels.forEach(model => {
+                model.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        const materials = Array.isArray(child.material) ? child.material : [child.material];
+                        materials.forEach(mat => {
+                            mat.clippingPlanes = [appliedPlane];
+                            mat.clipShadows = true;
+                            mat.needsUpdate = true;
+                        });
+                    }
+                });
+            });
+
+            // 同时设置 renderer 的全局裁剪平面，作为保护措施使新创建的材质也受影响
+            try {
+                renderer.clippingPlanes = [appliedPlane];
+            } catch (e) {
+                console.warn('无法设置 renderer.clippingPlanes:', e);
+            }
+        }
+
+        // 禁用裁剪
+        function disableClipping() {
+            loadedModels.forEach(model => {
+                model.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        const materials = Array.isArray(child.material) ? child.material : [child.material];
+                        materials.forEach(mat => {
+                            mat.clippingPlanes = [];
+                            mat.needsUpdate = true;
+                        });
+                    }
+                });
+            });
+            // 清除 renderer 全局裁剪平面
+            try { renderer.clippingPlanes = []; } catch (e) { /* ignore */ }
+        }
+
+        // 切换自定义高度控制
+        function toggleCustomHeight() {
+            customHeightMode = !customHeightMode;
+            const control = document.getElementById('customHeightControl');
+            control.style.display = customHeightMode ? 'block' : 'none';
+            
+            if (customHeightMode) {
+                console.log('✓ 自定义高度模式已启用');
+            }
+        }
+
+        // ==========================================
+        // 活动轨迹热力图系统（轻量实现）
+        // - 删除原有静态/模拟热力图，改为实时记录第一视角位置并在 UI 画布上渲染
+        // - 会尝试根据场景中名为 "wall" 的网格构建多边形遮罩，若失败则使用房子边界矩形
+        // ==========================================
+        let activityHeatmapCanvas = null;
+        let activityHeatmapCtx = null;
+        let activityPositions = []; // 存储 Vector3
+        let activityMode = false;
+        let lastRecordTime = 0;
+        const RECORD_INTERVAL = 0.12; // 秒
+
+        // 初始化 UI（调用时会找到已在 DOM 中预先创建的 canvas）
+        // 新版热力图：使用外部图片作为背景，并在固定世界矩形范围内把世界坐标映射到图片/画布坐标
+        let heatmapBgImage = null;
+        let heatmapImageReady = false;
+        let heatmapWorldBounds = null; // { minX, maxX, minZ, maxZ, width, depth }
+        // 栅格累积（性能友好）：使用较低分辨率网格累加访问次数
+        const HEATMAP_GRID_W = 512;
+        const HEATMAP_GRID_H = 512;
+        let heatmapGrid = new Float32Array(HEATMAP_GRID_W * HEATMAP_GRID_H);
+        let heatmapMaxValue = 0;
+
+        function initActivityHeatmapUI() {
+            activityHeatmapCanvas = document.getElementById('activityHeatmapCanvas');
+            if (!activityHeatmapCanvas) return;
+            activityHeatmapCtx = activityHeatmapCanvas.getContext('2d');
+
+            document.getElementById('activityHeatmapClearBtn').addEventListener('click', () => {
+                activityPositions.length = 0;
+                heatmapGrid.fill(0);
+                heatmapMaxValue = 0;
+                clearHeatmapCanvas();
+            });
+            document.getElementById('activityHeatmapExportBtn').addEventListener('click', () => {
+                if (!activityHeatmapCanvas) return;
+                const dataUrl = activityHeatmapCanvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = 'activity_heatmap.png';
+                a.click();
+            });
+            document.getElementById('activityHeatmapOpacity').addEventListener('input', (e) => {
+                activityHeatmapCanvas.style.opacity = e.target.value;
+            });
+
+            // 尝试加载背景图片（workspace 根目录下的 image.png）
+            heatmapBgImage = new Image();
+            heatmapBgImage.src = 'image.png';
+            heatmapBgImage.onload = () => {
+                heatmapImageReady = true;
+                console.log('热力图背景图片已加载: ', heatmapBgImage.naturalWidth, 'x', heatmapBgImage.naturalHeight);
+                // 将热力图画布像素尺寸设置为图片原始尺寸，避免压缩
+                if (activityHeatmapCanvas) {
+                    activityHeatmapCanvas.width = heatmapBgImage.naturalWidth;
+                    activityHeatmapCanvas.height = heatmapBgImage.naturalHeight;
+                    // 同步 CSS 尺寸为图片像素（可改为固定显示或保持100%宽度，如果想缩放请保留100%）
+                    activityHeatmapCanvas.style.width = heatmapBgImage.naturalWidth + 'px';
+                    activityHeatmapCanvas.style.height = heatmapBgImage.naturalHeight + 'px';
+                }
+                renderActivityHeatmapCanvas();
+            };
+            heatmapBgImage.onerror = () => {
+                heatmapImageReady = false;
+                console.warn('无法加载热力图背景图片 image.png，继续使用纯色背景');
+            };
+        }
+
+        // 切换热力图显示（在 UI 按钮中调用）
+        function toggleActivityHeatmap() {
+            activityMode = !activityMode;
+            const controls = document.getElementById('activityHeatmapControls');
+            if (controls) {
+                controls.style.display = activityMode ? 'block' : 'none';
+                if (activityMode) {
+                    controls.style.width = '256px';
+                } else {
+                    controls.style.width = '';
+                }
+            }
+            const btn = document.getElementById('activityHeatmapBtn');
+            if (btn) btn.style.opacity = activityMode ? '0.7' : '1';
+            if (activityMode) {
+                activityPositions.length = 0;
+                lastRecordTime = performance.now() / 1000;
+                initActivityHeatmapUI();
+                // 默认使用你提供的两个世界坐标作为热力图边界（可在运行时用其它值覆盖）
+                // 点1: x=-6.323, z=-41.231  点2: x=14.638, z=-5.038
+                setHeatmapWorldBoundsFromCorners(-6.323, -41.231, 14.638, -5.038);
+                console.log('✓ 活动轨迹热力图已启用（使用预设世界边界）');
+            } else {
+                console.log('✓ 活动轨迹热力图已关闭');
+            }
+        }
+
+        function clearHeatmapCanvas() {
+            if (!activityHeatmapCtx) return;
+            activityHeatmapCtx.clearRect(0, 0, activityHeatmapCanvas.width, activityHeatmapCanvas.height);
+        }
+
+        // 由外部调用：用两个世界坐标角点来设置热力图世界边界
+        function setHeatmapWorldBoundsFromCorners(x1, z1, x2, z2) {
+            const minX = Math.min(x1, x2);
+            const maxX = Math.max(x1, x2);
+            const minZ = Math.min(z1, z2);
+            const maxZ = Math.max(z1, z2);
+            heatmapWorldBounds = {
+                minX, maxX, minZ, maxZ,
+                width: Math.max(0.0001, maxX - minX),
+                depth: Math.max(0.0001, maxZ - minZ)
+            };
+            console.log('设置热力图世界边界:', heatmapWorldBounds);
+            // 重置栅格
+            heatmapGrid = new Float32Array(HEATMAP_GRID_W * HEATMAP_GRID_H);
+            heatmapMaxValue = 0;
+        }
+
+        // 在 animate 中调用：记录第一视角位置（若处于记录状态）
+        function recordActivityPositionIfNeeded(nowSec) {
+            if (!activityMode) return;
+            if (!firstPersonMode) return; // 仅记录第一视角下的位置
+            if (nowSec - lastRecordTime < RECORD_INTERVAL) return;
+            lastRecordTime = nowSec;
+            const pos = camera.position.clone();
+            activityPositions.push(pos);
+
+            // 同步到栅格
+            if (heatmapWorldBounds) {
+                const u = (pos.x - heatmapWorldBounds.minX) / heatmapWorldBounds.width;
+                const v = (pos.z - heatmapWorldBounds.minZ) / heatmapWorldBounds.depth;
+                // 允许超出边界但丢弃
+                if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
+                    const gx = Math.floor(u * (HEATMAP_GRID_W - 1));
+                    const gy = Math.floor(v * (HEATMAP_GRID_H - 1));
+                    const idx = gy * HEATMAP_GRID_W + gx;
+                    heatmapGrid[idx] += 1.0;
+                    if (heatmapGrid[idx] > heatmapMaxValue) heatmapMaxValue = heatmapGrid[idx];
+                }
+            }
+
+            // 同步渲染到画布（轻量刷新）
+            renderActivityHeatmapCanvas();
+        }
+
+        // 将世界坐标转换为画布坐标（基于 heatmapWorldBounds 与图片/画布尺寸）
+        function worldToCanvasXY_usingImage(x, z, canvas) {
+            if (!heatmapWorldBounds) return null;
+            const u = (x - heatmapWorldBounds.minX) / heatmapWorldBounds.width;
+            const v = (z - heatmapWorldBounds.minZ) / heatmapWorldBounds.depth;
+            // 图像坐标
+            const imgW = heatmapBgImage && heatmapImageReady ? heatmapBgImage.naturalWidth : canvas.width;
+            const imgH = heatmapBgImage && heatmapImageReady ? heatmapBgImage.naturalHeight : canvas.height;
+            const imgX = u * imgW;
+            const imgY = v * imgH;
+            // 映射到画布尺寸（图片会被拉伸填充到 canvas）
+            const cx = (imgX / imgW) * canvas.width;
+            const cy = (imgY / imgH) * canvas.height;
+            return { x: Math.round(cx), y: Math.round(cy) };
+        }
+
+        // 渲染热力图到 UI 画布（使用背景图 + 栅格累加）
+        function renderActivityHeatmapCanvas() {
+            if (!activityHeatmapCtx || !activityHeatmapCanvas) return;
+            const canvas = activityHeatmapCanvas;
+            const ctx = activityHeatmapCtx;
+            // 清除并绘制背景图
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (heatmapBgImage && heatmapImageReady) {
+                // 拉伸图片填满画布
+                ctx.drawImage(heatmapBgImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                // 备用浅色背景
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // 绘制热度层到离屏画布（仅热度层，不包含背景），以便只对热度做模糊处理
+            const heatLayer = document.createElement('canvas');
+            heatLayer.width = canvas.width; heatLayer.height = canvas.height;
+            const hctx = heatLayer.getContext('2d');
+            hctx.clearRect(0, 0, heatLayer.width, heatLayer.height);
+            hctx.globalCompositeOperation = 'lighter';
+            for (let gy = 0; gy < HEATMAP_GRID_H; gy++) {
+                for (let gx = 0; gx < HEATMAP_GRID_W; gx++) {
+                    const val = heatmapGrid[gy * HEATMAP_GRID_W + gx];
+                    if (!val) continue;
+                    const t = Math.min(1, val / Math.max(1, heatmapMaxValue));
+                    const cx = (gx + 0.5) / HEATMAP_GRID_W * heatLayer.width;
+                    const cy = (gy + 0.5) / HEATMAP_GRID_H * heatLayer.height;
+                    const radius = Math.max(8, Math.min(heatLayer.width, heatLayer.height) * 0.03);
+                    const grd = hctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+                    const a = Math.min(0.9, 0.25 + t * 0.75);
+                    grd.addColorStop(0, `rgba(255,${Math.round(200 - 150 * t)},0,${a})`);
+                    grd.addColorStop(0.5, `rgba(255,${Math.round(120 - 100 * t)},0,${a * 0.6})`);
+                    grd.addColorStop(1, 'rgba(255,255,255,0)');
+                    hctx.fillStyle = grd;
+                    hctx.beginPath();
+                    hctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                    hctx.fill();
+                }
+            }
+
+            // 模糊热度层（生成模糊的热力贴图），保留背景清晰
+            const blurred = document.createElement('canvas');
+            blurred.width = heatLayer.width; blurred.height = heatLayer.height;
+            const bctx = blurred.getContext('2d');
+            // 使用 Canvas2D 的 filter（若不支持会回退为无模糊）
+            bctx.filter = 'blur(6px)';
+            bctx.drawImage(heatLayer, 0, 0);
+
+            // 将背景绘制到主画布，然后把模糊的热度层以叠加模式绘上去
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (heatmapBgImage && heatmapImageReady) {
+                ctx.drawImage(heatmapBgImage, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.drawImage(blurred, 0, 0);
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        // 键盘控制平面高度
+        window.addEventListener('keydown', (e) => {
+            if (!topDownMode || !customHeightMode) return;
+            
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                
+                const slider = document.getElementById('planeHeightSlider');
+                let currentHeight = parseFloat(slider.value);
+                const step = 0.1;
+                
+                if (e.key === 'ArrowUp') {
+                    currentHeight = Math.min(parseFloat(slider.max), currentHeight + step);
+                } else {
+                    currentHeight = Math.max(parseFloat(slider.min), currentHeight - step);
+                }
+                
+                setPlaneHeight(currentHeight);
+            }
+        });
+
+        // ==========================================
+        // 7. 渲染循环 (符合：性能 > 25 fps)
+        // ==========================================
+        // FPS 计算变量
+        let lastTime = performance.now();
+        let frames = 0;
+        let fps = 60;
+        const fpsElement = document.getElementById('fpsValue');
+        const fpsMonitorElement = document.getElementById('fpsMonitor');
+        
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // 处理连续的WASD移动
+            if (keysPressed.w || keysPressed.a || keysPressed.s || keysPressed.d) {
+                if (firstPersonMode) {
+                    // 第一视角移动由后面的 fpMove + 速度逻辑处理，这里不再直接设置 pointerLockControls 属性
+                } else {
+                    // 普通视角：移动相机和target
+                    // 计算移动距离：基于视口大小的固定比例（每帧0.5%）
+                    const moveDistance = Math.max(window.innerWidth, window.innerHeight) * 0.00005;
+                    
+                    // 获取相机的方向向量
+                    const cameraRight = new THREE.Vector3();
+                    camera.getWorldDirection(cameraRight);
+                    cameraRight.cross(camera.up).normalize();
+                    
+                    const offset = new THREE.Vector3();
+                    
+                    if (keysPressed.w) { // 向前
+                        const forward = new THREE.Vector3();
+                        camera.getWorldDirection(forward);
+                        forward.y = 0;
+                        forward.normalize().multiplyScalar(moveDistance);
+                        offset.add(forward);
+                    }
+                    if (keysPressed.s) { // 向后
+                        const backward = new THREE.Vector3();
+                        camera.getWorldDirection(backward);
+                        backward.y = 0;
+                        backward.normalize().multiplyScalar(-moveDistance);
+                        offset.add(backward);
+                    }
+                    if (keysPressed.a) { // 向左
+                        const left = cameraRight.clone();
+                        left.y = 0;
+                        left.normalize().multiplyScalar(-moveDistance);
+                        offset.add(left);
+                    }
+                    if (keysPressed.d) { // 向右
+                        const right = cameraRight.clone();
+                        right.y = 0;
+                        right.normalize().multiplyScalar(moveDistance);
+                        offset.add(right);
+                    }
+                    
+                    // 应用移动
+                    controls.target.add(offset);
+                    camera.position.add(offset);
+                }
+            } else if (firstPersonMode) {
+                // 没有按键时重置移动状态（由 fpMove 管理）
+                fpMove.forward = fpMove.backward = fpMove.left = fpMove.right = false;
+                fpVelocity.set(0, 0, 0);
+            }
+
+            // 如果有骨骼动画 mixer，在这里 update
+            // if (mixer) mixer.update(clock.getDelta());
+
+            if (!firstPersonMode) {
+                controls.update();
+                // 在俯视模式下强制设置相机四元数
+                if (topDownMode) {
+                    camera.quaternion.set(-0.5031, -0.4969, -0.4969, 0.5031);
+                }
+            } else {
+                // 第一视角手动更新移动（PointerLockControls 负责鼠标视角）
+                const delta = fpClock.getDelta();
+
+                // 目标方向（基于摄像机朝向）
+                fpDirection.set(0, 0, 0);
+                if (fpMove.forward) fpDirection.z -= 1;
+                if (fpMove.backward) fpDirection.z += 1;
+                if (fpMove.left) fpDirection.x -= 1;
+                if (fpMove.right) fpDirection.x += 1;
+
+                if (fpDirection.lengthSq() > 0) fpDirection.normalize();
+
+                // 使用摄像机朝向计算移动方向（避免Euler符号或坐标系问题）
+                const forwardVec = new THREE.Vector3();
+                camera.getWorldDirection(forwardVec);
+                forwardVec.y = 0;
+                forwardVec.normalize();
+                const rightVec = new THREE.Vector3();
+                rightVec.crossVectors(forwardVec, camera.up).normalize();
+
+                const moveVec = new THREE.Vector3();
+                if (fpMove.forward) moveVec.add(forwardVec);
+                if (fpMove.backward) moveVec.sub(forwardVec);
+                if (fpMove.right) moveVec.add(rightVec);
+                if (fpMove.left) moveVec.sub(rightVec);
+
+                if (moveVec.lengthSq() > 0) moveVec.normalize();
+
+                // 速度逼近目标速度（阻尼）
+                const targetVel = moveVec.multiplyScalar(FP_SPEED);
+                fpVelocity.lerp(targetVel, Math.min(1, FP_DAMPING * delta));
+
+                // 应用位移（基于 pointerLockControls 管理的对象）
+                pointerLockControls.getObject().position.addScaledVector(fpVelocity, delta);
+                // 将 pointerLockControls 的位置同步到 camera，供渲染使用
+                camera.position.copy(pointerLockControls.getObject().position);
+            }
+            // 记录活动轨迹（若启用）并更新热力图画布
+            const nowSec = performance.now() / 1000;
+            recordActivityPositionIfNeeded(nowSec);
+            // 更新第一视角仪表盘
+            updateDashboard();
+            renderer.render(scene, camera);
+            
+            // 更新FPS
+            frames++;
+            const currentTime = performance.now();
+            const elapsed = currentTime - lastTime;
+            
+            if (elapsed >= 1000) { // 每秒更新一次FPS显示
+                fps = Math.round((frames * 1000) / elapsed);
+                fpsElement.textContent = fps;
+                
+                // 根据FPS改变颜色
+                if (fps >= 50) {
+                    fpsElement.style.color = '#0f0'; // 绿色 - 良好
+                    fpsMonitorElement.style.borderColor = 'rgba(0, 255, 0, 0.3)';
+                    fpsMonitorElement.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.2)';
+                } else if (fps >= 30) {
+                    fpsElement.style.color = '#ff0'; // 黄色 - 一般
+                    fpsMonitorElement.style.borderColor = 'rgba(255, 255, 0, 0.3)';
+                    fpsMonitorElement.style.boxShadow = '0 0 10px rgba(255, 255, 0, 0.2)';
+                } else {
+                    fpsElement.style.color = '#f00'; // 红色 - 较差
+                    fpsMonitorElement.style.borderColor = 'rgba(255, 0, 0, 0.3)';
+                    fpsMonitorElement.style.boxShadow = '0 0 10px rgba(255, 0, 0, 0.2)';
+                }
+                
+                frames = 0;
+                lastTime = currentTime;
+            }
+        }
+
+        animate();
+
+        // ==========================================
+        // 8. 窗口自适应
+        // ==========================================
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+</html>

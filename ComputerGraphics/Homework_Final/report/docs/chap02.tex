@@ -1,0 +1,68 @@
+\chapter{Gaussian-Flow：基于双域变形的4D重建}
+
+Gaussian-Flow 的核心贡献在于提出了一种非神经网络的、纯数学基函数驱动的动态场景表示方法。它旨在解决动态3DGS中存储爆炸与计算瓶颈之间的矛盾，实现了训练速度、渲染FPS和新视点合成质量的全面领先。
+
+\section{双域变形模型 (Dual-Domain Deformation Model, DDDM)}
+
+Gaussian-Flow 摒弃了隐式神经网络（Implicit Neural Fields）作为运动补偿的手段，转而采用显式的双域变形模型（DDDM） \cite{lin2024gaussianflow_cvpr}。该模型基于一个深刻的信号处理洞察：自然场景中的运动可以分解为低频的平滑轨迹和高频的细节震颤。
+
+\subsection{时域多项式拟合 (Time-Domain Polynomial Fitting)}
+
+对于每一个3D高斯点，其属性随时间的变化首先由一个多项式函数来建模。多项式擅长捕捉低频、连续的运动趋势，例如物体的平移、相机的运镜或肢体的舒展 \cite{wu2025survey}。
+设某个属性在时间 $t$ 的值为 $v(t)$，其多项式分量表示为：
+$$
+v_{poly}(t) = \sum_{k=0}^{K} c_k t^k
+$$
+其中 $c_k$ 是每个高斯点独有的可学习系数。使用多项式的好处在于其计算极其高效，仅涉及基本的乘加运算，且在GPU上易于并行化。这避免了神经网络前向传播带来的巨大算力开销。
+
+\subsection{频域傅里叶级数拟合 (Frequency-Domain Fourier Series Fitting)}
+
+然而，仅靠多项式难以拟合高频运动（如衣物的褶皱波动、树叶的颤动），强行增加多项式阶数会导致Runge's Phenomenon，即在区间边缘产生剧烈的震荡。为此，Gaussian-Flow 引入了频域的傅里叶级数来捕捉时间相关的残差 \cite{lin2024gaussianflow_cvpr}。
+这种设计使得模型能够通过少量的系数精确表达复杂的周期性或快速变化的运动。DDDM 将时域多项式与频域傅里叶级数相加，构成了完整的运动描述：
+$$
+v(t) = v_{poly}(t) + \sum_{m=1}^{M} (a_m \cos(2\pi m t) + b_m \sin(2\pi m t))
+$$
+这种显式变形建模确保了每个高斯点的状态查询是完全解析的（Analytical），无需任何黑盒网络参与，从而实现了与静态3DGS相媲美的超快渲染速度 \cite{lin2024gaussianflow_cvpr}。
+
+\section{自适应时间戳缩放 (Adaptive Timestamp Scaling)}
+
+在实际优化过程中，Gaussian-Flow 的研究团队发现了一个关键的技术难点：不同物体或同一物体的不同部分的运动速率差异巨大。如果在归一化的时间坐标 $t \in [0, 1]$ 上统一进行拟合，对于极短时间内发生的剧烈运动（Substantial motions within a very short time），多项式和傅里叶级数需要极大的系数才能拟合，这会导致优化过程的不稳定甚至崩溃 \cite{lin2024gaussianflow_cvpr}。
+为了解决这一问题，Gaussian-Flow 引入了自适应时间戳缩放（Adaptive Timestamp Scaling） 机制。系统为每个高斯点学习一个时间膨胀因子 $\gamma$ 和一个基准因子 $\beta$：
+$$
+t' = \gamma t + \beta
+$$
+将缩放后的时间 $t'$ 代入变形函数中。
+这相当于让每个高斯粒子拥有自己的“局部时钟”。对于快速运动的粒子，时间流逝被拉伸，使其在参数空间中的变化率降低，从而易于拟合；对于静止或慢速粒子，则保持原状。
+这一设计极大地增强了模型对复杂非刚性形变（Non-rigid Deformation）的鲁棒性。
+
+\section{训练与渲染性能分析}
+
+基于上述架构创新，Gaussian-Flow 在各项性能指标上取得了显著突破。根据论文及项目页面的数据：
+
+\begin{table}[h]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|c|c|}
+\hline
+指标 & 传统逐帧3DGS & 隐式动态网络方法 & Gaussian-Flow \\
+\hline
+训练速度 & 极慢（需优化每一帧） & 慢（神经网络反向传播开销大） & 极快（比逐帧快5倍） \\
+存储效率 & 低（线性增长） & 高（网络参数少） & 高（仅存储系数） \\
+渲染FPS & 高（若是预加载） & 低（需逐点推理网络） & 实时（解析计算） \\
+时序一致性 & 差（帧间独立优化导致闪烁） & 好（网络平滑） & 优（解析函数保证连续性） \\
+新视点质量 & 取决于单帧质量 & 往往模糊（过平滑） & SOTA（保留高频细节） \\
+\hline
+\end{tabular}
+}
+\caption{不同方法的性能对比}
+\end{table}
+
+定量结果显示，Gaussian-Flow 的训练速度比逐帧建模快 5倍 \cite{lin2024gaussianflow_cvpr}。在渲染质量上，由于DDDM能够解耦静态和动态属性，它在单目HyperNeRF数据集和多视点Plenoptic数据集上均超越了先前的方法 \cite{lin2024gaussianflow_cvpr}。此外，其点云表示支持对静态和动态场景部分的分割、编辑和重组 \cite{lin2024gaussianflow_cvpr}，这对于影视后期制作具有重要意义。
+
+\section{局限性与正则化}
+
+虽然离散点表示加速了渲染，但也带来了空间不连续性的风险。如果每个点独立优化，可能会导致邻近的点向不同方向飞散，破坏物体的结构完整性。Gaussian-Flow 通过引入正则化项（Regularizations） 来缓解这一问题 \cite{lin2024gaussianflow_cvpr}：
+\begin{itemize}
+    \item 空间平滑正则化：强制邻近的高斯点具有相似的运动轨迹系数。
+    \item 时间平滑正则化：惩罚变形函数的高阶导数，防止非自然的抖动。
+\end{itemize}

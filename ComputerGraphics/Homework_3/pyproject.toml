@@ -1,0 +1,11 @@
+[project]
+name = "homework1"
+version = "0.1.0"
+description = "A 2D graphics drawing system with interactive GUI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pillow>=10.0.0",
+    "pyinstaller>=6.16.0",
+    "tkinter-tooltip>=3.0.0",
+]

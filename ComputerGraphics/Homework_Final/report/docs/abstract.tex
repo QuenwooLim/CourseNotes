@@ -1,0 +1,21 @@
+%%
+% 摘要信息
+% 本文档中前缀"c-"代表中文版字段, 前缀"e-"代表英文版字段
+% 摘要内容应概括地反映出本论文的主要内容，主要说明本论文的研究目的、内容、方法、成果和结论。要突出本论文的创造性成果或新见解，不要与引言相 混淆。语言力求精练、准确，以 300—500 字为宜。
+% 在摘要的下方另起一行，注明本文的关键词（3—5 个）。关键词是供检索用的主题词条，应采用能覆盖论文主要内容的通用技术词条(参照相应的技术术语 标准)。按词条的外延层次排列（外延大的排在前面）。摘要与关键词应在同一页。
+% modifier: 黄俊杰(huangjj27, 349373001dc@gmail.com)
+% update date: 2017-04-15
+%%
+
+\cabstract{
+    随着元宇宙、数字孪生和VR/AR等应用的兴起, 同时具备高保真视觉重建与物理一致性仿真的统一三维表示成为计算机图形学与计算机视觉交叉领域的重要课题。近年来兴起的3D高斯泼溅(3D Gaussian Splatting, 3DGS)以离散各向异性高斯作为渲染基元, 在效率与质量之间取得了良好平衡, 为构建统一的“渲染-仿真”框架提供了新契机。本文围绕Gaussian-Flow、PhysGaussian和PhysDreamer三项代表性工作, 系统梳理了基于3DGS的动态4D重建与物理仿真研究进展。首先, 我们介绍Gaussian-Flow如何通过双域变形模型与自适应时间缩放, 在不依赖深度网络的前提下实现高效、紧凑的4D场景表示。其次, 我们分析PhysGaussian将3D高斯直接视为物质点法(MPM)中的物理粒子, 在统一管线中完成从连续介质力学到可微渲染的映射, 并通过内部填充与各向异性正则化获得稳定且多样的材质行为。然后, 我们讨论PhysDreamer如何利用视频生成模型蕴含的世界先验, 通过可微仿真与蒸馏优化反推物体的空间材质场, 从而赋予静态3D资产以感知合理的交互动态。最后, 文章从精度目标、驱动机制和计算代价等维度对三者进行综合对比, 展望物理基础模型与实时数字孪生等未来发展方向。
+}
+% 中文关键词(每个关键词之间用“，”分开,最后一个关键词不打标点符号。)
+\ckeywords{3D高斯泼溅，4D重建，物理仿真，Gaussian-Flow，PhysGaussian，PhysDreamer}
+
+\eabstract{
+    With the rapid growth of applications such as the metaverse, digital twins and VR/AR, it has become crucial to develop a unified 3D representation that can support both photorealistic rendering and physically consistent simulation. Recently, 3D Gaussian Splatting (3DGS) has emerged as an efficient explicit representation that models a scene as a set of anisotropic Gaussian primitives, striking a favorable balance between rendering quality and computational efficiency. Building on 3DGS, this thesis reviews recent progress on dynamic 4D reconstruction and physical simulation by focusing on three representative works: Gaussian-Flow, PhysGaussian and PhysDreamer. Gaussian-Flow replaces implicit neural fields with an explicit dual-domain deformation model, combining polynomial and Fourier bases together with adaptive timestamp scaling to achieve compact and fast 4D representations. PhysGaussian directly treats 3D Gaussians as physical particles in a Material Point Method (MPM) solver, unifying simulation and rendering through a consistent pipeline that updates Gaussian covariance and shading from continuum mechanics, while internal filling and anisotropic regularization enable stable and diverse material behaviors. PhysDreamer leverages priors from large-scale video generative models, and distills them via differentiable simulation and a score-distillation-like objective to infer spatially varying material fields, turning static 3D assets into interactable ones with perceptually plausible dynamics. Finally, we provide a comparative analysis of these methods in terms of accuracy objectives, driving mechanisms and computational cost, and outline future directions towards physical foundation models and real-time digital twins.
+}
+% 英文关键词(每个关键词之间用,分开, 最后一个关键词不打标点符号。)
+\ekeywords{3D Gaussian Splatting, 4D reconstruction, physical simulation, Gaussian-Flow, PhysGaussian, PhysDreamer}
+

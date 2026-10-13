@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>模型组件拾取测试 - 测试房子</title>
+  <style>
+    body { margin:0; overflow:hidden; font-family: Arial, sans-serif; }
+    #info { position:fixed; left:10px; top:10px; z-index:1000; background:rgba(0,0,0,0.6); color:#fff; padding:8px;border-radius:6px; }
+    #panel { position:fixed; right:10px; top:10px; z-index:1000; width:360px; max-height:80vh; overflow:auto; background:rgba(0,0,0,0.6); color:#fff; padding:10px; border-radius:6px; }
+    #panel h3 { margin:0 0 8px 0; font-size:14px }
+    .kv { font-size:13px; margin:4px 0; }
+    canvas { display:block; }
+    button { padding:6px 10px; margin-top:6px; }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="info">测试：加载“房子”模型后点击任意组件以查看定位信息。</div>
+  <div id="panel">
+    <h3>选中对象信息</h3>
+    <div id="no-selection">未选中任何对象，点击场景中的组件。</div>
+    <div id="infoBox" style="display:none;font-size:13px;"></div>
+    <button id="dumpBtn">在控制台打印详细信息</button>
+    <button id="listAllBtn">列出场景中的所有 Mesh 名称</button>
+    <button id="deleteBtn" style="background:#b83a3a;color:#fff;">删除选中对象</button>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x222233);
+
+    const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 1000);
+    camera.position.set(5, 5, 12);
+
+    const renderer = new THREE.WebGLRenderer({ antialias:true });
+    renderer.setSize(innerWidth, innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambient);
+    const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+    dir.position.set(5,10,7);
+    scene.add(dir);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0,1,0);
+    controls.update();
+
+    const grid = new THREE.GridHelper(40, 40, 0x444444, 0x222222);
+    scene.add(grid);
+
+    const loader = new FBXLoader();
+    const loadedModels = [];
+
+    // 加载单个"房子"模型（路径参照现有工程）
+    function loadHouse() {
+      const path = 'model/source/Modern House.fbx';
+      loader.load(path, (obj) => {
+        obj.name = '房子_test';
+        obj.traverse(c => { c.castShadow = true; c.receiveShadow = true; });
+        obj.scale.set(0.001,0.001,0.001);
+        scene.add(obj);
+        loadedModels.push(obj);
+        console.log('房子模型已加载:', obj);
+      }, (xhr) => {
+        // 进度
+      }, (err) => {
+        console.error('加载失败:', err);
+        alert('加载模型失败，请确认 model/source/Modern House.fbx 存在');
+      });
+    }
+
+    loadHouse();
+
+    // 射线拾取
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let selected = null;
+
+    window.addEventListener('click', (e) => {
+      if (e.target !== renderer.domElement) {
+        // 点击发生在 UI 上，允许
+      }
+      mouse.x = (e.clientX / innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+
+      // 收集所有 mesh
+      const list = [];
+      loadedModels.forEach(m => m.traverse(c => { if (c.isMesh) list.push(c); }));
+      if (list.length === 0) return;
+
+      const intersects = raycaster.intersectObjects(list, false);
+      if (intersects.length > 0) {
+        const mesh = intersects[0].object;
+        selectObject(mesh);
+      } else {
+        clearSelection();
+      }
+    }, false);
+
+    function selectObject(obj) {
+      selected = obj;
+      const infoBox = document.getElementById('infoBox');
+      const noSel = document.getElementById('no-selection');
+      noSel.style.display = 'none';
+      infoBox.style.display = 'block';
+
+      // 计算世界变换信息
+      const worldPos = new THREE.Vector3();
+      obj.getWorldPosition(worldPos);
+      const worldQuat = new THREE.Quaternion();
+      obj.getWorldQuaternion(worldQuat);
+      const worldEuler = new THREE.Euler().setFromQuaternion(worldQuat, 'XYZ');
+
+      const box = new THREE.Box3().setFromObject(obj);
+      const center = new THREE.Vector3();
+      const size = new THREE.Vector3();
+      box.getCenter(center); box.getSize(size);
+
+      infoBox.innerHTML = `
+        <div class="kv"><b>名称:</b> ${escapeHtml(obj.name || '(unnamed)')}</div>
+        <div class="kv"><b>UUID:</b> ${obj.uuid}</div>
+        <div class="kv"><b>类型:</b> ${obj.type}</div>
+        <div class="kv"><b>世界位置:</b> ${worldPos.x.toFixed(3)}, ${worldPos.y.toFixed(3)}, ${worldPos.z.toFixed(3)}</div>
+        <div class="kv"><b>世界旋转 (deg):</b> ${radToDeg(worldEuler.x).toFixed(2)}°, ${radToDeg(worldEuler.y).toFixed(2)}°, ${radToDeg(worldEuler.z).toFixed(2)}°</div>
+        <div class="kv"><b>四元数:</b> ${worldQuat.x.toFixed(4)}, ${worldQuat.y.toFixed(4)}, ${worldQuat.z.toFixed(4)}, ${worldQuat.w.toFixed(4)}</div>
+        <div class="kv"><b>包围盒中心:</b> ${center.x.toFixed(3)}, ${center.y.toFixed(3)}, ${center.z.toFixed(3)}</div>
+        <div class="kv"><b>包围盒尺寸:</b> ${size.x.toFixed(3)} × ${size.y.toFixed(3)} × ${size.z.toFixed(3)}</div>
+      `;
+
+      // 控制台也打印完整信息
+      console.log('=== Selected Object ===');
+      console.log(obj);
+      console.log('worldPos', worldPos);
+      console.log('worldQuat', worldQuat);
+      console.log('worldEuler', worldEuler);
+      console.log('box center', center, 'size', size);
+    }
+
+    function clearSelection() {
+      selected = null;
+      document.getElementById('no-selection').style.display = 'block';
+      document.getElementById('infoBox').style.display = 'none';
+      document.getElementById('infoBox').innerHTML = '';
+    }
+
+    document.getElementById('dumpBtn').addEventListener('click', () => {
+      if (!selected) { alert('未选中对象'); return; }
+      // 在控制台输出尽可能多的信息
+      const obj = selected;
+      const worldPos = new THREE.Vector3(); obj.getWorldPosition(worldPos);
+      const worldQuat = new THREE.Quaternion(); obj.getWorldQuaternion(worldQuat);
+      const box = new THREE.Box3().setFromObject(obj);
+      const center = new THREE.Vector3(); const size = new THREE.Vector3(); box.getCenter(center); box.getSize(size);
+      console.log('=== DUMP SELECTED ===');
+      console.log('name', obj.name, 'uuid', obj.uuid, 'type', obj.type);
+      console.log('worldPos', worldPos);
+      console.log('worldQuat', worldQuat);
+      console.log('box center', center, 'size', size);
+      alert('详细信息已打印到控制台');
+    });
+
+    document.getElementById('listAllBtn').addEventListener('click', () => {
+      const names = [];
+      loadedModels.forEach(m => m.traverse(c => { if (c.isMesh) names.push({name:c.name||'(unnamed)', uuid:c.uuid}); }));
+      console.table(names.slice(0,200));
+      alert('已将场景中前200个 Mesh 名称输出到控制台表格');
+    });
+
+    // 删除选中对象按钮
+    document.getElementById('deleteBtn').addEventListener('click', () => {
+      if (!selected) { alert('未选中对象'); return; }
+      const toRemove = selected;
+
+      // 从父节点移除
+      if (toRemove.parent) toRemove.parent.remove(toRemove);
+      else scene.remove(toRemove);
+
+      // 递归释放资源
+      function disposeRecursively(obj) {
+        obj.traverse(child => {
+          if (child.isMesh) {
+            try { if (child.geometry) child.geometry.dispose(); } catch (e) {}
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach(mat => {
+              if (!mat) return;
+              try { if (mat.map && mat.map.dispose) mat.map.dispose(); } catch (e) {}
+              try { if (mat.dispose) mat.dispose(); } catch (e) {}
+            });
+          }
+        });
+      }
+
+      disposeRecursively(toRemove);
+
+      // 如果被删除的是已加载的顶层模型，从 loadedModels 中移除
+      for (let i = loadedModels.length - 1; i >= 0; i--) {
+        if (loadedModels[i] === toRemove) {
+          loadedModels.splice(i, 1);
+          break;
+        }
+      }
+
+      clearSelection();
+      console.log('已删除选中对象:', toRemove.name || toRemove.uuid);
+      alert('已删除选中对象');
+    });
+
+    function radToDeg(v){ return v * 180 / Math.PI; }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]; }); }
+
+    // 渲染循环
+    window.addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); });
+    function animate(){ requestAnimationFrame(animate); renderer.render(scene, camera); }
+    animate();
+  </script>
+</body>
+</html>
