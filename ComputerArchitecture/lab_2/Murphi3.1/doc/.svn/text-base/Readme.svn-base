@@ -1,0 +1,71 @@
+===========================================================================
+This directory contains documents on how to use Murphi Release 3.1.
+
+A good place to start is the overview paper of Murphi (DDHY92.ps) and, of
+course, the user manual. We are currently working on a web tutorial for
+Murphi. Check our web page at
+  http://sprout.stanford.edu/dill/murphi.html
+to see if it is finished yet. Please consult the papers for background 
+information as needed.
+
+Convert.Note	: note on converting old Murphi programs into Version 2.x
+DDHY92.ps       : overview paper of Murphi
+ID93.ps         : symmetry paper 1
+ID93A.ps        : symmetry paper 2
+Readme		: this file
+SD95A.ps        : hash compaction paper 1
+SD96A.ps        : hash compaction paper 2
+User.manual	: user manual
+tutorial.ps     : a detailed case study using Murphi for exploring the com-
+                  position of two protocols
+
+Here the bibtex entries for the papers:
+
+DDHY92:
+@INPROCEEDINGS{Dil92,
+  AUTHOR = "D. L. Dill and A. J. Drexler and A. J. Hu and C. H. Yang",
+  TITLE  = "Protocol Verification as a Hardware Design Aid",
+  BOOKTITLE = "IEEE International Conference on Computer Design:
+               VLSI in Computers and Processors",
+  YEAR = "1992",
+  PAGES = "522--5" }
+
+ID93:
+@INPROCEEDINGS{Ip93,
+  AUTHOR = "C. N. Ip and D. L. Dill",
+  TITLE  = "Better Verification Through Symmetry",
+  BOOKTITLE = "11th International Conference on Computer
+               Hardware Description Languages and their Applications",
+  YEAR = "1993",
+  PAGES = "97--111" }
+
+ID93A:
+@INPROCEEDINGS{Ip93a,
+  AUTHOR = "C. N. Ip and D. L. Dill",
+  TITLE  = "Efficient Verification of Symmetric Concurrent Systems",
+  BOOKTITLE = "IEEE International Conference on Computer Design:
+               VLSI in Computers and Processors",
+  YEAR = "1993",
+  PAGES = "230--234" }
+
+SD95A:
+@INPROCEEDINGS{Ste95b,
+  AUTHOR = "U. Stern and D. L. Dill",
+  TITLE  = "Improved Probabilistic Verification by Hash Compaction",
+  BOOKTITLE = "IFIP WG 10.5 Advanced Research Working Conference on
+               Correct Hardware Design and Verification Methods",
+  YEAR = "1995",
+  PAGES = "206--224" }
+
+SD96A:
+@INPROCEEDINGS{Ste96,
+  AUTHOR = "U. Stern and D. L. Dill",
+  TITLE  = "A New Scheme for Memory-Efficient Probabilistic Verification",
+  BOOKTITLE = "IFIP TC6/WG6.1 Joint International Conference on 
+               Formal Description Techniques for Distributed Systems and
+               Communication Protocols, and 
+               Protocol Specification, Testing, and Verification",
+  YEAR = "1996",
+  PAGES = "" }
+
+===========================================================================

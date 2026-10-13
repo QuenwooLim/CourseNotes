@@ -1,0 +1,32 @@
+===========================================================================
+Follow the following instructions to check if Murphi Release 3.0 is wor-
+king correctly on your system:
+
+Please send mail to "murphi@verify.stanford.edu" if there are any problems.
+
+1) If you do not find an executable of the Murphi Compiler (mu) for your 
+ machine in the bin directory, go to the src directory and follow the in-
+ structions in the Readme file to build the Murphi compiler for your sys-
+ tem.
+
+2) Check a large example without error:
+ - go to the ex/sci directory
+ - compile the sci protocol with "mu sci.m"
+ - edit the Makefile to select the correct C++ compiler for your machine
+ - build the verifier for the sci protocol with "make sci"
+ - run the verifier with "sci"
+ - the result should be "No error found", 18193 states and 60455 rules.
+
+3) Repeat the step 2), using the compiler options listed in the following. 
+ The results should be the same as above for all three tests.
+ - "mu -b sci.m"       uses bit-compacted states
+ - "mu -c sci.m"       uses hash compaction
+ - "mu -b -c sci.m"    combination of the above
+
+4) Check a large example with error:
+ - compile the scierr protocol with "mu -c scierr.m"
+ - build the verifier with "make scierr"
+ - run the verifier with "scierr -d. > out"
+ - the output of the verifier should be the same as the one stored in the
+  file "scierr.out". Use "diff scierr.out out".
+===========================================================================

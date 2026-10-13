@@ -1,0 +1,125 @@
+	        Murphi Hacker's Manual II (C++ Verifier)
+
+		            Release 3.1
+
+		    Ralph Melton and C. Norris Ip
+			     Feb 1995
+
+
+Contents:  1. C++ Verification in General
+	   2. Variables and the Variable Hierarchy.
+ 	   Appendix A. Catalog of Include Files for the Verifier.
+	   Appendix B. Hints and Tips.
+
+All of this manual assumes familiarity with Murphi as presented in
+the User's Manual.
+
+1.  C++ Verification in General:
+
+The C++ source for a Murphi verifier is separated into three groups:
+    a) mu_prolog.inc and the files it includes.
+    b) mu_epilog.inc and the files it includes.
+    c) the generated program.C.
+
+The mu_prolog.inc group is essentially .h files for verifiers.
+It supplies declarations and definitions that may be needed by the
+generated code, such as the mu__int class, the error handler,
+and the declaration of the options class.
+
+The mu_epilog.inc group is the skeleton for Murphi verifiers.  It
+handles the search (breadth-first or depth-first) and the
+verification.  It requires these things to be provided it by the
+generated code:
+
+    a) Class definitions for every type declared in the program.
+    b) The "theworld" object which handles state packing and printing,
+       among other things.
+    c) The rule arrays "rules", "startstates", and "invariants".
+    d) The constants "numrules", "numstartstates", and "numinvariants".
+    e) BITS_IN_WORLD #defined as the number of bits in the state.
+    f) RULES_IN_WORLD #defined as the number of rules in the description.
+
+2.  Variables and the Variable Hierarchy:
+
+Murphi verifiers use classes and overloaded operators to get a
+significant amount of runtime error checking without sacrificing
+the readability of generated code.
+
+Firstly, every variable and component of a variable knows its own
+name.  Therefore, it can report its name in errors, and traces.
+
+Perhaps what's more important, though, is the variable hierarchy.
+In this scheme, there are simple types, which are subclasses
+of mu__int, and compound types, which are records and arrays of
+other variables.
+
+Variables of simple type know several things: their name, their
+offset in the state, the range of values that can be assigned
+to them, etc.  They have several methods, such as clear() for
+the CLEAR statement, print() and print_diff() for printouts,
+and to_state() and from_state() for handling state manipulations.
+
+Compound variables handle all these methods by passing them
+off to their components.  Thus, an array's from_state routine
+will simply call from_state() for each of its component variables.
+Similarly, a record's from_state() routine will call from_state()
+for each of its member variables, and so the message will get
+passed down to each of the simple variables in the state.
+
+The theworld object is very similar to a record of all the
+global variables; like a record, it is mainly a message dispatcher.
+
+This variable hierarchy has proven to be an extremely elegant,
+maintainable, and robust mechanism.  It has made it comparatively
+easy to add new features.  If you are attempting to add a feature
+that can be expressed for each variable as a property of that
+variable and its contents, I strongly recommend that you use this
+mechanism if possible.
+
+
+Appendix A. Catalog of Include Files for the Verifier:
+
+mu_epilog.inc  : Main include file, included at the end of the
+                 compiled program.  This file calls most of the *.C files.
+mu_io.C	       : Code related to I/O.
+mu_io.h	       : Header for code related to I/O.
+mu_live.C      : Code related to checking of liveness properties.
+mu_prolog.inc  : Main include file, included at the begining of the
+	         compiled program.  This file calls most of the *.h files.
+mu_state.C     : Code related to states in the state graph. 
+mu_state.h     : Header for code related to states in the state graph.
+mu_sym.C       : Code related to symmetry reduction.
+mu_sym.h       : Header for code related to symmetry reduction.
+mu_util.C      : Code related to other utilities.
+mu_util.h      : Header for code related to other utilities.
+mu_util_dep.h  : Header for code related to other utilities,
+	         dependent to constant declared in the compiled program.
+mu_verifier.C  : Code related to the verification algorithms.
+mu_verifier.h  : Header for code related to the verification algorithms.
+    
+Appendix B. Hints and Tips:
+    
+ This is a list of one-liners to remember in modifying Murphi.
+ 
+ 1. Flush cout before using printf and vice versa.
+ 
+ 2. Don't trust cfront to handle complex initializations of global variables.
+ 
+ 3. Don't trust cfront with functions defined within the class declaration.
+ 
+ 4. Never free up memory in the compiler.  You don't need to.
+ 
+ 5. Use M-C-\ in emacs with c++-mode to check the generated code.
+ 
+ 6. Make sure you pop exactly as many scopes as you push.
+ 
+ 7. Introduce a new scope with {} whenever you might get name conflicts.
+ 
+ 8. Supply an initializer to every variable declaration.
+ 
+ 9. Understand the difference between the class hierarchy, the syntax
+    tree, and the variable hierarchy.
+ 
+ 10. Use the variable hierarchy whenever possible.
+    
+    

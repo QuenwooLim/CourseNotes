@@ -1,0 +1,242 @@
+    	          Murphi Hacker's Manual I (Compiler)
+
+		           Release 3.1 
+
+		    Ralph Melton and David L. Dill
+		      (Updated by C. Norris Ip)
+			    Feb 1995
+
+
+Contents:  1. The Compiler in General
+	   2. The Parser
+           3. The Code Generator
+	   4. Class Hierarchy of the Compiler
+	   Appendix A. Catalog of files for Murphi Compiler.
+	   Appendix B. Hints and tips
+
+
+All of this manual assumes familiarity with Murphi as presented in
+the User's Manual.
+
+1. The Compiler in General:
+
+The class hierarchy for the compiler consists more or less of a class
+for each nonterminal in the BNF, plus some other support classes (a
+symbol table, etc.).  I've mostly used the following rules of thumb
+are useful in translating BNF into a class hierarchy:
+
+    <foo> ::= <bar> | <baz>
+    	bar and baz are subclasses of foo.
+
+    <foo> ::= ... <bar> ...
+    	bar and baz are member variables of foo.
+
+    <foo> ::= ... [ <bar> ] ...
+    	foo has a bar* member, which is NULL
+    	if the <bar> is not present.
+
+    <foo> ::= ... { <bar> } ...
+    	foo has a member which is a linked list of <bar>'s.
+    	A null list indicates no <bar>s.
+
+The compiler is sharply divided into a parser that determines an
+abstract syntax tree for the source program and a code generator that
+turns the abstract syntax tree into generated code.  The reason for
+this is twofold:
+
+  1) It allows for the introduction of global reprocessing of
+     the abstract syntax tree before compilation (although we
+     don't yet do any.)
+
+  2) It allows for a modularization of verification techniques,
+     because different code generators can easily be fitted in.
+
+
+2. The parser:
+
+The parser parses the program into an abstract syntax tree for
+the program.  This is not so very interesting--it uses yacc in
+fairly standard ways.  Our error-checking for illegal side effects
+of functions, et cetera, is perhaps a bit more rigorous than
+that of some compilers, but it's not really distinctive.
+
+The yacc source for the parser currently creates one shift/reduce
+conflict, when it's trying to decide whether an ID at the beginning
+of a simple rule constitutes a condition or the beginning of the
+body.  Because it prefers to shift instead of reduce, it does the
+right thing in this case.
+
+
+3. The code generator:
+
+To add a new back end to the Murphi compiler, do the following steps:
+
+    1) Copy no_code.C to be the name of your back end;
+       I'll call it foo_code.C
+    
+    2) Change the Makefile to use foo_code.o instead of cpp_code.o.
+
+    3) Fill in the blank generate_code() and generate_decl() functions
+       in foo_code.C.
+
+Each generate_code() member function outputs to stdout the code
+necessary to evaluate that thing, and returns a string with
+what is necessary to use it as a value.
+
+Some examples:
+
+    a) The statement "A := foo" sends this to stdout:
+    	mu_A = mu_foo;
+       And returns the null string.
+
+    b) The expression "A[i]" sends nothing to stdout and returns
+       the string "A[i]".
+
+    c) A more complicated example, the real motivation for this scheme:
+       The expression "FORALL i : 0..1 DO boolarray[i] END;"
+       sends something like the following to stdout, which is what is
+       required to compute the forall:
+
+             mu__forall_1 = TRUE;
+             {
+               for(i = 0; i <= 1; i++)
+                 {
+                   if ( !(boolarray[i]) )
+           	     {
+           	       mu__forall_1 = FALSE;
+           	       break;
+           	     }
+                 }
+             }
+
+       and then it returns "mu__forall_1", which is what\'s necessary to
+	   use the value of the forall.
+
+
+
+4. Class Hierarchy of the Compiler:
+
+Subclasses of classes are listed underneath, indented four spaces.
+Comments on the general nature of the class are prefixed with --.
+
+alias                       -- an alias record; not currently used.
+argclass                    -- an option handler.
+caselist                    -- a list of clauses for a switch statement.
+Error_handler               -- a general error handler.
+exprlist                    -- a linked list of expressions.
+lexid                       -- an entry in the lexer's name table.
+lextable                    -- the lexer's table of names and keywords.
+rulerec                     -- an intermediate record for rules.
+ste                         -- a symbol table entry.
+symboltable                 -- the symbol table.
+TNode                       -- Ancestor of all parsing classes.
+    decl                    -- things that can be declared
+        aliasdecl           -- declarations for aliases.
+        constdecl           -- constant declarations
+        quantdecl           -- quantifiers for rulesets, fors, and foralls.
+        procdecl            -- procedure definitions.
+            funcdecl        -- function definitions.
+        typedecl            -- various types.
+            arraytypedecl   -- arrays.
+            enumtypedecl    -- enumerated types.
+            recordtypedecl  -- record types.
+            subrangetypedecl-- subranges of integers.
+        vardecl             -- variable declarations
+            param           -- formal parameters to procedures and functions.
+            constparam      -- constant by-reference parameters
+            valparam        -- value parameters, not currently used.
+            varparam        -- by-reference paramters.
+    expr                    -- expressions.
+        arithexpr           -- + and -
+        boolexpr            -- & and |
+        compexpr            -- <, <=, >, >=
+        condexpr            -- ?:
+        designator          -- single items, mostly lvalues.
+        equalexpr           -- = and !=
+        funccall            -- a function call.
+        mulexpr             -- *, /, %
+        notexpr             -- !
+        quantexpr           -- forall and exists
+    rule                    -- rule, startstate, or invariant.
+        aliasrule           -- alias {aliases} : rules
+        invariant           -- an invariant property.
+        quantrule           -- a ruleset.
+        simplerule          -- a normal rule.
+        startstate          -- a startstate.
+    stmt                    -- a statement.
+        aliasstmt           -- alias {aliases} : stmts
+        assertstmt          -- assert a condition.
+        assignment          -- a := b.
+        clearstmt           -- set variables of simple type to their minima.
+        errorstmt           -- raise an error.
+        forstmt             -- a for statement.
+        ifstmt              -- an if statement.
+        proccall            -- a procedure call.
+        putstmt             -- print out values.
+        returnstmt          -- return a value from a function.
+        switchstmt          -- a C-like switch statement.
+        whilestmt           -- a while statement.
+YYSTYPE                     -- yacc's stack item.
+     
+
+Appendix A. Catalog of files for the Murphi Compiler:
+
+  cpp_code.C      All the code generation routines for the C++ verifier.
+  decl.C:         Implementation of constant, type, variable, procedure,
+                  and function declarations, etc.--basically, anything
+                  that might get entered into the symbol table.
+  decl.h:         Interface for declarations.
+  error.C:        An Error handler.
+  expr.C:         Implementation for expressions, which are basically
+                  everything you think of as expressions.
+  expr.h:         Interface for expressions.
+  lex.yy.c:       The code for the lexer, generated by flex.
+  lextable.C      A hash table used by the lexer to determine keywords.
+  lextable.h      Interface for the hashtable.
+  mu.C:           The main program and some global/miscellaneous things.
+  mu.grammar:     The yacc grammar for Murphi, without any actions.
+  mu.h:           Global/miscellaneous declarations. #includes all other
+                  .h files.
+  mu.l:           The lex (flex, actually) source for the lexer.
+  mu.y            The yacc (Berkeley yacc, actually) source for the parser.
+  mu_epilog.inc   The body of the generated verifier.
+  mu_prolog.inc   Declarations for the generated code to use.
+  no_code.C       An empty code.C, to facilitate writing back ends.
+  parse.C         A few miscellaneous parsing routines.
+  rule.C          Implementation for rules, startstates, and invariants.
+  rule.h          Interface for the same.
+  stmt.C          Implementation for statements, which are basically
+                  the same things as in Pascal.
+  stmt.h          Interface for statements.
+  symtab.C:       A symbol table.
+  util.C          A few miscellaneous functions.
+  y.output,
+  y.tab.c, and    The parser generated by Berkeley yacc.
+  y.tab.h
+
+
+
+Appendix B. Hints and tips:
+
+  This is a list of one-liners to remember in modifying Murphi.
+  
+  1. Flush cout before using printf and vice versa.
+  
+  2. Don't trust cfront to handle complex initializations of global variables.
+  
+  3. Don't trust cfront with functions defined within the class declaration.
+  
+  4. Never free up memory in the compiler.  You don't need to.
+  
+  5. Use M-C-\ in emacs with c++-mode to check the generated code.
+  
+  6. Make sure you pop exactly as many scopes as you push.
+  
+  7. Introduce a new scope with {} whenever you might get name conflicts.
+  
+  8. Supply an initializer to every variable declaration.
+  
+  9. Understand the difference between the class hierarchy, the syntax
+  tree, and the variable hierarchy.
+  
+  10. Use the variable hierarchy whenever possible.

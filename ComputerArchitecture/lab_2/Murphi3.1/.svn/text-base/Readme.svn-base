@@ -1,0 +1,133 @@
+===========================================================================
+
+Murphi Release 3.1
+Finite-state Concurrent System Verifier.
+
+Copyright (C) 1992 - 1999 by the Board of Trustees of 
+Leland Stanford Junior University.
+
+Responsible for this release: Ulrich Stern (uli@verify.stanford.edu)
+
+===========================================================================
+
+
+1. Introduction
+
+Murphi is an explicit state protocol verifier that consists of 
+* the Murphi Compiler, which translates the Murphi source file describing
+ a protocol into C++, and
+* the Murphi Verifier, which is a collection of C++ include files and
+ contains the core state enumeration algorithms.
+
+The Murphi Release 3.1 includes the following methods for reducing memory 
+and runtime requirements during the state enumeration:
+- symmetry and multiset reduction
+- hash compaction
+- improvements for security protocols
+
+The improvements for security protocols constitute the main difference between 
+this Release 3.1 and the previous Release 3.0.
+
+
+2. Getting Started Quickly
+
+If there is no executable of the Murphi Compiler (mu) for your machine
+in the bin directory, you have to create one yourself. Please go to the 
+src directory and follow the instructions in the Readme file. If there 
+are problems, please read the Notes on Portability below.
+
+IMPORTANT
+To check if Murphi is working correctly on your system, please go to
+the ex/sci directory and follow the instructions in the file Murphi.Check. 
+This check is especially recommendable if you are not running Murphi in 
+one of the environments listed below. In addition, Murphi.Check shows some
+typical interactions with Murphi.
+
+
+3. Notes on Portability
+
+Both the Murphi Compiler and the Murphi Verifier should be pretty portable. 
+Please tailor the Makefiles in the source (src) and example (ex) directories 
+for your particular environment, if required. There are some hints as com-
+ments in these Makefiles.
+
+Tested environments:
+
+Computer               OS                   C++ Compiler
+----------------------------------------------------------------------
+SGI INDY               IRIX 5.3             g++ 2.6.3, OCC 3.2.1 and 
+                                             DCC 4.0
+Sun SPARC20            SunOS 4.1.3_U1       g++ 2.6.0
+Sun SPARC20            SunOS 4.1.4          g++ 2.7.2 and CC 3.x
+Sun SPARC20            SunOS 5.4            g++ 2.7.2
+Sun SPARCserver-1000   SunOS 5.5            CC 4.1
+HP  9000/770           HP-UX 10.10          HP C++ 10.09
+Intel (PC)             Linux 1.3.48         g++ 2.7.0
+Intel (PC)             Linux 2.0.27         g++ 2.8.1
+Intel (PC)             Linux 2.0.34         egcs-1.0.2
+Intel (PC)             Linux 2.0.36         egcs-1.0.3
+
+
+4. Improvements for Security Protocols
+
+[This section assumes some knowledge of Murphi.]
+
+To use the improvements for security protocols, priorities have to be
+added to the transition rules (immediately after the 'rule' keyword), 
+and the intruder has to always intercept messages, instead of having 
+the choice between overhearing and intercepting.
+
+The improvements are sound if, e.g., the following priorities are assigned
+to the rules:
+  20: honest participants
+  10: intruder intercepts message
+  90: intruder (generates and) sends message
+ (Larger numbers denote lower priorities.)
+
+See the ex/secur directory for an example protocol (Needham-Schroeder), 
+either with or without rule priorities. Note that the protocol has to be
+verified with 'ns -ndl' to avoid deadlock checking.
+
+The improvements for security protocols are described in more detail in 
+the paper
+
+  V. Shmatikov and U. Stern.
+  Efficient Finite-State Analysis for Large Security Protocols.
+  11th IEEE Computer Security Foundations Workshop,
+  pages 106-15, 1998.
+
+which is available from
+
+  http://verify.Stanford.EDU/uli/publications.html  .
+
+
+5. Are You a New User?
+
+If you are a new Murphi user, please take a look at the Readme file in
+the doc directory. There, you will find some information about the avail-
+able documentation and recommendations on what to read first.
+
+Please see the license file for details of terms and conditions,
+and mail bug reports, questions, suggestions, etc. to
+
+        "murphi@verify.stanford.edu".
+
+If you are using Murphi, please register by sending mail to the same
+address saying who you are and as much as you like about what you are
+using it for.  We will add you to a mailing list for announcements
+of new releases, etc.
+
+
+===========================================================================
+This directory should contain the following:
+
+Bugfixes        : list of bugs fixed after first release date
+License	        : license file for details of terms and conditions
+Readme          : this file
+bin             : executables for the Murphi compiler
+doc             : documents on how to use Murphi
+ex              : examples written in the Murphi description language
+include		: include files for compilation of Murphi verifier
+src		: sources codes for the Murphi compiler
+
+===========================================================================

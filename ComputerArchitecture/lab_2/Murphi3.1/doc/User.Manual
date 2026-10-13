@@ -1,0 +1,1395 @@
+  		   Murphi Annotated Reference Manual
+
+	                       Release 3.1
+
+  	  	       Ralph Melton, David L. Dill
+	 	 Updated by C. Norris Ip and Ulrich Stern
+			        July 1996
+
+
+Contents:
+1.  Introduction
+    1.1  Whence "Murphi"?
+    1.2  Evolution of Murphi
+
+2.  Overview of Murphi 
+    2.1 Structure of a Murphi Description
+    2.2 Four simple steps to use Murphi to verify a system
+    2.3 Murphi Execution Model
+    2.4 Options of the Murphi Compiler
+    2.5 Using the Generated Special Purpose Verifier
+
+3.  Basic Concepts
+    3.1  BNF
+    3.2  Lexical Conventions
+    3.3  Program Structure
+
+4.  Declarations
+    4.1  Constant, type, and variable declarations.
+    4.2  Procedure and Function declarations.
+
+5.  Expressions
+
+6.  Statements
+
+7.  Rules, Startstates, and Invariants
+
+8.  Reduction Techniques
+    8.1 Symmetry and Multiset Reduction
+    8.2 Hash Compaction
+
+A.  Symmetry Reduction
+
+B.  Multiset Reduction
+
+
+1.  INTRODUCTION
+
+The Murphi Verification System consists of the Murphi Compiler and
+the Murphi description language.
+
+The Murphi Compiler generates a special purpose verifier from a Murphi
+description.  The special purpose verifier can be used to check 
+the properties of the system, such as error assertion, invariant and
+deadlock. 
+
+The Murphi description language is a high-level description language
+for finite-state asynchronous concurrent systems.  Murphi is
+high-level in the sense that many features found in common high-level
+programming languages such as Pascal or C are part of Murphi.  For
+example, Murphi has user-defined data types, procedures, and
+parameterization of descriptions.
+
+1.1  Whence "Murphi"
+
+The system used to be called "Trans", because descriptions consist of
+a collection of transition rules.  Aftering seeing 200 references to
+other systems called Trans, we decided to come up with a more unique
+name.
+
+We thought about calling the system Murphy, after one of
+Murphy's laws: 
+
+	"The bug is always in the case you didn't test",
+
+since the system can be considered an exhaustive tester.  In an
+attempt to enhance individuality, we decided to spell it "Murphi" and
+use the Greek letter to represent "phi" whenever the font was
+available.  This was probably inspired by Don Knuth's use of "chi"
+for the "X" in "TEX".
+
+1.2  Evolution of Murphi
+
+In the summer of 1990, we set out to verify some cache coherence
+protocols by two methods.  One method was to write the protocols as
+Boolean formulas and use methods based on Binary decision diagrams for
+verification.  The other was to program the protocol directly in C++,
+and embed it in a search procedure that explored all the states.  By
+the end of the summer, everyone concluded that it would be faster to
+develop a better description language and verification system and then
+verify the protocols than to continue with ad hoc approaches.
+
+We then designed a very limited form of Murphi (then called "Trans")
+that fall.  This design was driven largely by the desire to compile
+into Boolean formulas.  After modest experimentation, we decided to
+re-implement a somewhat less constrained version.  During the summer
+of 1991, several of us applied the system to some designs being
+developed by Dr. Andreas Nowatzyk at Sun Microsystems, with encouraging
+results.
+
+We changed the name to "Murphi" in the fall of 1991.  In the spring
+and summer of 1992, we re-designed Murphi based on our accumulated
+experience with the previous version, adding many convenience features
+such as reasonable loops, local variables, and recursive procedures.
+Ralph Melton re-implemented it almost entirely from scratch, with the
+explicit objective of making the implementation clean and easy to
+modify.
+
+
+2. Overview of Murphi
+
+2.1 Structure of a Murphi Description:
+
+A Murphi description consists of declarations of constants, types,
+global variables, and procedures; a collection of transition rules; a
+description of the initial states; and a set of invariants.
+
+The behavioral part of Murphi is a collection of transition rules.
+Each transition rule is an guarded command consists of a condition (a
+Boolean expression on the global variables) and an action (a statement
+that can modify the values of the variables).
+
+The condition and the action are both written in a Pascal-like
+language.  The action can be an arbitrarily complex statement
+containing loops and conditionals.  No matter how complex it is, the
+action is executed ATOMICALLY -- no other rule can change the
+variables or otherwise interfere with it while it is being executed.
+
+2.2 Four simple steps to use Murphi to verify a system:
+
+  a) Write a program in the Murphi Language, say pingpong.m.
+
+  b) Run the Murphi compiler over it, typically by typing:
+
+	$(murphipath)/mu pingpong.m
+
+     This yields a file pingpong.C.
+
+  c) Run the c++ compiler over pingpong.C, typically by typing:
+
+	$(g++path)/g++ pingpong.C -I$(includepath)
+
+     Remember to specify the path of all the include files.
+
+  d) Finally, you can run a simulation or a verification by
+     invoking a.out.  To see the list of switches, type
+
+	a.out -h
+
+In fact, the whole procedure can be further simplified using the Makefile
+provided in the Example directory "ex".  However, you have to set the
+variables CPLUSPLUS, MURPHIPATH and INCLUDEPATH appropriately.
+
+2.3 Murphi Execution Model:
+
+A Murphi state is an assignment of values to all of the global
+variables of the description.  
+
+An execution of the description can be generated by cycling infinitely
+through the following:
+
+Repeat forever:
+
+    a) Find all rules whose conditions are true in the current state.
+       (i.e. conditional expressions are true, given the current values
+       of the global variables).
+
+    b) Choose one arbitrarily and execute the action, yielding a new
+       state.
+
+Note that Murphi descriptions are nondeterministic, because of the
+arbitrary choice in step b.  The user has no control over how this
+choice is made, so a "correct" Murphi program must do the right thing
+no matter which rules are chosen.  However, once a rule has been
+chosen, the action is deterministic (there is a unique next state).
+
+This execution model is good for describing asynchronous systems
+(where different processes run at arbitrary speed) which interact
+via shared variables (process A affects process B by writing to
+a variable the process B reads).  Message passing can be modelled
+by reading from and writing to a buffer variable or array.
+
+The simulator in Murphi chooses among the rules arbitrarily to get
+the new state.  On the other hand, the verifier considers the results
+for ALL possible choices.  The current verifier does this by either a
+breadth-first search procedure or a depth-first search procedure, both
+of which stores states in a large hash table so that it can cut off
+the search when it encounters a state it has seen before.
+
+As states are generated by the verifier, various conditions are
+checked.  There can be run-time errors of various kinds, most notably
+out-of-bounds errors on assignments or array indexing.  There is are
+explicit "assert" and "error" statement that can be called within an
+action.  If one of these conditions occurs, the verifier halts and
+prints a diagnostic consisting of a reconstructed sequence of states
+that leads from the initial state to the error state.  The verifier
+also does this if one of the invariant expressions (given by the
+user as part of the description) is false for the current state,
+or if the current state is a "deadlock state" (has no successor
+states except itself).
+
+2.4 Options of the Murphi Compiler
+
+The Murphi Compiler has several command-line options:
+
+        -h            help
+        -l            print license
+        -b            use bit-compacted states
+        -c            use hash compaction.
+
+By default, Murphi aligns all state variables on byte boundaries.
+As a result, the state descriptor typically becomes 2-4 times 
+larger than a state descriptor in which every bit is used (bit-
+compacted, option "-b"). However, Murphi will run faster by approx-
+imately 25%.
+
+When using hash compaction (option "-c"), compressed values with
+typically 40 bits will be stored in the hash table instead of full 
+state descriptors. See Section 8.2 for more details. Hash compaction 
+can be combined with bit-compacted states to reduce the memory re-
+quirements for the queue of active states in which full state de-
+scriptors have to be used.
+
+2.5 Using the Generated Special Purpose Verifier
+
+The Murphi Compiler generates a special-purpose verifier for a
+particular Murphi description.  The list shown below are the
+command-line options for the special-purpose verifier:
+
+1) General:
+        -h            help.
+        -l            print license.
+
+2) Verification Strategy: (default: -v)
+        -s            simulate.
+        -v or -vbfs   verify with breadth-first search.
+        -vdfs         verify with depth-first search.
+        -ndl          do not check for deadlock.
+
+3) Others Options: (default: -m8, -p3, -loop1000)
+        -m<n>         amount of memory for closed hash table in Mb.
+        -k<n>         same, but in Kb.
+        -loop<n>      allow loops to be executed at most n times.
+        -p            make simulation or verification verbose.
+        -p<n>         report progress every 10^n events, n in 1..5.
+        -pn           print no progress reports.
+        -pr           print out rule information.
+
+4) Error Trace Handling: (default: -tn)
+        -tv           write a violating trace (with default -td).
+        -td           write only state differences from the previous states.
+                      (in simulation mode, write only state differences in
+                       verbose mode.)
+        -tf           write full states in trace.
+                      (in simulation mode, write full states in verbose mode.)
+        -ta           write all generated states at least once.
+        -tn           write no trace (default).
+
+5) Reduction Technique: (default: -sym3 with -permlimit 10 and multiset
+                                  reduction)
+        -nosym        no symmetry reduction (multiset reduction still effective)
+        -nomultiset   no multiset reduction
+        -sym<n>       reduction by symmetry
+        -permlimit<n> max num of permutation checked in alg 3
+                      (for canonicalization, set it to zero)
+                      n | methods
+                      -----------------------------------
+                      1 | exhaustive canonicalize
+                      2 | heuristic fast canonicalization
+                          (can be slower or faster than alg 3 canonicalization)
+                          (use a lot of auxiliary memory for large scalarsets)
+                      3 | heuristic small mem canonicaliztion/normalization
+                          (depends on -permlimit)
+                      4 | heuristic fast normalization (alg 3 with -permlimit 1)
+
+6) Hash Compaction: (default: hash compaction with 40 bits)
+        -b<n>         number of bits to store.
+        -d dir        write trace info into file dir/sci.trace.
+
+The command line option "-s" turn the verifier into a a simulator for
+Murphi, which chooses among the rules arbitrarily. Without the option
+"-s", the verifier considers the results for ALL possible choices.
+The current verifier does this by either a breadth-first search
+procedure (used as default) or a depth-first search procedure (set by
+the "-vdfs" command line option)
+
+A large hash table is used to store the states that are reachable.
+The size of which is determined by the option "-m" and "-k".  The
+default size for the memory usage is 8 Mbytes.  The constant
+"gPercentActiveStates" in file "mu_prolog.inc" can be modified to
+change the capacity of the queue used in breadth-first-search or
+depth-first-search verification.
+
+See Chapter 8 for more details about the "Reduction Technique" and
+"Hash Compaction".
+
+
+3.  BASIC CONCEPTS
+
+3.1  Backus-Naur Form (BNF)
+
+The syntax is specified in this manual in a Backus-Naur Form:
+    <> denote nonterminals;
+    [] denote optional sections;
+    {} denote repetition zero or more times.
+    a | b denotes either a or b.
+    () denote grouping.
+
+When any of these symbols are required within the language, they
+are escaped with backslashes.
+
+3.2  Lexical Conventions
+
+The following are reserved words in Murphi:              
+
+    alias           array           assert          begin           
+    boolean         by              case            clear
+    const           do              else            elsif
+    end             endalias        endexists       endfor
+    endforall       endfunction     endif           endprocedure
+    endrecord       endrule         endruleset      endstartstate
+    endswitch       endwhile        enum            error
+    exists          false           for             forall
+    function        if              in              interleaved
+    invariant       of              procedure       process
+    program         put             record          return
+    rule            ruleset         startstate      switch
+    then            to              traceuntil      true
+    type            var             while
+
+Reserved words are written out in the BNF.
+Some of these reserved words do not yet have defined meanings;
+these are reserved for future expansion. Those words are
+in, interleaved, process, program, traceuntil.
+
+CASE-SENSITIVITY: Murphi is case-sensitive, except for the reserved
+words.  'foo' and 'Foo' represent different identifiers.  'Begin' and
+'BeGiN' represent the same keyword.
+
+SYNONYM: The keyword 'end' is a synonym for every specific type of
+end: 'end' may be used freely in place of 'endrule', 'endfor', 
+
+
+IDENTIFIERS: An identifier is any sequence of letters, underscores,
+and digits beginning with a letter.  All identifiers beginning with
+underscore are reserved for use by the system.  Identifiers are
+referred to in the BNF below as <ID>.
+
+STRINGS: A string, referred to in the BNF as <string> is a sequence of
+characters other than double quote (\") enclosed in double quotes.
+
+INTEGER CONSTANTS: Integer constants, <integer-constant> in the BNF,
+are specified in base 10.
+
+Comments: There are two types of comments in Murphi: Ada-style
+comments that begin with -- and end with a newline.  C-style comments
+that begin with /* and end with */. C-style comments do not nest.
+
+3.3  Program Structure
+
+A Murphi program has the following structure, with comments about
+each section set off by --:
+
+<Program> ::= { <decl> }	-- Constant, type, and variable declarations
+	      { <procdecl> }	-- Procedure and function declarations
+	      { <rules> }	-- rules, startstates, and invariants
+
+A Murphi program implicitly determines a state graph.  A state is an
+assignment of a value to each global variable.  The start states of
+the graph are defined by startstates in the <rules> section of the
+program.  The next state relation of the graph is defined by rules
+within the <rules> section of the program.
+
+
+4. DECLARATIONS
+
+4.1 Constant, type, and variable declarations
+
+Declarations have the following syntax:
+
+	<decl> ::=	const { <constdecl> ; }
+		 |	type { <typedecl> ; }
+		 |	var { <vardecl> ; }
+
+Constant declarations:
+
+	<constdecl> ::=	<ID> : <expr>
+
+The <expr> of a constant declaration must have a value that can be
+evaluated at compile time.
+
+Type declarations:
+
+	<typedecl> ::=	<ID> : <typeExpr>
+
+The special enumerated type "boolean" is predefined, along with the
+constants "true" and "false". The type integer is not predefined,
+because using general integers without restricting them to subranges
+would consume memory horribly.
+
+The simple types are booleans, enumerations, finite subranges of
+integers.
+
+The compound types are arrays of compound or simple types,
+records of compound or simple types.
+
+The index types of arrays must be simple types.
+	
+	<typeExpr> ::=	<ID>		-- a previously defined type.
+	<typeExpr> ::=	<expr> .. <expr>	-- Integer subrange.
+	<typeExpr> ::=	enum \{ <ID> {, <ID> } \} -- enumeration.
+	<typeExpr> ::=	record { <vardecl> } end
+	<typeExpr> ::=	array \[ <typeExpr> \] of <typeExpr>
+
+Variable declarations:
+
+	<vardecl>  ::=	<ID> { , <ID> } : <typeExpr>
+
+
+Example:  The following example illustrates declarations.
+
+   const 
+     I: 2;
+     J: 31415 * I / 9;                 -- J will be 6981
+
+   type
+     val_t: 0..99;                     -- simple types.
+     ind_t: 1..i;
+     enum_t: enum { x, y, z };
+     b: boolean;
+
+     r_t: record f:0..1; g: 0..2; end; -- Record.
+     rr_t: record r: r_t; s: r_t; end; -- Record of record.
+
+     a_t: array [ ind_t ] of 19..29;   -- 1-dimensional array.
+     aa_t: array [ ind_t ] of a_t;     -- 2-dimensional array.
+
+     ar_t: array [ 1..2 ] of r_t;      -- Array of record.
+     ra_t: record a1: a_t; foo: ind_t; end;     -- Record with array.
+
+     ae_t: array [ enum_t ] of enum_t; -- Array with enum index and range.
+     aae_t: array [ ind_t ] of ae_t;   -- 2-dim array, 2nd index is enum.
+     re_t: record f: enum_t; end;      -- Record of enum.
+
+   var
+     val : val_t;
+     arr : ae_t;
+     rec : record foo: ind_t; bar: boolean; end;
+    
+    
+4.2 Procedure and function declarations
+    
+All procedures and functions must be declared at the top level of the
+program, with the following syntax:
+
+	<procdecl> ::=	<procedure>
+	             | 	<function>
+
+	<procedure> ::=	procedure <ID> \( [ <formal> { ; <formal> } ] \) ;
+			[ { <decl> } begin ] [ <stmts> ] end;
+
+	<function> ::=	function <ID> \( [ <formal> { ; <formal> } ] \)
+			: <typeExpr>; 
+			[ { <decl> } begin ] [ <stmts> ] end;
+
+Unlike Pascal procedures, procedures and functions with no arguments
+still need the parentheses surrounding the empty parameter list.
+
+Functions must return a value with a return statement (q.v.) at some
+point in the function.  Functions can have side effects; however,
+there are restrictions on the use of functions with side effects.
+
+The format of the parameter list in a procedure or a function is:
+
+	<formal> ::=	[var] <ID> { , <ID> } : <typeExpr>
+	 
+Formal parameters declared "var" are passed by reference.  Formals
+that are not declared "var" are passed by reference, but the function
+or procedure is not allowed to modify them.
+
+Formal parameter declarations and local declarations shadow declarations
+outside their scope.
+
+Example:  the following example illustrates procedures.
+
+	procedure Swap(var i, j: val_t);
+	var temp: val_t;
+	begin
+	  temp := i;
+	  i := j;
+	  j := temp;
+	end;
+	
+	function plustwo(input: val_t): val_t;
+	const two : 2;
+	begin
+	  return (input + two);
+	end;
+
+
+5.  EXPRESSIONS
+
+Type equivalence is by name.  Expressions of any integer subrange type
+are legal wherever an integer expression is legal (although it may
+generate a run-time error; see below about assignments).  Booleans
+are not type-compatible with integer expressions.
+
+It is an error to take the value of an variable that has not yet
+been assigned a value.  This error is detected at run time.
+(All run-time errors is detected by the verifier.)
+
+It is an error to use an out-of-bounds index for an array.  This
+too is detected at run time.
+
+Designators:
+
+	<designator> :=	<ID> { . <ID> | \[ <expr> \] }
+
+As usual, the form <designator>.<ID> refers to selecting a field
+of a record, and the form <designator> [<expr>] is for selecting
+an element of an array.
+
+Expressions:
+
+<expr> :=  \( expr \)
+	 | <designator>
+	 | <integer-constant>
+	 | <ID> \( <actuals> \)		-- a function call.
+	 | forall <quantifier> 
+	   do <expr> endforall		-- universal quantification.
+	 | exists <quantifier>
+	   do <expr> endexists		-- existential quantification.
+	 | <expr> + <expr>
+	 | <expr> - <expr>
+	 | <expr> * <expr>		-- multiplication.
+	 | <expr> / <expr>		-- integer division.
+	 | <expr> % <expr>		-- remainder.
+	 | ! <expr>			-- logical negation.
+	 | <expr> | <expr>		-- logical disjunction.
+	 | <expr> & <expr>		-- logical conjunction.
+	 | <expr> -> <expr>		-- logical implication.
+	 | <expr> < <expr>
+	 | <expr> <= <expr>
+	 | <expr> > <expr>
+	 | <expr> >= <expr>
+	 | <expr> = <expr>
+	 | <expr> != <expr>
+	 | <expr> ? <expr> : <expr>	-- C-style conditional expression.
+
+Operators:
+
+The priority of operators is as follows, with lowest-priority
+operators first and operators on the same line having equal priority:
+
+		?:			
+		->			
+		|			
+ 		&
+		!
+		< <= = != >= > 
+		+ -
+		* / %
+
+  a) '+', '-', '*', '/', '%', '<', '<=', '>=', and '>' are only
+     defined on integer operands.
+  b) '=' and '!=' are only defined on simple operands.
+  c) '!', '&', '!', and '->' are only defined on boolean operands.
+  d) For the '?:' operator, the test must be a boolean expression, and
+     the two alternatives must be of compatible type.
+  e) '+', '-', '*', '/', and '*' return an integer, the rest return
+      booleans, except for '?:'.
+
+'Forall' and 'Exists' Operators:
+
+See below, under the 'for' statement, for the specification of the
+<quantifier> used in quantified expressions, i.e. exist's and
+forall's.  For a quantified expression, the subexpression must
+be a boolean expression; it is evaluated once for each value of
+the quantifier.  A forall is true iff its expression is true
+for every value of the quantifier; an exists is true if its
+expression is true for some value of the quantifier.
+
+
+6.  STATEMENTS.
+
+The followings are the statements in Murphi:
+
+	<stmts> ::= <stmt> {; [<stmt>] }
+	
+	<stmt> ::= <assignment>         /* assignment */
+	         | <ifstmt>		/* if statement */
+		 | <switchstmt>		/* switch statement */
+		 | <forstmt>		/* for statement */
+		 | <whilestmt>		/* while statement */
+		 | <aliasstmt>		/* alias statement */
+		 | <proccall>		/* procedure call */
+		 | <clearstmt>		/* clear statement */
+		 | <errorstmt>		/* error assertion */
+		 | <assertstmt>		/* assertion */
+		 | <putstmt>		/* output statement */
+		 | <returnstmt>		/* function return */
+
+Assignment:
+
+	<assignment> ::= <designator> := <expression>
+
+The target and the expression must have compatible types, and the
+target must not be declared const.
+
+It is an error to assign a value to a variable that is outside the
+range for that variable.  This error is detected at run time.
+
+If statement:
+
+	<ifstmt> ::= if <expr> then [ <stmts> ]
+		        { elsif <expr> then [ <stmts> ] }
+			[ else [ <stmts> ] ]
+		     endif
+
+Each of the <expr>'s must be of boolean type.
+
+Switch statement:
+
+	<switchstmt> ::= switch <expr>
+			   { case <expr> {, expr} : [ <stmts> ] }
+			   [ else [ <stmts> ] ]
+			 endswitch
+
+Each of the expressions in the case must be a constant of a compatible
+type with the switch expression.  If no case expression is matched,
+the code labelled 'else' is executed.
+
+There is no fall through on cases.
+
+For statement:
+
+	<forstmt> ::= for <quantifier> do [stmts] endfor
+
+Quantifiers apply to for statements, to quantified expressions, and to
+rulesets.
+
+	<quantifier> ::= <ID> : <typeExpr>
+		       | <ID> := <expr> to <expr> [ by <expr> ]
+
+The first form executes the body of the for statement or evaluates the
+body of the quantified expression, etc., for each value in the
+<typeExpr> (which must be a simple type), from least to greatest
+value.  The second form corresponds to the Modula-2 FOR statement.
+The two expressions must be of integer type, and the by expression
+must be a constant expression.
+
+Using a quantifier, in a for statement or a quantified expression,
+declares the <ID> of the quantifier local to the for statement,
+shadowing any external declarations.  It is illegal to modify the
+quantifier variable from within the body of the for loop.
+
+While statement:
+
+	<whilestmt> ::= while <expr> do [stmts] end
+
+An infinite loop is a runtime error.  Although this is decidable
+because a bound on the total number of states can be computed,
+infinite loops obviously pose a practical problem for the verifier.
+Right now, the verifier stops with an error message after 1000
+iterations as an default option (which may be changed by changing a
+constant in the file mu_prolog.inc).  The user may change this limit
+by a command-line argument.
+
+Alias statement:
+
+	<aliasstmt> ::= alias <alias> { ; <alias> } do [ <stmts> ] end
+
+	<alias> ::= <ID> : <expr>
+
+	<ID>'s declared in aliases shadow external declarations of the same ID.
+
+Aliases behave differently depending on whether the <expr> is or is
+not an lvalue.  If the <expr> is an lvalue, then <ID> is defined as
+the lvalue associated with that expression when the alias statement is
+entered.  If <expr> is not an lvalue, then <ID> gets the value
+associated with <expr> when the alias statement is entered, and <ID>
+may not be changed within the alias block.
+
+	Example:
+
+	    -- i = 2 beforehand; arr[2] = 1.
+	    alias
+	      foo : arr[i] 	-- foo gets identified with arr[2]
+	      bar : arr[i] + 1	-- bar gets identified with 2.
+	    do
+	      arr[i] := 3;	-- now, foo = 3, but bar = 2.
+	      i := 1;		-- foo is still bound to a[2].
+	      foo := 4;		-- arr[2] is now 4. bar = 2.
+	      bar := 2;		-- Illegal.
+	    end
+
+Procedure call:
+
+	<proccall> ::= <ID> \( <expr> {, <expr> } \)
+
+This obeys all the standard rules of procedures.  Const formal
+parameters can be passed an actual of any compatible type; var
+parameters must be passed an lvalue of the same type; a var parameter
+of a subrange type must be passed an lvalue of the same subrange type.
+
+Clear statement:
+
+	<clearstmt> ::= clear <designator>
+
+This sets all components of an lvalue to the minimum values of their
+type.  The minimum value of an enumerated type is considered to be the
+first value declared in the list of names. The minimum value of the
+type boolean is false.  
+
+NOTE: Clear is frequently used to set "uninteresting" variables to a
+fixed value; otherwise, many states would be created during
+verification with random values in these variables.  Use of clear for
+other purposes is not encouraged.  We are thinking about replacing
+this with an "undefine" operator that assigns a reserved undefined
+value, which would be safer.
+
+Error assertion:
+
+	<errorstmt> ::= error <string>
+
+An error statement generates a run-time error.  In the verifier, if an
+error statement is executed, verification terminates, the specified
+string is printed, and a failure trace is printed if requested.
+
+Assertion:
+
+	<assertstmt> ::= assert <expr> [ <string> ]
+
+	"assert <expr> <string>" is completely equivalent to 
+	"if !<expr> then error <string> end"
+
+Output statement:
+
+	<putstmt> ::= put ( <expr> | <string> )
+
+Prints out the indicated value, each time the statement is executed.
+This is handed straight to printf, so be careful to include a
+
+		  put "\n"
+
+after each line you want to print.
+
+Generally, this will cause a huge amount of stuff to be printed during
+verification (with much duplication).  We have used it for debugging,
+and for generating a file of all of the possible values of certain
+variables (which is then processed to eliminate duplicates).
+
+Function return:
+
+	<returnstmt> ::= return [ <expr> ]
+
+Exit the current procedure, function, rule, or startstate.  If exiting
+a function, the <expr> must be provided and must match the return type
+of the function; otherwise, there must be no return value.
+
+
+7. RULES, STARTSTATES, AND INVARIANTS
+
+The syntax for rules, startstates and invariants is as follows:
+
+	<rules> ::= <rule> {; <rule> } [;]
+	
+	<rule> ::= <simplerule>
+	         | <startstate>
+		 | <invariant>
+		 | <ruleset>
+		 | <aliasrule>
+	
+Simple rule:
+
+	<simplerule> ::= rule [<string>]
+			   [ <expr> ==> ]
+			   [ { <decl> } begin ]
+			   [ stmts ]
+			 end
+
+A simple rule determines a transition from one state of the
+nondeterministic finite automaton to another.
+
+A simple rule defines a transition between states.  Logically, it
+consists of a body, which is a set of statements to be executed, and a
+condition, a boolean expression characterizing the states under which
+the body may be executed.  If the condition is true in a state, then
+the body of the rule may be executed to provide a transition to
+another state.
+
+The condition of a rule is optional.  If no condition is specified, then
+the rule is assumed to always be enabled.
+
+It is an error to use an expression with side effects in a rule condition.
+
+The rule may declare local variables, constants and types, which are
+not part of the state.  If no variables are declared, the begin that
+starts the body may be omitted.  Unfortunately, if there is neither a
+condition nor local declarations, the parser often misparses the input.
+Therefore, rules without conditions should always have the bodies
+started with the reserved word begin.
+
+A rule with a condition can be equivalently expressed as a rule
+without a condition by the transformation
+
+	rule		   			rule
+	  <condition>				  <decls>
+	==>					begin
+	  <decls>		-->		  if <condition>
+	begin					    <body>
+	  <body>				  end
+	end					end
+
+Although they are functionally redundant, conditions have allowed
+speedups in verification by factors of three or four.
+
+It is an error if the program does not have at least one simple rule.
+
+Startstate:
+
+	<startstate> ::= startstate [ <string> ]
+		           [ { <decl> } begin ]
+			   [ <stmts> ]
+			 end
+
+A startstate is a special type of rule.  It is only executed at the
+beginning of an execution run.  Another way to phrase this is that
+every execution consists of executing one startstate, and then zero or
+more simple rules.
+
+A startstate must assign a value to every global variable, or it is
+a run-time error which will be caught by the verifier.
+
+It is an error if the program does not have at least one startstate.
+
+Invariant:
+
+	<invariant> ::= invariant [ <string> ] <expr>
+
+The form
+
+    invariant "foo"
+      <expr>
+
+is syntactic sugar for
+
+   rule
+     !<expr>
+   ==>
+     Error "Invariant violated: foo"
+   end
+
+Many programmers find it more natural to use an embedded specification
+style with assert and error statements than to use invariants for some
+conditions.  However, for properties that are conveniently expressed
+as invariants, it is generally more efficient to express them as
+invariants, because the compiler can then take advantage of the
+restricted properties of that invariant.
+
+It is an error to use an expression with side effects in an invariant.
+
+Ruleset:
+
+	<ruleset> ::= ruleset <quantifier>
+		      {; <quantifier> } do [<rules>] end
+
+A ruleset can be thought of as syntactic sugar for creating a copy
+of its component rules for every value of its quantifier.
+
+rule:
+
+	<aliasrule> ::= alias <alias> {; <alias> } do [<rules>] end
+
+An aliased rule creates aliases (see above under the alias
+statement) which can be used in all the component rules.
+
+
+8.  REDUCTION TECHNIQUES
+
+Murphi has two techniques to reduce the memory requirements during
+verification: symmetry and multiset reduction, and hash compaction.
+
+8.1 Symmetry and Multiset Reduction
+
+The basic idea of symmetry reduction is that for many protocol one 
+can use a reduced state graph for verification instead of the full 
+one. Consider, for example, a protocol that has two processors that 
+form a list. The state where processor A is the head of the list and B 
+is the tail is - for verification purposes - equivalent to the state 
+where B is the head and A is the tail. 
+
+Symmetry and multiset reduction are described in more detail in ap-
+pendix A and B, respectively. You might also want to look at the
+papers ID93.ps and ID93A.ps for more details on symmetry reduction.
+
+8.2 Hash Compaction
+
+When using hash compaction, compressed values are stored in the state 
+table instead of full state descriptors. The resulting memory savings
+come at the price of a certain probability that some states of the
+protocol will be omitted during verification. However, by choosing the
+number of bits for the compressed values, the user can control this
+probability and make it very small. Furthermore, if one re-runs the
+Murphi verifier, the omission probabilities from both runs can be
+multiplied, since Murphi picks independent compression functions for 
+each run.
+
+There are two different ways how one can use the hash compaction scheme:
+- If one wants to have a small bound (typically 0.1%) on the probability 
+ of even one omission, typically 40 bits should be used for the com-
+ pressed values.
+- However, if one is only concerned about the probability of "false 
+ positives", i.e. the verifier claiming an error-free protocol even
+ though it actually has errors, using only 20 bits is typically suf-
+ ficient. 
+The verifier reports the actual omission probabilities at the end of 
+the verification run. However, the probability of false positives (or 
+"even one undetected error") can only be reported when breadth-first 
+search is used. Increasing the number of bits by one roughly halves
+the reported probabilities.
+
+When using hash compaction together with breadth-first search the infor-
+mation needed to generate the error traces can be stored in a temporary 
+file ("protocol-name.trace"). The user has to specify the directory for 
+this file with the verifier option "-d dir" - otherwise the file will 
+not be created and no trace can be printed in the case of a protocol error. 
+The memory requirements for each state in this file are the compressed 
+value (rounded up to full bytes) plus another 4 bytes.
+
+Remember that you have to compile your protocol with "mu -c" to use
+hash compaction. The papers SD95A.ps and SD96A.ps contain more info
+on hash compaction. 
+
+
+A.  SYMMETRY REDUCTION
+
+		   Overview of Symmetry Extension
+		
+		           C. Norris Ip
+ 	                    March 1994
+
+Content:
+
+	1) Introduction
+	2) Specification of symmetry in Murphi 2.x
+		a) new datatype: scalarset
+		b) new datatype: scalarsetunion
+		c) extended datatypes: undefined value
+		d) new operation: undefine
+		e) new predicate: isundefine(...)
+		f) new predicate: ismember(...)
+	3) Verification using symmetry reduction
+	4) Underlying mechanism
+	5) Things to be aware of for maximium performance
+	6) Converting from Murphi 1.x with symmetry
+		a) Declaration
+		b) Clearing a scalarset/scalarsetunion
+		c) ismember(...) and isundefined(...)
+	7) Other Files and Directories
+
+
+1) Introduction:
+
+Symmetry can be used to reduce the amount of time and memory used
+in verification.  This document describes how you may take advantage
+of symmetry in a system to make verification more efficient.
+
+This document assumes the basic knowledge about Murphi 2.x
+
+
+2) Specification of symmetry in Murphi 2.x:
+
+a) new datatype: Scalarset
+
+The syntax is as follows:
+
+	typeExpr	: typeid 	/* An already defined type. */
+			| enumtype
+			| subrangetype
+			| recordtype
+			| arraytype
+	                | scalarsettype	/* scalarset */
+			...
+			;
+		
+	scalarsettype   : SCALARSET "(" expr ")" 
+
+You can replace any symmetrical subrange by a scalarset by specifying
+its size.  A subrange is symmetrical if all the operations
+involving this subrange do not depend on the ordering of the subrange
+elements.  For example,
+
+	i) the values are not used in any comparison operation
+	   except equality testing, 
+	ii) the values are not used in any arithmetic operation, 
+	iii) the result from the for loop with the subrange as index
+	     does not depend on the order of the iteration.
+
+The compiler will flag an error if you have operations involving a
+scalarset that break symmetry.  (Note that in the current
+implmentation, the for loop is not checked.)
+
+An example would be the processor id in a multiprocessor system.
+
+	Type
+		Proc: Scalarset(NumProc);
+	Var
+		Processor: Array [Proc] of processor_state;
+
+You cannot use any literal constant to refer to any particular
+value in the scalarset.  You can assign value to a scalarset 
+variable through the following means:
+
+	i) Forall n : Proc Do ... Endforall
+	ii) Exists n : Proc Do ... Endexists
+	iii) For n : Proc Do ... Endfor
+	iv) Ruleset n : Proc Do ... Endruleset
+	v) assignment from another scalarset variables
+
+Note that the "for" construct is a restricted version of the "for"
+construct for subrange.  The set of variables written in an iteration
+should be disjoint to the set of variables referenced in another
+iteration.  The net effect on the variables are therefore independent
+to the ordering of the execution of the iterations. There should be no
+return statement. 
+
+*** In the current implementation, the user is required ***
+*** to check this condition manually.                   ***
+
+b) new datatype: Union
+
+The syntax is as follows:
+
+	typeExpr	: typeid 	/* An already defined type. */
+			| enumtype
+			| subrangetype
+			| recordtype
+			| arraytype
+	                | scalarsettype	/* scalarset */
+	                | uniontype	/* scalarset */
+			...
+			;
+		
+	uniontype
+        	        : UNION "{" list "}"  
+	                ;
+
+	list            : list "," listelt
+	                | listelt "," listelt /* at least two elements */ 
+	                ; 
+
+	scalarsetlistelt 
+	                : ID  		/* scalarset/enum that has 
+					already been declared */
+			| enumtype
+
+This uniontype provides a short hand if we want to refer
+to a few scalarsets at the same time.  For example, in a multiprocessor
+system, we will have a set of Memory module and a set of processor.
+Then we may want to have channels between every two of them:
+
+	Type
+		Mem: Scalarset(NumMem);
+		Proc: Scalarset(NumProc);
+		Node: Union {Mem, Proc};
+	Var
+		Channel: Array [Node] of incoming_message;
+
+If we have only 1 Mem, we can use the following:
+
+	Type
+		Proc: Scalarset(NumProc);
+		Node: Union { enum {Mem} , Proc};
+	Var
+		Channel: Array [Node] of incoming_message;
+
+c) extended datatypes: undefined value
+
+All base datatype (enumtype, subrangetype, scalarsettype and
+uniontype) have been extended to have a undefined value.
+
+This is necessary for scalarsettype and uniontype, because
+we have to set the value to a undefined value if they are not used.
+(otherwise, the value will be considered in the symmetry consideration
+and generates states that are redundant.)
+
+This is also a good extension for other datatypes, because the verifier
+can now check that an intentionally undefined value is not used in 
+any calculation. (For more detailed explaination, take a look 
+at section 5.
+
+d) new operation: undefine
+
+The syntax is as follows:
+
+	undefinestmt	: UNDEFINE designator;
+
+You can set any variable to its respective undefined value using 
+"undefine".  If the variable is an aggregate datatype, all 
+elements will be set to the undefined value.
+
+e) new predicate: isundefined(...)
+
+The syntax is as follows:
+
+	expr	: ... 
+		| ISUNDEFINED '(' designator ')';
+
+You can check whether a variable is undefined using this predicate.
+"designator" must be a simple type (enum, subrange, scalarset or
+scalarsetunino).
+
+f) new predicate: ismember(...)
+
+The syntax is as follows:
+
+	expr 	: ...
+                | ISMEMBER '(' designator ',' typeExpr ')' ;
+
+You can check whether the value of a scalarsetunion variable belongs
+to a particular member of the union.  For example you may have:
+
+	Alias n: Message.from Do
+		Rule
+			Ismember(n,Proc)
+			==>
+			handle_message_from_processor()
+		Endrule;
+		Rule
+			Ismember(n,Home)
+			==> handle_message_from_memory()
+		Endrule;
+	Endalias;
+
+
+3) verification using symmetry reduction:
+
+Symmetry reduction is now automatically invoked if appropriate.
+You can suppress symmetry reduction by the online flag "-nosym".
+You can also change the symmetry reduction algorithm by the
+online flag "-sym<n>"
+where <n> is the algorithm number for the reduction algorithm.
+
+There are three algorithms provided:
+
+	i) Fast normalization (algorithm 1)
+	This algorithm handles the complexity of symmetry reduction
+	by an approximation.  Therefore, the time used to canonicalize
+	a state is much shorter, while maximium saving is not guaranteed.
+
+	ii) Simple straight-forward canonicalization (algorithm 2)
+	This algorithm is used in the papers memtioned at the
+	end of this document.  Most of the time it is slower than
+	the other algorithms.
+	
+	iii) Fast canonicalization (algorithm 3)
+	This algorithm considers the interrelation between scalarset
+	variables in the states and canonicalizes the state much faster
+	then algorithm 1,2)
+
+In summary, algorithm 1 is the default.  If it is taking too
+long and memory is not a concern, you should try algorithm 3.
+If algorithm 1 and 3 give funny error, you have probably discovered
+a bug in the new algorithm and you should use algorithm 2.
+
+
+4) Underlying Mechanism:
+
+The underlying mechanism for symmetry reduction is very simple.
+
+Whenever the standard search algorithm puts a state into the hash
+table, we convert it to the unique representative (or, in the case of
+normalization, a member in a subset) of the set of symmetry
+equivalent states.  Therefore, whenever we check whether 
+we have seen a state before, we are checking whether we have
+seen an equivalent state before.  If so, we don't do the redundant 
+work.
+
+For details, please take a look at "CHDL93.ps" and "ICCD93.ps".
+
+
+5) Things to be aware of for maximium performance:
+
+You should set variables to their undefined values, if their values
+do not affect the functionality of the protocol.
+
+This is always a good practise. Even if we don't have symmetry,
+we should set the irrelevent variable to the same value, otherwise
+we will have two different states which differ only in this irrelevent
+value.  By setting them to the same value, we have a state graph
+of a smaller size.
+
+Because we don't have access to a particular value in scalarset, we
+have to set it to a value outside the scalarset: the undefined value.
+
+On the other hand, the use of the undefined values
+actually caught some of the errors in the examples, which
+uses a field in a network message that has not been set by the
+sender!
+
+
+6) Converting from Murphi 1.x with symmetry
+
+a) Declaration
+
+The syntax for declaring scalarset/union is
+different, but the basic is the same.  You have to declare
+the individual scalarset first before you put them into a union.
+
+b) Clearing a scalarset/union
+
+You have to convert all Murphi 1.x "clear" operations on
+scalarset/union to Murphi 2.x "undefine" operations on
+scalarset/union.
+
+It is also advantageous to convert Murphi 1.x "clear" operations
+on other type to "undefine", if you mean that you will not use
+the value in the variable.  
+
+However, if your "clear" operations is just a short hand
+to set the variables to the base value, don't convet them to "undefine".
+
+c) ismember(...) and isundefined(...)
+
+you may also find these predicates useful in simplifying your
+program, or make it possible to model things that are impossible
+to express in Murphi 1.x symmetry version.
+
+
+7) Other Files and Directories:
+
+a) Please see "CHDL93.ps" and "ICCD93.ps" at the "doc" directory
+   for the papers on the use of symmetry, the behind theory of
+   symmetry reduction and the results from different examples.
+   Please note that the symmetry algorithm in this release 
+   has been redesigned and provide a much faster canonicalization
+   or normalization than the one in the papers.  Therefore,
+   time reduction is almost guaranteed.	
+
+
+B.  MULTISET REDUCTION
+
+		   Overview of Multiset Extension
+		
+		           C. Norris Ip
+ 	                     Feb 1995
+
+Content:
+
+	1) Introduction
+	2) Specification of symmetry in Murphi 2.x
+		a) new datatype: multiset
+	3) Verification using multiset reduction
+	4) Underlying mechanism
+
+
+1) Introduction:
+
+Symmetry can be used to reduce the amount of time and memory used in
+verification.  While scalarset (presented in "Symmetry.Extension")
+handles process symmetry and data symmetry very well, it does not
+handle temporary symmetry in unordered buffer in which elements are
+constantly being created and removed.  Multiset is used to handle such
+aspect of the system.
+
+Basically a multiset is very similar to an array indexed by a
+scalarset, except that the "multiset index" cannot be stored in any
+state variable and most of the local variables.  Such
+restriction actually allows us to achieve a larger reduction
+and to obtain a much faster canonicalization function.  For
+example, if we have an array of multiset:
+
+	OutgoingChannels:  Array [0..1] of Multiset [Max] of Messages;
+
+the two states
+
+1)	[ {msg1, msg2}, {msg1, msg2} ]
+2)	[ {msg1, msg2}, {msg2, msg1} ]
+
+are equivalent (since the entries of the two multisets
+are permuted independently.  However if we model it with scalarset:
+
+	indexes: scalarset [ Max ];
+	OutgoingChannels:  Array [0..1] of Array [indexes] of Messages;
+
+the two states
+
+1)	[ {msg1, msg2}, {msg1, msg2} ]
+2)	[ {msg1, msg2}, {msg2, msg1} ]
+
+will not be equivalent (since the index to the two array are of the same
+scalarset, they are permuted in the same way).
+
+This document describes how you may take advantage of multiset
+symmetry in a system to make verification more efficient.  You should
+also take a look at the examples in "ex/multiset+sym" to get a better
+idea on how to use multiset.
+
+This document assumes the basic knowledge about Murphi 2.x
+and scalarsets. 
+
+
+2) Specification of multiset in Murphi 2.x:
+
+a) new datatype: multiset
+
+The syntax is as follows:
+
+	typeExpr	: typeid 	/* An already defined type. */
+			| enumtype
+			| subrangetype
+			| recordtype
+			| arraytype
+	                | scalarsettype
+			| multisettype
+			...
+			;
+
+	multisettype	: MULTISET "[" expr "]" OF typeExpr
+
+You can replace any unorder buffer by a multiset, by specifying
+the type of its entries and the maximum number of entries in the buffer.
+
+The compiler will flag an error if you have operations involving a
+multiset that break symmetry. 
+
+An example would be the processor id in a multiprocessor system.
+
+	Type
+		message: Record
+			   Sender: pid;
+			   Receiver: pid;
+			   MessageType: msg_type;
+		         End
+	Var
+		Network: Multiset [ MaxEntries ] of message;
+
+You cannot use any literal constant to refer to any particular
+entry in the multiset. Assuming "net" is a multiset variable,
+and "msg" is a local variable representing a new entry:
+
+You can put in a new entry by:
+
+	statement
+	i) MultisetAdd( msg, net );
+
+You can select an entry in the multiset by the Choose construct
+(similar to "ruleset"):
+
+	Choose i:net Do
+	  Rule
+	    net[i].Sender = net[i].Receiver
+	  ==>
+	    ...
+	EndChoose
+
+You can also check the entries in the multiset by:
+
+	predicates
+	i) MultisetCount(i:net, net[i].Receiver = net[i].Sender)
+	   where "i" is a new local variable, 
+	   which count the number of elements satisfying the predicate
+
+You can remove the entries in the multiset by
+	
+	statement
+	i) MultisetRemove( i, net ) 
+	   where "i" is bounded by a choose construct,
+	   which remove the entry bounded by the choose construct.
+	ii) MultisetRemovePred( i:net,  net[i].Receiver = net[i].Sender
+	   where "i" is a new local variable, 
+	   which remove the entries satisfying the predicate.
+
+
+3) verification using multiset reduction:
+
+Multiset reduction is automatically invoked.  Due to the nature
+of mulisets, you cannot suppress multiset reduction. (You will
+get a very large state graph, since the same entry in a different
+position of the multiset array represents a different state without
+multiset reduction)
+
+
+4) Underlying Mechanism:
+
+The underlying mechanism for multiset reduction is very simple.
+
+Whenever the standard search algorithm puts a state into the hash
+table, we convert it to the unique representative (or, in the case of
+normalization, a member in a subset) of the set of symmetry
+equivalent states, by rearranging the entries of the multiset.
+Therefore, whenever we check whether 
+we have seen a state before, we are checking whether we have
+seen an equivalent state before.  If so, we don't do the redundant 
+work.

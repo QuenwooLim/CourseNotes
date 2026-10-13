@@ -1,0 +1,24 @@
+===========================================================================
+This directory contains examples in Murphi 3.0 for the SCI Cache Coherence 
+Protocol:
+
+Makefile	: make file to generate the verifier
+Murphi.Check    : instructions to check if Murphi is working correctly
+                  on your system
+Readme		: this file
+SD95.ps         : description of the verification of the SCI Cache Coher-
+                  ence Protocol
+sci.m           : typical set cache coherence protocol of the Scalable 
+                  Coherent Interface (SCI), IEEE Std 1596-1992
+scierr.m        : sci protocol with paramters exposing an error
+scierr.out      : error trace for the above error
+
+Here the bibtex entry for SD95.ps:
+@INPROCEEDINGS{Ste95a,
+  AUTHOR = "U. Stern and D. L. Dill",
+  TITLE  = "Automatic Verification of the {SCI} Cache Coherence Protocol",
+  BOOKTITLE = "IFIP WG 10.5 Advanced Research Working Conference on
+               Correct Hardware Design and Verification Methods",
+  YEAR = "1995",
+  PAGES = "21--34" }
+===========================================================================

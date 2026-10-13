@@ -1,0 +1,7 @@
+bin/*.*
+src/*.o
+src/no_code
+src/mu
+gauravu_ex/others/nackfree.C
+gauravu_ex/others/nackfree
+bin/mu.x86_64

@@ -1,0 +1,8 @@
+===========================================================================
+This directory contains security protocol examples in Murphi 3.1
+
+Makefile	: make file to generate the verifier
+Readme		: this file
+ns-old.m        : Needham-Schroeder (ns) protocol without rule priorities
+ns.m            : ns protocol with rule priorities
+===========================================================================

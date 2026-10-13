@@ -1,0 +1,27 @@
+===========================================================================
+This directory contains examples in Murphi 3.0 for
+
+	Examples that use symmetries in scalarset
+
+Please mail bug reports, questions, suggestions, etc. to:
+
+	"murphi@verify.stanford.edu".
+
+===========================================================================
+There are 6 files in this directory:
+
+Makefile	: make file to generate the C++ verifier
+Readme		: this file
+adash.m		: abstract Dash protocol
+		: ( normal data accesses and DMA accesses )
+adashbug.m	: abstract DAsh protocol with design bug
+cache3.m	: an industrial cache coherence protocol
+eadash.m	: elementary abstract Dash protocol
+		: ( normal data accesses only)
+ldash.m		: spinning lock Dash protocol
+list6.m		: a distributed list protocol with network modeled as array
+list6too.m	: a distributed list protocol with network modeled as scalarset
+mcslock1.m	: MCS distributed list-based queuing lock I
+mcslock2.m	: MCS distributed list-based queuing lock II
+n_peterson.m	: Peterson's algorithm (n processes)
+===========================================================================

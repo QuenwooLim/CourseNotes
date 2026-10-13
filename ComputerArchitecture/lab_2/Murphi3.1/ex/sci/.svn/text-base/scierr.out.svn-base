@@ -1,0 +1,390 @@
+This program should be regarded as a DEBUGGING aid, not as a 
+certifier of correctness.
+Call with the -l flag or read the license file for terms
+and conditions of use.
+Run this program with "-h" for the list of options.
+
+Bugs, questions, and comments should be directed to
+"murphi@verify.stanford.edu".
+
+Murphi compiler last modified date: Jan 29 1999
+Include files   last modified date: Jan 29 1999
+==========================================================================
+
+==========================================================================
+Murphi Release 3.1
+Finite-state Concurrent System Verifier.
+
+Copyright (C) 1992 - 1999 by the Board of Trustees of
+Leland Stanford Junior University.
+
+==========================================================================
+
+Protocol: scierr
+
+Algorithm:
+	Verification by breadth first search.
+	with symmetry algorithm 3 -- Heuristic Small Memory Normalization
+	with permutation trial limit 10.
+
+Memory usage:
+
+	* The size of each state is 968 bits (rounded up to 124 bytes).
+	* The memory allocated for the hash table and state queue is
+	  8 Mbytes.
+	  With states hash-compressed to 40 bits, the maximum size of
+	  the state space is 1481483 states.
+	   * Use option "-k" or "-m" to increase this, if necessary.
+	* Capacity in queue for breadth-first search: 148148 states.
+	   * Change the constant gPercentActiveStates in mu_prolog.inc
+	     to increase this, if necessary.
+
+The following is the error trace for the error:
+
+	Assertion failed: HeadDirtyToFlushed: POP_DIRTY false
+
+Startstate Startstate 0, d:Data_1 fired.
+cacheUsage:CU_GLOBAL
+proc[ProcId_1].exec.state.insType:I_NONE
+proc[ProcId_1].exec.state.insPhase:Undefined
+proc[ProcId_1].exec.state.cTPtr:Undefined
+proc[ProcId_1].exec.state.tStat:Undefined
+proc[ProcId_1].exec.state.fetchOption:Undefined
+proc[ProcId_1].exec.state.data:Undefined
+proc[ProcId_1].exec.state.subState.lB.cState:Undefined
+proc[ProcId_1].exec.state.subState.lB.firstTo:Undefined
+proc[ProcId_1].exec.state.subState.lB.firstEntrySub:Undefined
+proc[ProcId_1].exec.state.subState.lB.memId:Undefined
+proc[ProcId_1].exec.state.subState.lB.addrOffset:Undefined
+proc[ProcId_1].exec.state.subState.lC.cState:Undefined
+proc[ProcId_1].exec.state.toState.l0.secondEntry:Undefined
+proc[ProcId_1].exec.state.toState.l0.mState:Undefined
+proc[ProcId_1].exec.state.toState.l0.co:Undefined
+proc[ProcId_1].exec.state.toState.l1.firstEntrySub:Undefined
+proc[ProcId_1].exec.state.toState.l1.firstLoop:Undefined
+proc[ProcId_1].exec.state.toState.l1.cState:Undefined
+proc[ProcId_1].exec.state.toState.l2.firstEntrySub:Undefined
+proc[ProcId_1].exec.state.toState.l2.firstLoop:Undefined
+proc[ProcId_1].exec.state.toState.l2.cState:Undefined
+proc[ProcId_1].exec.state.toState.l2.nextId:Undefined
+proc[ProcId_1].exec.reqPacket.targetId:Undefined
+proc[ProcId_1].exec.reqPacket.cmd:Undefined
+proc[ProcId_1].exec.reqPacket.sourceId:Undefined
+proc[ProcId_1].exec.reqPacket.offset:Undefined
+proc[ProcId_1].exec.reqPacket.mopCop:Undefined
+proc[ProcId_1].exec.reqPacket.s:Undefined
+proc[ProcId_1].exec.reqPacket.eh:Undefined
+proc[ProcId_1].exec.reqPacket.data:Undefined
+proc[ProcId_1].exec.reqPacket.newId:Undefined
+proc[ProcId_1].exec.reqPacket.memId:Undefined
+proc[ProcId_1].exec.resPacket.cmd:Undefined
+proc[ProcId_1].exec.resPacket.cn:Undefined
+proc[ProcId_1].exec.resPacket.co:Undefined
+proc[ProcId_1].exec.resPacket.mCState:Undefined
+proc[ProcId_1].exec.resPacket.data:Undefined
+proc[ProcId_1].exec.resPacket.forwId:Undefined
+proc[ProcId_1].exec.resPacket.backId:Undefined
+proc[ProcId_1].cache.line[CacheLineId_1].cState:CS_INVALID
+proc[ProcId_1].cache.line[CacheLineId_1].forwId:Undefined
+proc[ProcId_1].cache.line[CacheLineId_1].backId:Undefined
+proc[ProcId_1].cache.line[CacheLineId_1].memId:Undefined
+proc[ProcId_1].cache.line[CacheLineId_1].addrOffset:Undefined
+proc[ProcId_1].cache.line[CacheLineId_1].data:Undefined
+proc[ProcId_2].exec.state.insType:I_NONE
+proc[ProcId_2].exec.state.insPhase:Undefined
+proc[ProcId_2].exec.state.cTPtr:Undefined
+proc[ProcId_2].exec.state.tStat:Undefined
+proc[ProcId_2].exec.state.fetchOption:Undefined
+proc[ProcId_2].exec.state.data:Undefined
+proc[ProcId_2].exec.state.subState.lB.cState:Undefined
+proc[ProcId_2].exec.state.subState.lB.firstTo:Undefined
+proc[ProcId_2].exec.state.subState.lB.firstEntrySub:Undefined
+proc[ProcId_2].exec.state.subState.lB.memId:Undefined
+proc[ProcId_2].exec.state.subState.lB.addrOffset:Undefined
+proc[ProcId_2].exec.state.subState.lC.cState:Undefined
+proc[ProcId_2].exec.state.toState.l0.secondEntry:Undefined
+proc[ProcId_2].exec.state.toState.l0.mState:Undefined
+proc[ProcId_2].exec.state.toState.l0.co:Undefined
+proc[ProcId_2].exec.state.toState.l1.firstEntrySub:Undefined
+proc[ProcId_2].exec.state.toState.l1.firstLoop:Undefined
+proc[ProcId_2].exec.state.toState.l1.cState:Undefined
+proc[ProcId_2].exec.state.toState.l2.firstEntrySub:Undefined
+proc[ProcId_2].exec.state.toState.l2.firstLoop:Undefined
+proc[ProcId_2].exec.state.toState.l2.cState:Undefined
+proc[ProcId_2].exec.state.toState.l2.nextId:Undefined
+proc[ProcId_2].exec.reqPacket.targetId:Undefined
+proc[ProcId_2].exec.reqPacket.cmd:Undefined
+proc[ProcId_2].exec.reqPacket.sourceId:Undefined
+proc[ProcId_2].exec.reqPacket.offset:Undefined
+proc[ProcId_2].exec.reqPacket.mopCop:Undefined
+proc[ProcId_2].exec.reqPacket.s:Undefined
+proc[ProcId_2].exec.reqPacket.eh:Undefined
+proc[ProcId_2].exec.reqPacket.data:Undefined
+proc[ProcId_2].exec.reqPacket.newId:Undefined
+proc[ProcId_2].exec.reqPacket.memId:Undefined
+proc[ProcId_2].exec.resPacket.cmd:Undefined
+proc[ProcId_2].exec.resPacket.cn:Undefined
+proc[ProcId_2].exec.resPacket.co:Undefined
+proc[ProcId_2].exec.resPacket.mCState:Undefined
+proc[ProcId_2].exec.resPacket.data:Undefined
+proc[ProcId_2].exec.resPacket.forwId:Undefined
+proc[ProcId_2].exec.resPacket.backId:Undefined
+proc[ProcId_2].cache.line[CacheLineId_1].cState:CS_INVALID
+proc[ProcId_2].cache.line[CacheLineId_1].forwId:Undefined
+proc[ProcId_2].cache.line[CacheLineId_1].backId:Undefined
+proc[ProcId_2].cache.line[CacheLineId_1].memId:Undefined
+proc[ProcId_2].cache.line[CacheLineId_1].addrOffset:Undefined
+proc[ProcId_2].cache.line[CacheLineId_1].data:Undefined
+memory[MemoryId_1].line[MemoryLineId_1].mState:MS_HOME
+memory[MemoryId_1].line[MemoryLineId_1].forwId:Undefined
+memory[MemoryId_1].line[MemoryLineId_1].data:Data_1
+----------
+
+Rule flush instruction, k:CacheLineId_1, o:MemoryLineId_1, m:MemoryId_1, i:ProcId_1 fired.
+proc[ProcId_1].exec.state.insType:I_FLUSH
+proc[ProcId_1].exec.state.insPhase:I_SETUP
+proc[ProcId_1].exec.state.cTPtr:CacheLineId_1
+proc[ProcId_1].exec.state.tStat:TS_NORM_CODE
+proc[ProcId_1].exec.state.subState.lB.cState:CS_INVALID
+proc[ProcId_1].exec.state.subState.lB.firstTo:false
+proc[ProcId_1].exec.state.subState.lB.firstEntrySub:false
+proc[ProcId_1].exec.state.toState.l0.secondEntry:true
+proc[ProcId_1].exec.reqPacket.targetId:MemoryId_1
+proc[ProcId_1].exec.reqPacket.cmd:SC_MREAD
+proc[ProcId_1].exec.reqPacket.sourceId:ProcId_1
+proc[ProcId_1].exec.reqPacket.offset:MemoryLineId_1
+proc[ProcId_1].exec.reqPacket.mopCop:MC_CACHE_DIRTY
+proc[ProcId_1].exec.reqPacket.s:true
+proc[ProcId_1].exec.reqPacket.eh:false
+proc[ProcId_1].cache.line[CacheLineId_1].cState:CS_PENDING
+proc[ProcId_1].cache.line[CacheLineId_1].memId:MemoryId_1
+proc[ProcId_1].cache.line[CacheLineId_1].addrOffset:MemoryLineId_1
+----------
+
+Rule store instruction, d:Data_1, k:CacheLineId_1, o:MemoryLineId_1, m:MemoryId_1, i:ProcId_2 fired.
+proc[ProcId_2].exec.state.insType:I_STORE
+proc[ProcId_2].exec.state.insPhase:I_SETUP
+proc[ProcId_2].exec.state.cTPtr:CacheLineId_1
+proc[ProcId_2].exec.state.tStat:TS_NORM_CODE
+proc[ProcId_2].exec.state.data:Data_1
+proc[ProcId_2].exec.state.subState.lB.cState:CS_INVALID
+proc[ProcId_2].exec.state.subState.lB.firstTo:false
+proc[ProcId_2].exec.state.subState.lB.firstEntrySub:false
+proc[ProcId_2].exec.state.toState.l0.secondEntry:true
+proc[ProcId_2].exec.reqPacket.targetId:MemoryId_1
+proc[ProcId_2].exec.reqPacket.cmd:SC_MREAD
+proc[ProcId_2].exec.reqPacket.sourceId:ProcId_2
+proc[ProcId_2].exec.reqPacket.offset:MemoryLineId_1
+proc[ProcId_2].exec.reqPacket.mopCop:MC_CACHE_DIRTY
+proc[ProcId_2].exec.reqPacket.s:true
+proc[ProcId_2].exec.reqPacket.eh:false
+proc[ProcId_2].cache.line[CacheLineId_1].cState:CS_PENDING
+proc[ProcId_2].cache.line[CacheLineId_1].memId:MemoryId_1
+proc[ProcId_2].cache.line[CacheLineId_1].addrOffset:MemoryLineId_1
+----------
+
+Rule memory behavior, j:ProcId_2, i:MemoryId_1 fired.
+proc[ProcId_2].exec.reqPacket.targetId:Undefined
+proc[ProcId_2].exec.reqPacket.cmd:Undefined
+proc[ProcId_2].exec.reqPacket.sourceId:Undefined
+proc[ProcId_2].exec.reqPacket.offset:Undefined
+proc[ProcId_2].exec.reqPacket.mopCop:Undefined
+proc[ProcId_2].exec.reqPacket.s:Undefined
+proc[ProcId_2].exec.reqPacket.eh:Undefined
+proc[ProcId_2].exec.resPacket.cmd:SC_RESP64
+proc[ProcId_2].exec.resPacket.cn:false
+proc[ProcId_2].exec.resPacket.co:true
+proc[ProcId_2].exec.resPacket.mCState:MS_HOME
+proc[ProcId_2].exec.resPacket.data:Data_1
+memory[MemoryId_1].line[MemoryLineId_1].mState:MS_GONE
+memory[MemoryId_1].line[MemoryLineId_1].forwId:ProcId_2
+----------
+
+Rule continue instructions, i:ProcId_2 fired.
+proc[ProcId_2].exec.state.insType:I_NONE
+proc[ProcId_2].exec.state.insPhase:Undefined
+proc[ProcId_2].exec.state.cTPtr:Undefined
+proc[ProcId_2].exec.state.tStat:Undefined
+proc[ProcId_2].exec.state.data:Undefined
+proc[ProcId_2].exec.state.subState.lB.cState:Undefined
+proc[ProcId_2].exec.state.subState.lB.firstTo:Undefined
+proc[ProcId_2].exec.state.subState.lB.firstEntrySub:Undefined
+proc[ProcId_2].exec.state.toState.l0.secondEntry:Undefined
+proc[ProcId_2].exec.resPacket.cmd:Undefined
+proc[ProcId_2].exec.resPacket.cn:Undefined
+proc[ProcId_2].exec.resPacket.co:Undefined
+proc[ProcId_2].exec.resPacket.mCState:Undefined
+proc[ProcId_2].exec.resPacket.data:Undefined
+proc[ProcId_2].cache.line[CacheLineId_1].cState:CS_ONLY_DIRTY
+proc[ProcId_2].cache.line[CacheLineId_1].data:Data_1
+----------
+
+Rule memory behavior, j:ProcId_1, i:MemoryId_1 fired.
+proc[ProcId_1].exec.reqPacket.targetId:Undefined
+proc[ProcId_1].exec.reqPacket.cmd:Undefined
+proc[ProcId_1].exec.reqPacket.sourceId:Undefined
+proc[ProcId_1].exec.reqPacket.offset:Undefined
+proc[ProcId_1].exec.reqPacket.mopCop:Undefined
+proc[ProcId_1].exec.reqPacket.s:Undefined
+proc[ProcId_1].exec.reqPacket.eh:Undefined
+proc[ProcId_1].exec.resPacket.cmd:SC_RESP00
+proc[ProcId_1].exec.resPacket.cn:false
+proc[ProcId_1].exec.resPacket.co:true
+proc[ProcId_1].exec.resPacket.mCState:MS_GONE
+proc[ProcId_1].exec.resPacket.forwId:ProcId_2
+memory[MemoryId_1].line[MemoryLineId_1].forwId:ProcId_1
+----------
+
+Rule continue instructions, i:ProcId_1 fired.
+proc[ProcId_1].exec.state.toState.l0.secondEntry:false
+proc[ProcId_1].exec.state.toState.l0.mState:MS_GONE
+proc[ProcId_1].exec.state.toState.l2.cState:CS_QUEUED_JUNK
+proc[ProcId_1].exec.reqPacket.targetId:ProcId_2
+proc[ProcId_1].exec.reqPacket.cmd:SC_CREAD
+proc[ProcId_1].exec.reqPacket.sourceId:ProcId_1
+proc[ProcId_1].exec.reqPacket.offset:MemoryLineId_1
+proc[ProcId_1].exec.reqPacket.mopCop:CC_COPY_VALID
+proc[ProcId_1].exec.reqPacket.s:true
+proc[ProcId_1].exec.reqPacket.eh:true
+proc[ProcId_1].exec.reqPacket.memId:MemoryId_1
+proc[ProcId_1].exec.resPacket.cmd:Undefined
+proc[ProcId_1].exec.resPacket.cn:Undefined
+proc[ProcId_1].exec.resPacket.co:Undefined
+proc[ProcId_1].exec.resPacket.mCState:Undefined
+proc[ProcId_1].exec.resPacket.forwId:Undefined
+proc[ProcId_1].cache.line[CacheLineId_1].cState:CS_QUEUED_JUNK
+proc[ProcId_1].cache.line[CacheLineId_1].forwId:ProcId_2
+----------
+
+Rule cache behavior, k:CacheLineId_1, j:ProcId_1, i:ProcId_2 fired.
+proc[ProcId_1].exec.reqPacket.targetId:Undefined
+proc[ProcId_1].exec.reqPacket.cmd:Undefined
+proc[ProcId_1].exec.reqPacket.sourceId:Undefined
+proc[ProcId_1].exec.reqPacket.offset:Undefined
+proc[ProcId_1].exec.reqPacket.mopCop:Undefined
+proc[ProcId_1].exec.reqPacket.s:Undefined
+proc[ProcId_1].exec.reqPacket.eh:Undefined
+proc[ProcId_1].exec.reqPacket.memId:Undefined
+proc[ProcId_1].exec.resPacket.cmd:SC_RESP64
+proc[ProcId_1].exec.resPacket.cn:false
+proc[ProcId_1].exec.resPacket.mCState:CS_ONLY_DIRTY
+proc[ProcId_1].exec.resPacket.data:Data_1
+proc[ProcId_2].cache.line[CacheLineId_1].cState:CS_TAIL_VALID
+proc[ProcId_2].cache.line[CacheLineId_1].backId:ProcId_1
+----------
+
+Rule continue instructions, i:ProcId_1 fired.
+The last state of the trace (in full) is:
+cacheUsage:CU_GLOBAL
+proc[ProcId_1].exec.state.insType:I_FLUSH
+proc[ProcId_1].exec.state.insPhase:I_CLEANUP
+proc[ProcId_1].exec.state.cTPtr:CacheLineId_1
+proc[ProcId_1].exec.state.tStat:TS_NORM_CODE
+proc[ProcId_1].exec.state.fetchOption:Undefined
+proc[ProcId_1].exec.state.data:Undefined
+proc[ProcId_1].exec.state.subState.lB.cState:CI_HD_FLUSH_IN
+proc[ProcId_1].exec.state.subState.lB.firstTo:Undefined
+proc[ProcId_1].exec.state.subState.lB.firstEntrySub:Undefined
+proc[ProcId_1].exec.state.subState.lB.memId:Undefined
+proc[ProcId_1].exec.state.subState.lB.addrOffset:Undefined
+proc[ProcId_1].exec.state.subState.lC.cState:Undefined
+proc[ProcId_1].exec.state.toState.l0.secondEntry:Undefined
+proc[ProcId_1].exec.state.toState.l0.mState:Undefined
+proc[ProcId_1].exec.state.toState.l0.co:Undefined
+proc[ProcId_1].exec.state.toState.l1.firstEntrySub:Undefined
+proc[ProcId_1].exec.state.toState.l1.firstLoop:Undefined
+proc[ProcId_1].exec.state.toState.l1.cState:Undefined
+proc[ProcId_1].exec.state.toState.l2.firstEntrySub:Undefined
+proc[ProcId_1].exec.state.toState.l2.firstLoop:Undefined
+proc[ProcId_1].exec.state.toState.l2.cState:Undefined
+proc[ProcId_1].exec.state.toState.l2.nextId:Undefined
+proc[ProcId_1].exec.reqPacket.targetId:Undefined
+proc[ProcId_1].exec.reqPacket.cmd:Undefined
+proc[ProcId_1].exec.reqPacket.sourceId:Undefined
+proc[ProcId_1].exec.reqPacket.offset:Undefined
+proc[ProcId_1].exec.reqPacket.mopCop:Undefined
+proc[ProcId_1].exec.reqPacket.s:Undefined
+proc[ProcId_1].exec.reqPacket.eh:Undefined
+proc[ProcId_1].exec.reqPacket.data:Undefined
+proc[ProcId_1].exec.reqPacket.newId:Undefined
+proc[ProcId_1].exec.reqPacket.memId:Undefined
+proc[ProcId_1].exec.resPacket.cmd:SC_RESP64
+proc[ProcId_1].exec.resPacket.cn:false
+proc[ProcId_1].exec.resPacket.co:Undefined
+proc[ProcId_1].exec.resPacket.mCState:CS_ONLY_DIRTY
+proc[ProcId_1].exec.resPacket.data:Data_1
+proc[ProcId_1].exec.resPacket.forwId:Undefined
+proc[ProcId_1].exec.resPacket.backId:Undefined
+proc[ProcId_1].cache.line[CacheLineId_1].cState:CI_HD_FLUSH_IN
+proc[ProcId_1].cache.line[CacheLineId_1].forwId:ProcId_2
+proc[ProcId_1].cache.line[CacheLineId_1].backId:Undefined
+proc[ProcId_1].cache.line[CacheLineId_1].memId:MemoryId_1
+proc[ProcId_1].cache.line[CacheLineId_1].addrOffset:MemoryLineId_1
+proc[ProcId_1].cache.line[CacheLineId_1].data:Data_1
+proc[ProcId_2].exec.state.insType:I_NONE
+proc[ProcId_2].exec.state.insPhase:Undefined
+proc[ProcId_2].exec.state.cTPtr:Undefined
+proc[ProcId_2].exec.state.tStat:Undefined
+proc[ProcId_2].exec.state.fetchOption:Undefined
+proc[ProcId_2].exec.state.data:Undefined
+proc[ProcId_2].exec.state.subState.lB.cState:Undefined
+proc[ProcId_2].exec.state.subState.lB.firstTo:Undefined
+proc[ProcId_2].exec.state.subState.lB.firstEntrySub:Undefined
+proc[ProcId_2].exec.state.subState.lB.memId:Undefined
+proc[ProcId_2].exec.state.subState.lB.addrOffset:Undefined
+proc[ProcId_2].exec.state.subState.lC.cState:Undefined
+proc[ProcId_2].exec.state.toState.l0.secondEntry:Undefined
+proc[ProcId_2].exec.state.toState.l0.mState:Undefined
+proc[ProcId_2].exec.state.toState.l0.co:Undefined
+proc[ProcId_2].exec.state.toState.l1.firstEntrySub:Undefined
+proc[ProcId_2].exec.state.toState.l1.firstLoop:Undefined
+proc[ProcId_2].exec.state.toState.l1.cState:Undefined
+proc[ProcId_2].exec.state.toState.l2.firstEntrySub:Undefined
+proc[ProcId_2].exec.state.toState.l2.firstLoop:Undefined
+proc[ProcId_2].exec.state.toState.l2.cState:Undefined
+proc[ProcId_2].exec.state.toState.l2.nextId:Undefined
+proc[ProcId_2].exec.reqPacket.targetId:Undefined
+proc[ProcId_2].exec.reqPacket.cmd:Undefined
+proc[ProcId_2].exec.reqPacket.sourceId:Undefined
+proc[ProcId_2].exec.reqPacket.offset:Undefined
+proc[ProcId_2].exec.reqPacket.mopCop:Undefined
+proc[ProcId_2].exec.reqPacket.s:Undefined
+proc[ProcId_2].exec.reqPacket.eh:Undefined
+proc[ProcId_2].exec.reqPacket.data:Undefined
+proc[ProcId_2].exec.reqPacket.newId:Undefined
+proc[ProcId_2].exec.reqPacket.memId:Undefined
+proc[ProcId_2].exec.resPacket.cmd:Undefined
+proc[ProcId_2].exec.resPacket.cn:Undefined
+proc[ProcId_2].exec.resPacket.co:Undefined
+proc[ProcId_2].exec.resPacket.mCState:Undefined
+proc[ProcId_2].exec.resPacket.data:Undefined
+proc[ProcId_2].exec.resPacket.forwId:Undefined
+proc[ProcId_2].exec.resPacket.backId:Undefined
+proc[ProcId_2].cache.line[CacheLineId_1].cState:CS_TAIL_VALID
+proc[ProcId_2].cache.line[CacheLineId_1].forwId:Undefined
+proc[ProcId_2].cache.line[CacheLineId_1].backId:ProcId_1
+proc[ProcId_2].cache.line[CacheLineId_1].memId:MemoryId_1
+proc[ProcId_2].cache.line[CacheLineId_1].addrOffset:MemoryLineId_1
+proc[ProcId_2].cache.line[CacheLineId_1].data:Data_1
+memory[MemoryId_1].line[MemoryLineId_1].mState:MS_GONE
+memory[MemoryId_1].line[MemoryLineId_1].forwId:ProcId_1
+memory[MemoryId_1].line[MemoryLineId_1].data:Data_1
+----------
+
+End of the error trace.
+
+==========================================================================
+
+Result:
+
+	Assertion failed: HeadDirtyToFlushed: POP_DIRTY false
+
+State Space Explored:
+
+	64 states, 116 rules fired in 0.27s.
+
+Analysis of State Space:
+
+	There are rules that are never fired.
+	If you are running with symmetry, this may be why.  Otherwise,
+	please run this program with "-pr" for the rules information.

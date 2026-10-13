@@ -1,0 +1,29 @@
+===========================================================================
+
+This file contains a list of bug fixes for Murphi Release 3.1 after
+the first release date. If you encounter any of the following problems,
+please try downloading Murphi again or just download the files that we 
+changed to fix the problems. Please report problems to
+
+  murphi@verify.stanford.edu
+
+problem:        Murphi Compiler reports error ("Internal: arraytypedecl::
+                getsize()") when alias is declared between ruleset and 
+                rule
+files changed:  src/rule.C
+date fixed:     3-22-99
+remark:         first discovered by Brian Winters from UBC
+                corrected by Vitaly Shmatikov
+
+problem:        Murphi Compiler and Verifier do not compile using newer
+                versions of g++ (e.g., 2.95)
+files changed:  in src/:     decl.h, rule.h, mu.h
+                in include/: mu_statecl.h, mu_verifier.h, mu_hash.C,
+                             mu_system.C
+date fixed:     11-3-99
+
+problem:        Murphi Compiler does not compile under Cygwin B20.1
+files changed:  src/decl.C
+date fixed:     1-12-00
+
+===========================================================================

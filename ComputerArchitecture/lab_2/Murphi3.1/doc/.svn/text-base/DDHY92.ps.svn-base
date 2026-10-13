@@ -1,0 +1,7499 @@
+%!PS-Adobe-1.0
+%%Title: dac.dvi
+%%Creator: dvi2ps
+%%EndComments
+%! 
+% The following defines procedures assumed and used by program "dvi2ps"
+%
+% $Header: /iswim/u1/uli/merge/cvsroot/murphi/doc/DDHY92.ps,v 1.1.1.1 1999/01/29 07:30:15 uli Exp $
+%
+% Original By:  Neal Holtz, Carleton University, Ottawa, Canada
+%		<holtz@cascade.carleton.cdn>
+%		<holtz%cascade.carleton.cdn@ubc.csnet>
+%		June, 1985
+% Seriously hacked by Van Jacobson, LBL
+%		<van@lbl-csam.arpa>
+% Modifications by Glenn Trewitt, Stanford
+%		<trewitt@miasma.stanford.edu>
+% (incorporated by Joe Pallas, Stanford <pallas@pescadero.stanford.edu>)
+
+% To convert this file into a downloaded file instead of a header
+% file, uncomment all of the lines beginning with %-%
+
+%-%0000000 			% Server loop exit password
+%-%serverdict begin exitserver
+%-%  systemdict /statusdict known
+%-%  {statusdict begin 9 0 3 setsccinteractive /waittimeout 300 def end}
+%-% if
+
+/TeXDict 200 dict def   % define a working dictionary
+TeXDict begin           % start using it.
+                        % units are in "dots" (Resolution/inch)
+
+%%%%%%%%%%%%%%%%%%%%% Page setup (user) options %%%%%%%%%%%%%%%%%%%%%%%%
+
+% dvi2ps will output coordinates in the TeX coordinate system:
+%	(0,0) is 1" down and in from top left, with y +ive downward
+%	1 unit/device-pixel
+% The default PostScript coordinate system is:
+%	(0,0) at bottom left, y +ive up, 72 units/inch
+
+%  The following code was extensively hacked over to make it more or less
+%  device independent, and to NOT use initgraphics and setmatrix, which make it
+%  difficult or impossible to include a PS file in another.  The general idea
+%  is that, for each page size, we create a transformation matrix "Mtrx" that
+%  can be concat-ed with the CTM (in @bop1).
+
+%  Dvi2ps is now responsible for emitting the following, but we also do it here
+%  for compatibility with older versions
+/Resolution 300 def		% units are in pixels
+
+%  We keep the current "normal" matrix here BEFORE we do the DVI transform
+%  for each page.  Updated at the beginning of each page; used by @special.
+/DefaultMatrix matrix def
+%  Transformations that should be applied to DefaultMatrix for specials are
+%  kept in SpecialMatrix (but translations are not required)
+/SpecialMatrix matrix def
+
+/Inch  {Resolution mul} def	% converts inches to number of pixels
+
+%  The page selection operators used to be called here.  Very wrong:
+%  On some printers (such as LaserWriter) these operators clear the
+%  framebuffer and initialize the graphics state.  If dvi2ps output is
+%  included in another PostScript document, or if a prolog/trailer is
+%  wrapped around it, things would be totally screwed -- the pre-existing
+%  image would be lost and the preset graphics state would be lost.
+%
+%  These operators (note, letter, legal) do different things on different
+%  printers -- the LaserWriter clears the frambuffer and does an
+%  initgraphics, while other printers merely choose a paper tray.
+%  
+%  Paper selection is properly done by a print manager (the spooler, in the
+%  case of UN*X), and should come at the start of the whole document.
+%
+%  Unfortunately, very few spoolers allow such control, and paper selection
+%  is intimately tied into document composition, so we do paper selection
+%  here, although it is rigged so that the operators are only invoked once,
+%  at the beginning of the document (in the @start procedure).
+
+/@letter { /PaperType /$letter def } def
+/@note { /PaperType /$note def } def
+/@landscape { /PaperType /$landscape def } def
+/@legal { /PaperType /$legal def } def
+/@11x17 { /PaperType /$11x17 def } def
+/@ledger { /PaperType /$ledger def } def
+
+/@manualfeed
+   { statusdict /manualfeed true put
+   } def
+
+
+/$letter {
+	72 Resolution div dup neg matrix scale	% set scaling to 1/pixel
+	/Mtrx exch def
+	Mtrx 4 72 put    Mtrx 5 720 put		%  origin to top-left
+	statusdict /letter known
+	{ statusdict /letter get exec }
+	{ statusdict /lettertray known
+		{ statusdict /lettertray get exec }
+		if
+	}
+	ifelse
+} def
+/$note {		% note is like letter, except it uses less VM
+	$letter					%  Use letter settings
+	statusdict /note known			%  then select note, if there
+	{ statusdict /note get exec }
+	if
+} def
+/$landscape {
+	$letter					%  use letter settings
+	72 Resolution div dup neg matrix scale	% set scaling to 1/pixel
+	90 rotate
+	/Mtrx exch def				%
+	Mtrx 4 72 put    Mtrx 5 -72 put		%  origin to top-left
+	%  Record the rotation for specials
+	[ 0 1 -1 0 0 0 ] SpecialMatrix SpecialMatrix concatmatrix pop
+} def
+/$legal {
+	72 Resolution div dup neg matrix scale	% set scaling to 1/pixel
+	/Mtrx exch def
+	Mtrx 4 72 put    Mtrx 5 936 put		%  origin to top-left
+	statusdict /legal known
+	{ statusdict /legal get exec }
+	{ statusdict /legaltray known
+		{ statusdict /legaltray get exec }
+		{ $letter }			%  fall back to letter
+		ifelse
+	}
+	ifelse
+} def
+/$ledger {
+	72 Resolution div dup neg matrix scale	% set scaling to 1/pixel
+	/Mtrx exch def
+	Mtrx 4 72 put    Mtrx 5 720 put		%  origin to top-left
+	statusdict /ledger known
+	{ statusdict /ledger get exec }
+	{ statusdict /ledgertray known
+		{ statusdict /ledgertray get exec }
+		if
+	}
+	ifelse
+} def
+/$11x17 {
+	72 Resolution div dup neg matrix scale	% set scaling to 1/pixel
+	/Mtrx exch def
+	Mtrx 4 72 put    Mtrx 5 1152 put	%  origin to top-left
+	statusdict /11x17 known
+	{ statusdict /11x17 get exec }
+	{ statusdict /11x17tray known
+		{ statusdict /11x17tray get exec }
+		if
+	}
+	ifelse
+} def
+
+
+% n @copies -   set number of copies
+/@copies
+   { /#copies exch def
+   } def
+
+%%%% Letter is the default type, but may be overridden by executing any
+%%%% other papertype request before @start.
+@letter
+
+%%%%%%%%%%%%%%%%%%%% Procedure Defintions %%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% id @newfont -		initialize a new font dictionary
+/@newfont
+  { /newname exch def
+    newname 7 dict def          % allocate new font dictionary
+    newname load begin
+        /FontType 3 def
+        /FontMatrix [1 0 0 -1 0 0] def
+        /FontBBox [0 0 1 1] def
+        /BitMaps 128 array def
+        /BuildChar {CharBuilder} def
+        /Encoding 128 array def
+        0 1 127 {Encoding exch /.undef put} for
+        end
+    newname newname load definefont pop
+  } def
+
+
+% the following is the only character builder we need.  it looks up the
+% char data in the BitMaps array, and paints the character if possible.
+% char data  -- a bitmap descriptor -- is an array of length 6, of 
+%          which the various slots are:
+
+/ch-image {ch-data 0 get} def   % the hex string image
+/ch-width {ch-data 1 get} def   % the number of pixels across
+/ch-height {ch-data 2 get} def  % the number of pixels tall
+/ch-xoff  {ch-data 3 get .1 sub} def   % number of pixels below origin
+/ch-yoff  {ch-data 4 get .1 sub} def   % number of pixels to left of origin
+/ch-tfmw  {ch-data 5 get} def   % spacing to next character
+
+% fontdict ch Charbuilder -     -- image one character
+/CharBuilder
+  { /ch-code exch def           % save the char code
+    /font-dict exch def         % and the font dict.
+    /ch-data font-dict /BitMaps get ch-code get def   % get the bitmap
+    ch-data null eq not {
+	ch-tfmw 0 ch-xoff neg ch-yoff neg
+	ch-width ch-xoff sub ch-height ch-yoff sub
+	setcachedevice
+        ch-width ch-height true [1 0  0 1  ch-xoff ch-yoff]
+	{ch-image} imagemask
+    } if
+} def
+
+
+% fontdict @sf -        -- make that the current font
+/@sf { setfont } def
+
+% in the following, the font-cacheing mechanism requires that
+% a name unique in the particular font be generated
+
+% char-data ch @dc -    -- define a new character bitmap in current font
+/@dc
+  { /ch-code exch def
+    dup 0 get
+    length 2 lt
+      { pop [ <00> 1 1 0 0 8.00 ] } % replace <> with null
+    if
+    /ch-data exch def
+    currentfont /BitMaps get ch-code ch-data put
+    % generate a unique name simply from the character code
+    currentfont /Encoding get ch-code dup (   ) cvs cvn put
+  } def
+
+/@DRAFTF { gsave newpath
+       /Helvetica-Bold findfont setfont
+       (Draft) dup stringwidth pop 8.875 exch div dup 72 mul dup scale
+       52.3 rotate 2.5 exch div -.35 translate
+       0.95 setgray
+       0 0 moveto show
+       grestore } def
+/@DRAFTM { gsave newpath
+       /Helvetica-Bold findfont 72 scalefont setfont
+       0.95 setgray
+       576 702 moveto
+       (Draft) stringwidth exch neg exch neg rmoveto
+       (Draft) show
+       grestore } def
+
+% n @bop0 -              -- begin the char def section of a new page
+/@bop0 { pop } def
+
+% n @bop1 -              -- begin a brand new page
+/@bop1 { pop
+	DefaultMatrix currentmatrix pop	% save it away
+	/SaveImage save def
+	Mtrx concat } def
+
+/@draft {
+    /@bop1
+	  { DefaultMatrix currentmatrix pop
+	    1 le {@DRAFTF} {@DRAFTM} ifelse
+	    /SaveImage save def
+	    Mtrx concat
+	  } def
+} def
+
+% - @eop -              -- end a page
+/@eop { SaveImage restore showpage } def
+
+% - @start -            -- start everything
+/@start { PaperType load exec /@TeXSave save def } def
+
+% - @end -              -- done the whole shebang
+/@end { end } def
+
+% x y p -               -- move to position
+/p { moveto } bind def
+
+% x r -                 -- move right
+/r { 0 rmoveto } bind def
+
+% string s -            -- show the string
+/s { show } bind def
+
+% x string m -            -- move right then show string
+/m { exch 0 rmoveto show } bind def
+
+% ch c -                -- show the character (code given)
+/c { c-string dup 0 4 -1 roll put show } bind def
+
+/c-string ( ) def
+
+% dx dy ru -   -- set a rule (rectangle)
+/ru
+  { /dy exch neg def    % because dy is height up from bottom
+    /dx exch def
+    /x currentpoint /y exch def def   % remember current point
+    newpath x y moveto
+    dx 0 rlineto
+    0 dy rlineto
+    dx neg 0 rlineto
+    closepath fill
+    x y moveto
+  } bind def
+
+/@MacSetUp
+  { userdict /md known  % if md is defined
+      { userdict /md get type /dicttype eq      % and if it is a dictionary
+	{
+	/MacDrwgs true def
+	md begin                             % then redefine some stuff
+	/letter {} def
+	/note {} def
+	/legal {} def
+	/od{txpose
+	    1 0 mtx defaultmatrix dtransform exch atan/pa exch def
+	    newpath clippath mark
+	    {transform{itransform moveto}}
+	    {transform{itransform lineto}}
+	    { 6 -2 roll transform
+	      6 -2 roll transform
+	      6 -2 roll transform
+	      { itransform 6 2 roll
+		itransform 6 2 roll
+		itransform 6 2 roll
+		curveto
+	      }
+	    }
+	    {{closepath}}
+	    pathforall newpath counttomark array astore /gc xdf
+	    pop ct 39 0 put
+	    10 fz 0 fs 2 F/|______Courier fnt invertflag{PaintBlack}if
+	}def
+	/txpose{
+	    pxs pys scale ppr aload pop
+	    por {
+		noflips {
+		    pop exch neg exch translate pop 1 -1 scale
+		}if
+		xflip yflip and {
+		    pop exch neg exch translate 180 rotate 1 -1 scale
+		    ppr 3 get ppr 1 get neg sub neg ppr 2 get
+		    ppr 0 get neg sub neg translate
+		}if 
+		xflip yflip not and {
+		    pop exch neg exch translate pop 180 rotate
+		    ppr 3 get ppr 1 get neg sub neg 0 translate
+		}if
+		yflip xflip not and {
+		    ppr 1 get neg ppr 0 get neg translate
+		}if
+	    }
+	    {
+		noflips {
+		    translate pop pop 270 rotate 1 -1 scale
+		}if
+		xflip yflip and {
+		    translate pop pop 90 rotate 1 -1 scale
+		    ppr 3 get ppr 1 get neg sub neg ppr 2 get
+		    ppr 0 get neg sub neg translate
+		}if
+		xflip yflip not and {
+		    translate pop pop 90 rotate ppr 3 get
+		    ppr 1 get neg sub neg 0 translate
+		}if
+		yflip xflip not and {
+		    translate pop pop 270 rotate ppr 2 get
+		    ppr 0 get neg sub neg 0 exch translate
+		}if
+	    }ifelse
+	    scaleby96 {
+		ppr aload pop 4 -1 roll add 2 div 3 1 roll add 2 div 2 copy
+		translate .96 dup scale neg exch neg exch translate
+	    }if
+	}def
+	/cp {pop pop showpage pm restore}def
+        end
+      }if
+    } if    
+  } def
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%     the \special command junk
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   The structure of the PostScript produced by dvi2ps for \special is:
+%         @beginspecial
+%           - any number of @hsize, @hoffset, @hscale, etc., commands
+%         @setspecial
+%           - the users file of PostScript commands
+%         @endspecial
+
+% The @beginspecial command recognizes whether the Macintosh Laserprep
+% has been loaded or not, and redfines some Mac commands if so.
+% The @setspecial handles the users shifting, scaling, clipping commands
+
+
+% The following are user settable options from the \special command.
+
+/@SpecialDefaults
+  { /hs 8.5 Inch def
+    /vs 11 Inch def
+    /ho 0 def
+    /vo 0 def
+    /hsc 1 def
+    /vsc 1 def
+    /CLIP false def
+  } def
+
+%       d @hsize -      specify a horizontal clipping dimension
+%                       these 2 are executed before the MacDraw initializations
+/@hsize {/hs exch def /CLIP true def} def
+/@vsize {/vs exch def /CLIP true def} def
+%       d @hoffset -    specify a shift for the drwgs
+/@hoffset {/ho exch def} def
+/@voffset {/vo exch def} def
+%       s @hscale -     set scale factor
+/@hscale {/hsc exch def} def
+/@vscale {/vsc exch def} def
+
+/@setclipper
+  { hsc vsc scale
+    CLIP
+      { newpath 0 0 moveto hs 0 rlineto 0 vs rlineto hs neg 0 rlineto closepath clip }
+    if
+  } def
+
+% this will be invoked as the result of a \special command (for the
+% inclusion of PostScript graphics).  The basic idea is to change all
+% scaling and graphics back to defaults that were restored by the most
+% recent showpage, but to shift the origin to the current position on the
+% page.  
+%
+% We draw the figure at the current location.
+
+/@beginspecial          % - @beginspecial -     -- enter special mode
+  {
+    /SpecialSave save def
+    /showpage {} def		% prevent showpage from working
+          % the following magic incantation establishes the current point as
+          % the users origin, and reverts back to default scalings, rotations
+    currentpoint transform	% device coords of CP
+    DefaultMatrix setmatrix	% back to "normal" CTM
+    SpecialMatrix concat	% plus any special transformations
+    itransform translate	% move to CP
+    @SpecialDefaults    % setup default offsets, scales, sizes
+    @MacSetUp           % fix up Mac stuff 
+  } def
+
+/@setspecial    % to setup user specified offsets, scales, sizes (for clipping)
+  {
+    MacDrwgs
+      {md begin /pxt ho def /pyt vo neg def end}
+      {ho vo translate @setclipper}
+    ifelse
+  } def
+
+/@endspecial            % - @endspecial -       -- leave special mode
+  {
+    SpecialSave restore
+  } def
+
+/MacDrwgs false def     % will get set if we think the Mac LaserPrep file has been loaded
+
+%!
+% All software, documentation, and related files in this distribution of
+% psfig/tex are Copyright (c) 1987 Trevor J. Darrell
+%
+% Permission is granted for use and non-profit distribution of psfig/tex 
+% providing that this notice be clearly maintained, but the right to
+% distribute any portion of psfig/tex for profit or as part of any commercial
+% product is specifically reserved for the author.
+%
+%
+% psfigTeX PostScript Prolog
+% $Header: /iswim/u1/uli/merge/cvsroot/murphi/doc/DDHY92.ps,v 1.1.1.1 1999/01/29 07:30:15 uli Exp $
+%
+/psf$TeXscale { 65536 div } def
+
+% Changed to use DefaultMatrix and SpecialMatrix instead of currentmatrix
+/DocumentInitState [
+	%  SpecialMatrix x DefaultMatrix
+	/SpecialMatrix cvx /DefaultMatrix cvx /matrix cvx /concatmatrix cvx
+	currentlinewidth currentlinecap currentlinejoin currentdash
+	currentgray currentmiterlimit
+] cvx def
+
+%  x y bb-llx bb-lly bb-urx bb-ury startFig -
+/startTexFig {
+	/psf$SavedState save def
+	userdict maxlength dict begin
+	currentpoint transform
+
+	DocumentInitState setmiterlimit setgray setdash setlinejoin setlinecap
+		setlinewidth setmatrix
+
+	itransform moveto
+
+	/psf$ury exch psf$TeXscale def
+	/psf$urx exch psf$TeXscale def
+	/psf$lly exch psf$TeXscale def
+	/psf$llx exch psf$TeXscale def
+	/psf$y exch psf$TeXscale def
+	/psf$x exch psf$TeXscale def
+	
+	currentpoint /psf$cy exch def /psf$cx exch def
+
+	/psf$sx psf$x psf$urx psf$llx sub div def 	% scaling for x
+	/psf$sy psf$y psf$ury psf$lly sub div def	% scaling for y
+
+	psf$sx psf$sy scale			% scale by (sx,sy)
+
+	psf$cx psf$sx div psf$llx sub
+	psf$cy psf$sy div psf$ury sub translate
+	
+	/DefFigCTM matrix currentmatrix def
+
+	/initmatrix {
+		DefFigCTM setmatrix
+	} def
+	/defaultmatrix {
+		DefFigCTM exch copy
+	} def
+
+	/initgraphics {
+		DocumentInitState setmiterlimit setgray setdash 
+			setlinejoin setlinecap setlinewidth setmatrix
+		DefFigCTM setmatrix
+	} def
+
+	/showpage {
+		initgraphics
+	} def
+	@MacSetUp
+} def
+
+% llx lly urx ury doclip -	(args in figure coordinates)
+/doclip {
+	currentpoint 6 2 roll
+	newpath 4 copy
+	4 2 roll moveto
+	6 -1 roll exch lineto
+	exch lineto
+	exch lineto
+	closepath clip
+	newpath
+	moveto
+} def
+
+% - endTexFig -
+/endTexFig { end psf$SavedState restore } def
+
+
+%%%% Additions by LA Carr to reencode Adobe fonts as TeX fonts (almost)
+%%%% Based on routine in LaserWriter Cookbook
+/ReEncodeForTeX
+  { /newfontname exch def
+    /basefontname exch def
+    /TeXstr 30 string def
+
+    /basefontdict basefontname findfont def
+    /newfont basefontdict maxlength dict def
+    basefontdict
+      { exch dup /FID ne
+	  { dup /Encoding eq
+	    { exch dup length array copy
+	        newfont 3 1 roll put }
+	    { exch newfont 3 1 roll put }
+	    ifelse
+	  }
+	{ pop pop }
+	ifelse
+      } forall
+
+      basefontdict /MathFontName known not
+        { 
+	  /TeXvec basefontname TeXstr cvs (Courier) search
+	    { pop pop pop TeXcourvec }
+	    { pop TeXnormalvec }
+	  ifelse def
+          TeXvec aload pop
+
+          TeXvec length 2 idiv
+	    { newfont /Encoding get 3 1 roll put }
+	  repeat
+	}
+      if
+
+      newfontname newfont definefont pop
+  } def
+
+/TeXnormalvec
+	[ 8#014 /fi 8#015 /fl 8#020 /dotlessi 8#022 /grave 8#023 /acute
+	  8#024 /caron 8#025 /breve 8#026 /macron 8#027 /ring 8#030 /cedilla
+	  8#031 /germandbls 8#032 /ae 8#033 /oe 8#034 /oslash 8#035 /AE
+	  8#036 /OE 8#037 /Oslash 8#042 /quotedblright 8#074 /exclamdown
+	  8#076 /questiondown 8#134 /quotedblleft 8#136 /circumflex
+	  8#137 /dotaccent 8#173 /endash 8#174 /emdash 8#175 /hungarumlat
+	  8#176 /tilde 8#177 /dieresis ] def
+/TeXcourvec
+	[ 8#016 /exclamdown 8#017 /questiondown 8#020 /dotlessi 8#022 /grave
+	  8#023 /acute 8#024 /caron 8#025 /breve 8#026 /macron 8#027 /ring
+	  8#030 /cedilla 8#031 /germandbls 8#032 /ae 8#033 /oe 8#034 /oslash
+	  8#035 /AE 8#036 /OE 8#037 /Oslash 8#074 /less 8#076 /greater
+	  8#134 /backslash 8#136 /circumflex 8#137 /underscore 8#173 /braceleft
+	  8#174 /bar 8#175 /braceright 8#177 /dieresis ] def
+
+/TeXPSmakefont {	% defines a routine for generating PS fonts, fudged!
+	/TeXsize exch def findfont 
+	[ TeXsize 0 0 TeXsize neg 0 0 ] makefont
+} def
+
+% fontname basefontname angle ObliqueFont -
+% Create a General Oblique font
+/ObliqueFont {
+    /ObliqueAngle exch def
+    /ObliqueBaseName exch def
+    /ObliqueFontName exch def
+    /ObliqueTransform [1 0 ObliqueAngle sin ObliqueAngle cos div 1 0 0] def
+    /basefontdict ObliqueBaseName findfont ObliqueTransform makefont def
+    /newfont basefontdict maxlength dict def
+    basefontdict
+      { exch dup /FID ne
+	  { dup /Encoding eq
+	    { exch dup length array copy
+	        newfont 3 1 roll put }
+	    { exch newfont 3 1 roll put }
+	    ifelse
+	  }
+	{ pop pop }
+	ifelse
+      } forall
+
+     newfont /FontName ObliqueFontName put
+     ObliqueFontName newfont definefont
+     pop
+} def
+
+% Palatino-ItalicUnslanted? You must be joking!
+
+% fontname basename SmallCapsFont -	Create a General SmallCaps font
+/SmallCapsFont {
+    /SmallCapsBaseName exch def
+    /SmallCapsFontName exch def
+    /basefontdict SmallCapsBaseName findfont def
+    /newfont basefontdict maxlength 10 add dict def
+
+    newfont begin
+	/FontName SmallCapsFontName def
+	/FontBaseDict basefontdict 1000 scalefont def
+	/FontSCDict FontBaseDict .8 scalefont def
+	/FontType 3 def
+	/BuildChar {SmallCapChar} def
+	/FontMatrix dup basefontdict exch get def
+	/FontBBox dup basefontdict exch get def
+	/Encoding dup basefontdict exch get def
+    end
+    SmallCapsFontName newfont definefont pop
+} def
+
+% fontdict ch SmallCapChar -
+% It shouldn't be so damn hard to do this (make one font out
+% of two others) but I tried several dozen variations on this
+% theme until I found something that worked. -- vj
+/SmallCapChar {
+    /achar (A) def
+    achar exch 0 exch put
+    begin
+    achar 0 get dup 97 ge exch 122 le and {
+	% handle 'a' through 'z' specially
+	achar 0 achar 0 get 32 sub put
+	FontSCDict
+    } {
+	FontBaseDict
+    } ifelse
+    setfont achar stringwidth FontBBox setcachedevice
+    newpath 0 0 moveto achar show
+    end
+} def
+
+/MathEncodingVec [
+/Gamma /Delta /Theta /Lambda /Xi /Pi /Sigma /Upsilon1
+/Phi /Psi /Omega /alpha /beta /gamma /delta /epsilon
+/zeta /nu /theta /iota /kappa /lambda /mu /nu
+/xi /pi /rho /sigma /tau /upsilon /phi /chi
+/psi /omega /epsilon /theta1 /omega1 /rho /sigma /phi1
+/arrowleft /arrowleft /arrowright /arrowright
+/suchthat /congruent /proportional /angle
+/zero /one /two /three /four /five /six /seven
+/eight /nine /period /comma /less /slash /greater /asteriskmath
+/partialdiff /A /B /C /D /E /F /G
+/H /I /J /K /L /M /N /O
+/P /Q /R /S /T /U /V /W
+/X /Y /Z /registerserif /copyrightserif /trademarkserif /logicalor /logicaland
+/section /a /b /c /d /e /f /g
+/h /i /j /k /l /m /n /o
+/p /q /r /s /t /u /v /w
+/x /y /z /dotlessi /j /weierstrass /macron /breve
+] def
+
+% the following gives the character codes of the above characters
+% in their font.  I.e., this is the character we have to hand "show"
+% to image the characters above.
+/MathCharVec [
+	71	68	81	76	88	80	83	161
+	70	89	87	97	98	103	100	101
+	122	110	113	105	107	108	109	110
+	120	112	114	115	116	117	102	99
+	121	119	101	74	118	114	115	106
+	172	172	174	174	39	64	181	208
+	48	49	50	51	52	53	54	55
+	56	57	46	44	60	47	62	42
+	182	65	66	67	68	69	70	71
+	72	73	74	75	76	77	78	79
+	80	81	82	83	84	85	86	87
+	88	89	90	210	211	212	218	217
+	167	97	98	99	100	101	102	103
+	104	105	106	107	108	109	110	111
+	112	113	114	115	116	117	118	119
+	120	121	122	245	106	195	197	198
+] def
+
+% this array tells which font dictionary holds each character above
+% (0 = basefont, 1 = symbol (maybe slanted), 2 = symbol (unslanted)).
+/MathDictVec [
+	1 1 1 1 1 1 1 1
+	1 1 1 1 1 1 1 1
+	1 1 1 1 1 1 1 1
+	1 1 1 1 1 1 1 1
+	1 1 1 1 1 1 1 1
+	2 2 2 2 2 2 2 2
+	0 0 0 0 0 0 0 0
+	0 0 0 0 2 2 2 2
+	2 0 0 0 0 0 0 0
+	0 0 0 0 0 0 0 0
+	0 0 0 0 0 0 0 0
+	0 0 0 2 2 2 2 2
+	2 0 0 0 0 0 0 0
+	0 0 0 0 0 0 0 0
+	0 0 0 0 0 0 0 0
+	0 0 0 0 0 2 0 0
+] def
+
+
+% fontname basename symbolname symbolbase angle MathOblique -
+% Create a "math" font with the symbol font characters slanted
+% by "angle"
+/MathOblique {
+    3 copy ObliqueFont
+    pop pop MathFont
+} def
+    
+
+% fontname basename symbolname MathFont -	Create a math italic font
+%
+% We build this font out of the base font & the symbol font
+% using an encoding vec as close as we can get to cmmi10 with
+% standard postscript characters.  An array parallel to the
+% encoding vector tells which font dictionary to use for a
+% particular character.
+/MathFont {
+    /MathSymName exch def
+    /MathBaseName exch def
+    /MathFontName exch def
+    /basefontdict MathBaseName findfont def
+    /newfont basefontdict maxlength 10 add dict def
+
+    newfont begin
+	/FontName MathFontName def
+	/FontDictArray [
+	    basefontdict 1000 scalefont
+	    MathSymName findfont 950 scalefont
+	    /Symbol findfont 950 scalefont
+	   ] def
+	/FontType 3 def
+	/BuildChar {MathFontChar} def
+	/FontMatrix dup basefontdict exch get def
+	/FontBBox dup basefontdict exch get def
+	% the encoding vector is a copy of the original font's
+	% encoding, modified "appropriately".
+	/Encoding dup basefontdict exch get dup length array copy def
+	/WhichFont MathDictVec def
+	/WhichChar MathCharVec def
+	MathEncodingVec Encoding copy pop
+	/achar (A) def
+    end
+    MathFontName newfont definefont pop
+} def
+
+% fontdict ch MathFontChar -
+% (there's some serious magic going on here:  see note on 
+% SmallCapChar above -- vj).
+/MathFontChar {
+    exch begin
+    achar exch 0 exch put
+    FontDictArray WhichFont achar 0 get get get setfont
+    achar dup 0 get WhichChar exch get 0 exch put
+    achar stringwidth FontBBox setcachedevice
+    newpath 0 0 moveto achar show
+    end
+} bind def
+
+/@flushfonts { @TeXSave restore /@TeXSave save def} def
+
+end                     % revert to previous dictionary
+
+TeXDict begin
+%%EndProlog
+/Resolution 300.000000 def
+@start
+%%Page: ? 1
+1 @bop0
+/cmr17.300 @newfont
+cmr17.300 @sf
+[<FFFF800000FFFF80000007F000000003E000000003E000000003E000000003E000000003E00000
+  0003E000000003E000000003E000000003E000000003E000000003E000000003E000000003E000
+  000003E000000003E000000003E000000003E000000003E000000003E000000003E000000003E0
+  00000003FFFFF00003E000FC0003E0001F0003E0000F8003E00007C003E00003E003E00003E003
+  E00001F003E00001F003E00001F803E00001F803E00001F803E00001F803E00001F803E00001F8
+  03E00001F003E00001F003E00003F003E00003E003E00007C003E0000F8003E0001F0007E000FE
+  00FFFFFFF800FFFFFFC000> 40 49 -4 0 45.061] 80 @dc
+[<FFFE00FFFE000FC000078000078000078000078000078000078000078000078000078000078000
+  07800007800007800007800007800007800007800007800007800007C00007C00007C00007C038
+  0FA07CFF907CFF907C3F8C180183E0> 24 31 -2 0 25.402] 114 @dc
+[<001FC00000F0780001C01C0007800F000F0007801E0003C01E0003C03C0001E03C0001E07C0001
+  F0780000F0F80000F8F80000F8F80000F8F80000F8F80000F8F80000F8F80000F8F80000F87800
+  00F0780000F0780000F03C0001E03C0001E01C0001C01E0003C00F0007800700070001C01C0000
+  F07800001FC000> 32 31 -2 0 32.896] 111 @dc
+[<001F000078C000E04001E02001C02003C01003C01003C01003C01003C01003C01003C01003C010
+  03C00003C00003C00003C00003C00003C00003C00003C00003C00003C00003C00003C00003C000
+  03C00003C00003C000FFFFE01FFFE00FC00007C00003C00001C00001C00000C00000C00000C000
+  004000004000004000004000004000> 24 44 -1 0 25.402] 116 @dc
+[<003F800000E0600003801800070004000F0002001E0002001E0001003C0001007C0000007C0000
+  0078000000F8000000F8000000F8000000F8000000F8000000F8000000F8000000F8000000F800
+  0000780000007C0008007C003E003C003E001C003E001E001E000F000400070004000380180000
+  E06000003F8000> 32 31 -3 0 29.149] 99 @dc
+[<FFFCFFFC0FC0078007800780078007800780078007800780078007800780078007800780078007
+  800780078007800780078007800780078007800780078007800780078007800780078007800780
+  0780078007800780078007800F80FF80FF803F800180> 16 50 -2 0 17.907] 108 @dc
+[<000001800000000000018000000000000180000000000003C0000000000003C0000000000007E0
+  000000000007E0000000000007E000000000000F9000000000000F9000000000001F9800000000
+  001F0800000000001F0800000000003F0400000000003E0400000000003E0400000000007C0200
+  000000007C020000000000FC010000000000F8010000000000F8010000000001F0008000000001
+  F0008000000003F000C000000003E0004000000003E0004000000007E0002000000007C0002000
+  000007C000200000000F8000100000000F8000100000001F8000080000001F0000080000001F00
+  00080000003E0000040000003E0000040000007E0000060000007C0000020000007C0000020000
+  00FC000001000000F8000001000000F8000001000001F0000000800001F0000000800003F00000
+  00C00003E0000000C00003E0000000E00007F0000001F800FFFE000007FF00FFFE000007FF00> 56 50 -1 1 49.731] 86 @dc
+[<001FC00000F0300001C00C00078002000F0002000E0001001E0000803C0000803C0000007C0000
+  0078000000F8000000F8000000F8000000F8000000F8000000F8000000FFFFFF80F8000780F800
+  07807800078078000F807C000F003C000F001C000F001E001E000E001E0007003C000380380000
+  E0E000003F8000> 32 31 -2 0 29.149] 101 @dc
+[<FFF8FFF80FC0078007800780078007800780078007800780078007800780078007800780078007
+  800780078007800780078007800F80FF80FF801F80018000000000000000000000000000000000
+  00000000000007000F801F801F800F800700> 16 48 -2 0 17.907] 105 @dc
+[<7FFE1FFF807FFE1FFF8007E001F80003C000F00003C000F00003C000F00003C000F00003C000F0
+  0003C000F00003C000F00003C000F00003C000F00003C000F00003C000F00003C000F00003C000
+  F00003C000F00003C000F00003C000F00003C000F00003C000F00003C000F00003C000F00003C0
+  00F00003C000F00003C000F00003C000F00003C000F00003C001F000FFFFFFF000FFFFFFF00003
+  C000000003C000000003C000000003C000000003C000000003C000000003C000000003C0000000
+  03C000000003C000000003C000E00003C001F00001E001F00000E001F00000F000F00000780020
+  00001C00400000070180000001FE0000> 40 50 -1 0 35.814] 12 @dc
+[<03FC03E00F0307F03E008F087C005E0478003E04F8003E04F8003E04F8001E04F8001E04F8001E
+  047C001E003C001E003E001E001F001E000F801E0003E01E0000FC1E00000FFE0000001E000000
+  1E0000001E0008001E003E001E003E001E003E001C003C003C0010003800100070000C00E00003
+  03C00000FE0000> 32 31 -3 0 32.896] 97 @dc
+[<FFFC1FFF80FFFC1FFF800FC001F800078000F000078000F000078000F000078000F000078000F0
+  00078000F000078000F000078000F000078000F000078000F000078000F000078000F000078000
+  F000078000F000078000F000078000F000078000F000078000F000078000F000078000F00007C0
+  00F00007C000F00007A000F0000FA001E000FF9001E000FF8C03C0003F830780000180FE0000> 40 31 -2 0 36.644] 110 @dc
+[<80FE00C301C0EC0060F00030F00038E00018E0001CC0001CC0001C80001C80003C80003C0000F8
+  0001F8003FF003FFE00FFFC01FFF003FF0007E0000F80000F00010E00010E00010E00010E00030
+  6000303000701800F00E033001FC10> 24 31 -2 0 25.776] 115 @dc
+[<FFFF807FFFC0FFFF807FFFC007F00003F80003E00001F00003E00001F00003E00001F00003E000
+  01F00003E00001F00003E00001F00003E00001F00003E00001F00003E00001F00003E00001F000
+  03E00001F00003E00001F00003E00001F00003E00001F00003E00001F00003E00001F00003E000
+  01F00003E00001F00003E00001F00003E00001F00003E00001F00003FFFFFFF00003FFFFFFF000
+  03E00001F00003E00001F00003E00001F00003E00001F00003E00001F00003E00001F00003E000
+  01F00003E00001F00003E00001F00003E00001F00003E00001F00003E00001F00003E00001F000
+  03E00001F00003E00001F00003E00001F00003E00001F00003E00001F00003E00001F00003E000
+  01F00007F00003F800FFFF807FFFC0FFFF807FFFC0> 48 49 -4 0 49.731] 72 @dc
+[<003F81FF0000E061FF00038011F000070009E0000E0005E0001E0003E0001C0001E0003C0001E0
+  003C0001E000780001E000780001E000F80001E000F80001E000F80001E000F80001E000F80001
+  E000F80001E000F80001E000F80001E000F80001E000780001E0007C0001E0003C0001E0003C00
+  01E0001E0001E0000E0003E0000F0003E000078005E00001C019E00000F061E000001F81E00000
+  0001E000000001E000000001E000000001E000000001E000000001E000000001E000000001E000
+  000001E000000001E000000001E000000001E000000001E000000001E000000003E00000003FE0
+  0000003FE00000000FE0000000006000> 40 50 -3 0 36.644] 100 @dc
+[<000200010000000600018000000700038000000700038000000F0003C000000F8007C000000F80
+  07C000001E80072000001E400F2000001E400F2000003C400E1000003C201E1000003C201E1000
+  0078201C08000078103C08000078103C080000F01038040000F00878040000F00878040001E008
+  70020001E004F0020001E004F0020003C007E0010003C003E0010003C003E00100078003C00080
+  078003C000800F8003C001C00FC007C003F0FFF07FF80FFCFFF07FF80FFC> 48 31 -1 0 47.886] 119 @dc
+[<FFFFFFE00000FFFFFFFC000007E0007F000003E0000F800003E00007E00003E00001F00003E000
+  00F80003E00000780003E000007C0003E000003E0003E000001F0003E000001F0003E000000F80
+  03E000000F8003E000000F8003E000000FC003E0000007C003E0000007C003E0000007C003E000
+  0007E003E0000007E003E0000007E003E0000007E003E0000007E003E0000007E003E0000007E0
+  03E0000007E003E0000007E003E0000007E003E0000007E003E0000007C003E0000007C003E000
+  000FC003E000000FC003E000000F8003E000000F8003E000001F0003E000001F0003E000003E00
+  03E000003E0003E000007C0003E00000780003E00000F00003E00001E00003E00007C00003E000
+  0F800007E0007F0000FFFFFFFC0000FFFFFFE00000> 48 49 -4 0 50.682] 68 @dc
+[<003FE00001C01C00070007001C0001C0380000E07000007070000070E0000038E0000038E00000
+  38E0000038E000003870000070300000F0180001E00E000FC003FFFF8007FFFF000FFFF8000E00
+  00001C0000001800000018000000180000001800000018000000087F000009C1C0000780E00007
+  0070000F0078001E003C001E003C003E003E003E003E003E003E003E003E003E003E003E003E00
+  1E003C001E003C000F007800070070080380E81C01C1C41C007F0308000000F0> 32 47 -2 15 32.896] 103 @dc
+[<FFE00003FFFCFFE00003FFFC1F8000003F80070000001F00030000001F00030000003F00010000
+  003E00010000003E00008000007C00008000007C00008000007C0000400000F80000400000F800
+  00400001F80000200001F00000200001F00000200003F000001FFFFFE000001FFFFFE000001800
+  07E00000080007C00000080007C0000004000F80000004000F80000004000F80000002001F0000
+  0002001F00000002003F00000001003E00000001003E00000001807E00000000807C0000000080
+  7C0000000040F80000000040F80000000040F80000000021F00000000021F00000000023F00000
+  000013E00000000013E00000000017E0000000000FC0000000000FC0000000000FC00000000007
+  800000000007800000000003000000000003000000000003000000> 48 50 -2 0 49.731] 65 @dc
+/cmsy10.360 @newfont
+cmsy10.360 @sf
+[<00C00000C00000C00000C00000C000C0C0C0F0C3C038C7000EDC0003F00000C00003F0000EDC00
+  38C700F0C3C0C0C0C000C00000C00000C00000C00000C000> 24 21 -3 -2 24.906] 3 @dc
+/cmr10.329 @newfont
+cmr10.329 @sf
+[<FFFFE0000F803C0007800E000780070007800380078003C0078001E0078001E0078000F0078000
+  F0078000F0078000F8078000F8078000F8078000F8078000F8078000F8078000F8078000F80780
+  00F8078000F0078000F0078001F0078001E0078001E0078003C0078003800780070007801E000F
+  803C00FFFFE000> 32 31 -2 0 34.721] 68 @dc
+[<0F83C0386720781E10F01E10F00E10F00E10F00E10780E00380E001E0E00078E0000FE00000E00
+  000E00000E00300E00781C007818003030001FE000> 24 20 -2 0 22.727] 97 @dc
+[<00200000700000700000700000E80000E80001EC0001C40001C400038200038200038200070100
+  0701000E00800E00800E00801C00C01E01E0FF83F8> 24 20 -1 0 23.989] 118 @dc
+[<FFC00E000E000E000E000E000E000E000E000E000E000E000E000E000E000E000E000E007E000E
+  000000000000000000000000001C001E003E001E001C00> 16 31 0 0 12.626] 105 @dc
+[<03E3F80E1B801C0780380780380380700380700380F00380F00380F00380F00380F00380F00380
+  7003807003803803803803801C0780061B8003E380000380000380000380000380000380000380
+  000380000380000380000380003F80000380> 24 32 -2 0 25.252] 100 @dc
+[<FFFFFC0F807C07801C07800C078004078004078006078002078002078002078002078000078000
+  078000078000078000078000078000078000078000078000078000078000078000078000078000
+  0780000780000780000FC000FFFE00> 24 31 -2 0 28.408] 76 @dc
+[<70F8F8F870> 8 5 -4 0 12.626] 46 @dc
+[<FFE00E000E000E000E000E000E000E000E000E000E000E000E000E000E000E000E000E000E000E
+  000E000E000E000E000E000E000E000E000E000E00FE000E00> 16 32 0 0 12.626] 108 @dc
+[<FFC03FFE1F0007E00E0003C0040003C002000780020007800200078001000F0001000F0001000F
+  0000FFFE0000801E0000801E0000403C0000403C0000403C000020780000207800002078000010
+  F0000010F0000010F0000009E0000009E0000009E0000007C0000007C0000007C0000003800000
+  0380000003800000010000> 32 32 -1 0 34.090] 65 @dc
+[<FFE7FC0E01C00E01C00E01C00E01C00E01C00E01C00E01C00E01C00E01C00E01C00E01C00E01C0
+  0E01C00E01C00F01C00F01C00E8180FE43000E3E00> 24 20 -1 0 25.252] 110 @dc
+[<FFE00E000E000E000E000E000E000E000E000E000E000E000E000E000E000F0C0F1E0F1EFE8C0E
+  78> 16 20 -1 0 17.803] 114 @dc
+[<01F8000706000C0100180080380080700000700000F00000F00000F00000FFFF80F00380F00380
+  7003807007003807003807001C0E000E1C0003F000> 24 20 -1 0 20.202] 101 @dc
+[<8F80D060E030C018C01880188018803800700FF03FE07F807800E000C010C010C010403030701F
+  90> 16 20 -2 0 17.929] 115 @dc
+[<0F800030E000407000407800F03800F83C00F83C00F83C00203C00003C00003C00003C00003C00
+  003C00003C00003C00003C00003C00003C00003C00003C00003C00003C00003C00003C00003C00
+  003C00003C00003C00003C00007C000FFFC0> 24 32 -2 1 23.358] 74 @dc
+[<FF07FE1E01E00601E00201C0030380010700008700004E00007C00003C0000380000780000EC00
+  00E40001C2000381000701800701C00F01E07FC3FC> 24 20 0 0 23.989] 120 @dc
+[<FFF8FFF80F800F8007800F0007800F0007800F0007800F0007800F0007800F0007800F0007800F
+  0007800F0007800F0007800F0007800F0007800F0007800F0007FFFF0007800F0007800F000780
+  0F0007800F0007800F0007800F0007800F0007800F0007800F0007800F0007800F0007800F000F
+  800F80FFF8FFF8> 32 31 -2 0 34.090] 72 @dc
+[<01F1FC030DC00603C00E03C00E01C00E01C00E01C00E01C00E01C00E01C00E01C00E01C00E01C0
+  0E01C00E01C00E01C00E01C00E01C0FE1FC00E01C0> 24 20 -1 0 25.252] 117 @dc
+[<000FC0000070380001C0040003800200070001000E0000801E0000801C0000403C0000407C0000
+  407C00004078000000F8000000F8000000F8000000F8000000F8000000F8000000F8000000F800
+  0000F8000000780000407C0000407C0000403C0000C01C0000C01E0000C00E0001C0070003C003
+  8005C001C009C0007030C0000FC040> 32 33 -3 1 32.828] 67 @dc
+[<007FFE00000007C000000003C000000003C000000003C000000003C000000003C000000003C000
+  000003C000000003C000000003C000000003C000000003C000000007C000000007A00000000FB0
+  0000001F100000001E080000003E080000003C040000007C04000000F802000000F003000001F0
+  01000001E000800003E000800007C000400007800040000F800060001F8000F800FFF003FF00> 40 31 -1 0 34.090] 89 @dc
+[<03FC001C03803000C0600060C00030C00030C00030C000306000703001E00FFFC01FFF803FFE00
+  30000030000020000020000033E0001E38001C1C00380E00780F00780F00780F00780F00780F00
+  380E001C1C300E3C3003E3300000E0> 24 31 -1 10 22.727] 103 @dc
+[<01F800070E001C03803801C03801C07000E07000E0F000F0F000F0F000F0F000F0F000F0F000F0
+  7000E07000E03801C03801C01C0380070E0001F800> 24 20 -1 0 22.727] 111 @dc
+[<FFE7FE7FE00E00E00E000E00E00E000E00E00E000E00E00E000E00E00E000E00E00E000E00E00E
+  000E00E00E000E00E00E000E00E00E000E00E00E000E00E00E000E00E00E000E00E00E000F00F0
+  0E000F00F00E000E81C81C00FE618618000E1F01F000> 40 20 -1 0 37.878] 109 @dc
+[<FFE0000E00000E00000E00000E00000E00000E00000E00000E00000E3E000EC3000F01C00F01E0
+  0E00E00E00F00E00700E00780E00780E00780E00780E00780E00780E00700E00F00E00E00F00E0
+  0F01C0FEC3800E3E00> 24 29 -1 9 25.252] 112 @dc
+[<01E0031006100E080E080E080E080E080E000E000E000E000E000E000E000E000E000E000E00FF
+  F83E000E000E0006000600020002000200> 16 28 -1 0 17.676] 116 @dc
+[<81F800CE0C00F00600E00300C00380C001808001C08001C08001C08001C00001C00003C00003C0
+  000780001F8003FF000FFE001FFC003FF0007F0000780000F00000F00000E00080E00080E00080
+  E001806001806001803003801007800C198007E080> 24 33 -3 1 25.252] 83 @dc
+[<3C0000620000F10000F08000F08000004000004000004000002000002000007000007000007000
+  00E80000E80001EC0001C40001C4000382000382000382000701000701000E00800E00800E0080
+  1C00C01E01E0FF83F8> 24 29 -1 9 23.989] 121 @dc
+[<083E000CC3000D01C00F00E00E00E00E00700E00700E00780E00780E00780E00780E00780E0078
+  0E00700E00700E00E00F00E00F01C00EC3800E3E000E00000E00000E00000E00000E00000E0000
+  0E00000E00000E00000E0000FE00000E0000> 24 32 -1 0 25.252] 98 @dc
+[<7FF000070000070000070000070000070000070000070000070000070000070000070000070000
+  070000070000070000070000070000070000FFF000070000070000070000070000070000070000
+  070000070600038F00018F0000C600007C00> 24 32 0 0 13.889] 102 @dc
+[<000FC000003820000070180000E0080001C0040001C00200038002000380020007800100078001
+  000780010007800100078001000780010007800100078001000780010007800100078001000780
+  010007800100078001000780010007800100078001000780010007800100078001000780010007
+  8003800FC007C0FFFC3FF8> 32 32 -2 1 34.090] 85 @dc
+[<40201010080804040474FCFCF870> 8 14 -4 9 12.626] 44 @dc
+[<0FC000107000201800700C00780E0078060030070000070000038000038000038003E3C00E13C0
+  180BC03807C07007C07007C0F003C0F003C0F003C0F003C0F003C0F00380F00380700380700700
+  3807003806001C0C000E180003F000> 24 31 -2 1 22.727] 57 @dc
+[<00FFE0000E00000E00000E00000E00000E00000E00000E00FFFFF0C00E00400E00200E00200E00
+  100E00080E00080E00040E00020E00020E00010E00008E00008E00004E00002E00002E00001E00
+  000E00000E00000600000600> 24 30 -1 0 22.727] 52 @dc
+[<03F0001C3C00200E00400F00400780F00780F807C0F807C0F807C02007C00007C0000780000780
+  000F00000E00003C0003F000003800001C00000E00000F00000F00000F80380F80780780780780
+  780F80200F00100E000C1C0003F000> 24 31 -2 1 22.727] 51 @dc
+[<03F0000E1C001C0E00180600380700780780700380700380700380F003C0F003C0F003C0F003C0
+  F003C0F003C0F003C0F003C0F003C0F003C0F003C0F003C0F003C0700380700380700380700380
+  3807001806001C0E000E1C0003F000> 24 31 -2 1 22.727] 48 @dc
+[<03E0000C3800100E00200600400700400380E00380F003C0F003C07003C00003C00003C00003C0
+  000380000380100780100700180E00161C0011F000100000100000100000100000100000100000
+  1FE0001FF8001FFC001FFE00180300> 24 31 -2 1 22.727] 53 @dc
+/cmbx10.329 @newfont
+cmbx10.329 @sf
+[<FFE00FFFE0FFE00FFFE00E0000FE00060000FC00060001FC00030001F800030001F800018003F0
+  00018003F00001FFFFF00000FFFFE00000C007E00000600FC00000600FC00000701FC00000301F
+  800000303F800000183F000000183F0000000C7E0000000C7E0000000EFE00000006FC00000006
+  FC00000003F800000003F800000001F000000001F000000001F000000000E000000000E00000> 40 31 -2 0 39.519] 65 @dc
+[<181F80001C7FE0001EC1F8001F807C001F007C001F003E001F003E001F003F001F003F001F003F
+  001F003F001F003F001F003F001F003E001F003E001F007E001F807C001FE0F8001F7FF0001F1F
+  C0001F0000001F0000001F0000001F0000001F0000001F0000001F0000001F0000001F0000001F
+  000000FF000000FF000000> 32 32 -2 0 29.040] 98 @dc
+[<C7F000FFFC00F81E00F00600E00700C00700C00700001F0003FE001FFE003FFC007FF800FFC000
+  F80000E00600E00600600E00701E003FFE000FE600> 24 20 -2 0 20.618] 115 @dc
+[<01F003F807CC0F860F860F860F860F860F800F800F800F800F800F800F800F800F800F80FFFCFF
+  FC3F800F800780038003800380018001800180> 16 29 -1 0 20.328] 116 @dc
+[<FFF000FFF0001F00001F00001F00001F00001F00001F00001F00001F00001F00001F00001F0000
+  1F03001F8FC01E8FC01E8FC01ECFC0FE7F80FE3E00> 24 20 -2 0 21.527] 114 @dc
+[<0FE07E3FF9FE7E0DE0FC05E0F803E0F803E0F803E07C03E03C03E01F03E007FBE0007FE00003E0
+  0C03E03F03E03F03E03F07C03F0F801FFF0007FC00> 24 20 -1 0 25.410] 97 @dc
+[<01FC0007FF001F81C03F00C03E00607E00007C0000FC0000FC0000FC0000FC0000FC0000FC0000
+  7C03007C0FC03E0FC03E0FC01F0FC007FF8001FE00> 24 20 -2 0 23.232] 99 @dc
+/cmti9.300 @newfont
+cmti9.300 @sf
+[<FFF80007800003800003800003800003800001C00001C00001C00001C00000E00000E00000E000
+  00E000007000007000007000007000803804803804803804403804401C04201C04381C0C3FFFFC> 24 26 -7 0 27.443] 84 @dc
+[<600E00E01900703900703880701C80701C80381C00380E00380E00380E001C07001C07001E0700
+  1E07000F86000E7C000E00000E00000700000700000700000700000380000380000380001F8000> 24 26 -2 0 19.602] 104 @dc
+[<1F0030C060206010E008E000E000E000E000FFE07010700838081C08061801E0> 16 16 -4 0 17.642] 101 @dc
+[<6000E000700070007000700038003800380038009C009C009C189E38591830F0> 16 16 -4 0 16.172] 114 @dc
+[<1F0030C06060E030E018E01CE00CE00EE00E600E700E300E180E0C0C061801F0> 16 16 -4 0 19.602] 111 @dc
+[<30006800E400E400E400E400700070007000700038003800380038001C001C001C001C000E000E
+  000E000E000700070007003F00> 16 26 -3 0 9.801] 108 @dc
+[<700000CC0000E4000066000007000007000007000003800003800003800003800003800001C000
+  01C00001C00001C00001C00000E00000E00000E00000E00000E00007FF00007000007000007000
+  007000003000003000003B00001B80001980000700> 24 33 1 7 11.761] 102 @dc
+[<1E18613460F2C072C072C072E038E038E038E038701C301C381C181C0E2E03CC> 16 16 -4 0 19.602] 97 @dc
+[<0F0C00389A00307900703900703900703900381C00381C00381C001C1C009C0E009C0E008E0E00
+  4E0E004C0700380600> 24 16 -4 0 20.582] 117 @dc
+[<38006400E200E100E100E100700070007000700038003800380038001C00FFC01C001C000E000E
+  000E000E000600> 16 23 -4 0 12.741] 116 @dc
+[<60180700E0380C80701C1C80701C1C40701C0E40701C0E40380E0E00380E0700380E0700380E07
+  009C0703809C0703809E0703809E07838059866300307C1E00> 32 16 -4 0 31.364] 109 @dc
+[<38006400E400E200720072007000380038001C009C009C008E004E004C00380000000000000000
+  0000000000060007000300> 16 25 -4 0 11.761] 105 @dc
+[<1F0030C06020E010E008E000E000E000E00060007000301018380C18060801F0> 16 16 -4 0 17.642] 99 @dc
+[<FF00001C00001C00001C00001C00000E00000E00000E78000E8E000703000703800701800701C0
+  0380E00380E00380E00380E009C06009C06009C06009E0C00590C0030F00> 24 23 0 7 19.602] 112 @dc
+[<0F0018C030407020701070103808380838081C089C0C9C0C8E0C4E1C4C1C3818> 16 16 -4 0 17.642] 118 @dc
+[<78000000CC000000E60000006600000007000000070000000300000003803000038068000380E4
+  000380E40003C0E40001C0E40001C0700001C0700001C0700001C0700000E0380000E0380000E0
+  380000E0380000E01C0007FFFC0000700000007000000070000000700000003800000038000000
+  180600001C0700000E03000003FE00> 32 33 1 7 21.562] 12 @dc
+[<FF00FF80FF80> 16 3 -3 -6 13.722] 45 @dc
+[<600E00E01900703900703880701C80701C80381C00380E00380E00380E009C07009C07009E0700
+  9E0700598600307C00> 24 16 -4 0 21.562] 110 @dc
+[<1E180061340060F200C07200C07200C07200E03800E03800E03800E03800701C00301C00381C00
+  181C000E2E0003CE00000E00000E00000700000700000700000700000380000380000380001F80> 24 26 -4 0 19.602] 100 @dc
+[<0F0F0018B8803070407070407070207070203838103838103838101C38109C1C189C1C188E1C18
+  4E1C384C0E38380C30> 24 16 -4 0 25.483] 119 @dc
+[<3E00418080C0E060E060006000E00FE01FC01F801C00186018700830043003E0> 16 16 -3 0 15.682] 115 @dc
+[<7F0000C1C000E0E00060700000700000380000380007B800187800183C00301C00301C00301C00
+  380E00380E00380E00380E001C07000C07000E0700060700038B8000F300> 24 23 -2 7 17.642] 103 @dc
+[<60F07830> 8 4 -4 0 11.761] 46 @dc
+[<FFC000001C0000000E0000000E0000000E0000000E000000070000000700000007000000070000
+  00038000000380000003FF80000380700001C0380001C01C0001C00E0001C00E0000E0070000E0
+  070000E0070000E00700007007000070060000701C0003FFF800> 32 26 -3 0 26.013] 80 @dc
+[<78F000C58800E78400C3820003820003820001C00001C00001C00001C00020E00020E00020E180
+  10F38008D180078F00> 24 16 -2 0 17.700] 120 @dc
+[<81C043E07FF020181008080804000300018000400020101010080FFC07C40382> 16 16 -2 0 15.682] 122 @dc
+[<1E00638060C0C0E0C060C070E038E038E038E03870187018701878303C303BC0380038001C001C
+  001C001C000E000E000E007E00> 16 26 -4 0 17.642] 98 @dc
+[<1FF001C001C001C001C000E000E01EE061E060F0C070C070C070E038E038E038E038701C301C38
+  1C181C0E2E03C2> 16 23 -4 7 17.642] 113 @dc
+[<FF01FF001C0038000C003800040038000400380002003800010038000100380000FFF000008070
+  000040700000207000002070000010700000107000000870000008700000047000000270000002
+  70000001E0000001E0000000E000000060000000600000002000> 32 26 -2 0 28.504] 65 @dc
+[<0800100030002000600060006000C000C000C000C000C000E000E000E000600060006000700070
+  00300030003800180018001C000C000E000600030003000180008000C00060003000180004> 16 38 -5 10 15.682] 40 @dc
+[<FF083FF000380C070000180C038000080E038000080F038000080F038000041C81C000041C81C0
+  00041C41C000041C41C000021C20E000021C10E000021C10E000021C08E000011C087000011C04
+  7000011C027000011C027000009C013800009C01380000B800B80000B800B8000078005C000078
+  003C000078003C0003F8001FC0> 40 26 -3 0 34.385] 77 @dc
+/cmmi9.300 @newfont
+cmmi9.300 @sf
+[<0C00000E00000E00000E000006000006000006000003F0000FFC003FFF007907806100C0C10060
+  808020808010800010804010406010403010401830201FF0100FE01003C0> 24 23 -2 7 25.073] 39 @dc
+cmti9.300 @sf
+[<800040002000100018000C000600060003000380018001C000C000C000E0006000700070003000
+  30003800380018001800180018001800180018001800180018001800100030002000600040> 16 38 -1 10 15.682] 41 @dc
+[<8040202010100838783818> 8 11 -3 7 11.761] 44 @dc
+[<3C0000470000C18000E1C00060E0000060000070000F700038F000307800703800703800703800
+  381C00381C00381C001C1C009C0E009C0E008E0E004E0E004C0700380600> 24 23 -4 7 18.622] 121 @dc
+cmbx10.329 @sf
+[<FFFF80FFFF8003E00003E00003E00003E00003E00003E00003E00003E00003E00003E00003E000
+  03E00003E00003E00003E00003E00003E00003E00003E00003E00003E00003E000F3E000FFE000
+  0FE00001E00000E000> 24 29 -4 0 26.136] 49 @dc
+[<FFFF00FFFF0007E00007E00007E00007E00007E00007E00007E00007E00007E00007E00007E000
+  07E00007E00007E00007E00007E00007E00007E00007E00007E00007E00007E00007E00007E000
+  07E00007E00007E000FFFF00FFFF00> 24 31 -2 0 19.823] 73 @dc
+[<FFE3FF00FFE3FF001F00F8001F00F8001F00F8001F00F8001F00F8001F00F8001F00F8001F00F8
+  001F00F8001F00F8001F00F8001F00F8001F00F8001E80F8001EC0F8001E61F000FE3FE000FE0F
+  C000> 32 20 -3 0 29.040] 110 @dc
+[<01FF0007FFC01F83F03E00F83E00F87C007C7C007CFC007EFC007EFC007EFC007EFC007EFC007E
+  7C007C7C007C3E00F83E00F81F83F007FFC001FF00> 24 20 -1 0 26.136] 111 @dc
+[<03F8FF000FFEFF001F07F8003E01F8007E00F8007C00F8007C00F800FC00F800FC00F800FC00F8
+  00FC00F800FC00F800FC00F8007C00F8007C00F8007E00F8003E01F8001F83F8000FFEF80001F8
+  F8000000F8000000F8000000F8000000F8000000F8000000F8000000F8000000F8000000F80000
+  00F8000007F8000007F800> 32 32 -2 0 29.040] 100 @dc
+[<03F8FF0007FCFF000F06F8001F01F8001F01F8001F00F8001F00F8001F00F8001F00F8001F00F8
+  001F00F8001F00F8001F00F8001F00F8001F00F8001F00F8001F00F8001F00F800FF07F800FF07
+  F800> 32 20 -3 0 29.040] 117 @dc
+[<FFE0FFE01F001F001F001F001F001F001F001F001F001F001F001F001F001F001F001F00FF00FF
+  000000000000000000000000001C003F007F007F007F003F001C00> 16 33 -2 0 14.520] 105 @dc
+/cmr9.300 @newfont
+cmr9.300 @sf
+[<FF861FFC1C0601C0080601C0080F01C0080F01C0080F01C0081C81C0081C81C0081C81C0083841
+  C0083841C0083841C0087021C0087021C008E011C008E011C008E011C009C009C009C009C009C0
+  09C00B8005C00B8005C00B8005C00F0003C00F0003C0FF0003FC> 32 26 -2 0 35.191] 77 @dc
+[<07E0001C3800381C00700E00600600E00700E00700E00700E00700E00700E00700600600700E00
+  300C001C380007E000> 24 16 -1 0 19.198] 111 @dc
+[<8F80F040C020C0308030807000F01FE03FC07F00F000C020C020402060E01F20> 16 16 -1 0 15.145] 115 @dc
+[<03800E401C201C201C201C201C201C001C001C001C001C001C001C001C00FFC03C001C000C000C
+  00040004000400> 16 23 -1 0 14.932] 116 @dc
+[<07E00C18380830047000E000E000E000E000E000E00070003008381C0C1C07F8> 16 16 -1 0 17.065] 99 @dc
+[<FF9FE7F81C0701C01C0701C01C0701C01C0701C01C0701C01C0701C01C0701C01C0701C01C0701
+  C01C0701C01C0701C01E0781C01E0781C01D8E6380FC7C1F00> 32 16 -1 0 31.997] 109 @dc
+[<FF80001C00001C00001C00001C00001C00001C00001CF0001F0C001E07001C03001C03801C01C0
+  1C01C01C01C01C01C01C01C01C01C01C03801C03801E07001F0E00FCF800> 24 23 -1 7 21.331] 112 @dc
+[<FF801C001C001C001C001C001C001C001C001C001C001C001C001C001C001C001C001C001C001C
+  001C001C001C001C001C00FC00> 16 26 0 0 10.666] 108 @dc
+[<07E00C18380830046000E000E000E000E000FFFCE00C600C701830181C3007C0> 16 16 -1 0 17.079] 101 @dc
+[<FC3FC0381E00181C0008380004380002700003E00001E00001C00003C0000760000720000E1000
+  1C18003C1C00FF3F80> 24 16 -1 0 20.265] 120 @dc
+[<07CFC01C2E00381E00700E00600E00E00E00E00E00E00E00E00E00E00E00E00E00700E00300E00
+  380E000C3E0003CE00000E00000E00000E00000E00000E00000E00000E00000E00000E00007E00> 24 26 -1 0 21.331] 100 @dc
+[<FF801C001C001C001C001C001C001C001C001C001C001C001C001C001C00FC0000000000000000
+  000000000018003C003C001800> 16 26 0 0 10.666] 105 @dc
+[<07E000381C00600600C00300C00300C00300C00300600F001FFE003FFC003FF000700000600000
+  2000002FC0001860003030007038007038007038007038003030001873000FCE00> 24 24 -1 8 19.198] 103 @dc
+[<1E3C0071FB00E0F100E07100E07100E070007070003070001C700007F000007000007000207000
+  70E00070C0003F8000> 24 16 -2 0 19.198] 97 @dc
+[<FF9FC01C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001E0E00
+  1E0E001D0C00FCF800> 24 16 -1 0 21.331] 110 @dc
+[<07CFC00C2E001C1E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E00
+  1C0E001C0E00FC7E00> 24 16 -1 0 21.331] 117 @dc
+[<10F0001B0C001E07001C03001C03801C01C01C01C01C01C01C01C01C01C01C01C01C01801C0380
+  1E07001F0E001CF8001C00001C00001C00001C00001C00001C00001C00001C00001C0000FC0000> 24 26 -1 0 21.331] 98 @dc
+[<FFC01C001C001C001C001C001C001C001C001C001C001C001E201E701D70FCE0> 16 16 -1 0 15.018] 114 @dc
+cmti9.300 @sf
+[<6000F00078003000000000000000000000000000000000000C001E000F000600> 16 16 -4 0 11.761] 58 @dc
+cmr9.300 @sf
+[<00800001C00001C00001C00003A00003A0000790000710000710000E08000E08001E0C001C0400
+  1C04003C0600FF1F80> 24 16 -1 0 20.265] 118 @dc
+[<780000E40000E20000E1000001000001000000800000800001C00001C00001C00003A00003A000
+  0790000710000710000E08000E08001E0C001C04001C04003C0600FF1F80> 24 23 -1 7 20.265] 121 @dc
+[<FF9FC01C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001C0E001E0E00
+  1E0E001D0C001CF8001C00001C00001C00001C00001C00001C00001C00001C00001C0000FC0000> 24 26 -1 0 21.331] 104 @dc
+[<FFF07030701038101C081C080E0807000700038041C041C040E0407060707FF8> 16 16 -1 0 17.065] 122 @dc
+[<60F0F060> 8 4 -3 0 10.666] 46 @dc
+[<003F0001C0C00300300E00081C00081C0004380004780002700002700002F00000F00000F00000
+  F00000F00000F000007000027000027800023800061C00061C000E0E001E03002E01C0C6003F02> 24 26 -2 0 27.731] 67 @dc
+[<010040000180C0000380E0000380E00003C1E0000741D000074190000F2398000E2388000E2308
+  001E170C001C1704001C160400380E06003C0E0700FF3F9F80> 32 16 -1 0 27.731] 119 @dc
+[<8040202010101070F0F060> 8 11 -3 7 10.666] 44 @dc
+[<7FE00E000E000E000E000E000E000E000E000E000E000E000E000E000E00FFC00E000E000E000E
+  000E000E000E100738031801F0> 16 26 0 0 11.732] 102 @dc
+[<7F0FF00E07000E07000E07000E07000E07000E07000E07000E07000E07000E07000E07000E0700
+  0E07000E0700FFFFF00E07000E07000E07000E07000E07000E070006070407078E0183C600FC7C> 24 26 0 0 22.398] 11 @dc
+[<FFC0FFC0> 16 2 0 -7 12.799] 45 @dc
+[<03FFE000001C0000001C0000001C0000001C0000001C0000001C0000001C0000001C0000001C00
+  00001C0000001C0000001C0000001C0000001C0000001C0000001C0000001C0000801C0080801C
+  0080801C0080C01C0180401C0100401C0100701C07007FFFFF00> 32 26 -1 0 27.731] 84 @dc
+[<003E000000C18000018040000300400007002000060020000E0010000E0010000E0010000E0010
+  000E0010000E0010000E0010000E0010000E0010000E0010000E0010000E0010000E0010000E00
+  10000E0010000E0010000E0010000E0010000E003800FFE1FF00> 32 26 -2 0 28.792] 85 @dc
+[<FFFFF00E00700E00380E00180E00080E00080E00080E00040E00040E04000E04000E04000E0C00
+  0FFC000E0C000E04000E04000E04000E00080E00080E00080E00180E00100E00300E0070FFFFF0> 24 26 -2 0 26.128] 69 @dc
+[<FF3FC01C1F001C1E001C1C001C38001C78001C70001CE0001FE0001DC0001C40001C20001C1000
+  1C18001C1E001C3F801C00001C00001C00001C00001C00001C00001C00001C00001C0000FC0000> 24 26 -1 0 20.265] 107 @dc
+[<7F8FE3FC0E0380E00E0380E00E0380E00E0380E00E0380E00E0380E00E0380E00E0380E00E0380
+  E00E0380E00E0380E00E0380E00E0380E00E0380E0FFFFFFE00E0380000E0380000E0380000E03
+  80000E0380000E038040060380E00703C06001C17040007E1F80> 32 26 0 0 31.997] 14 @dc
+[<007FC0000E00000E00000E00000E00000E00000E0007CE001C2E00381E00700E00700E00E00E00
+  E00E00E00E00E00E00E00E00E00E00700E00300E00381E000C260003C200> 24 23 -1 7 20.265] 113 @dc
+[<FFE7FF000E0070000E0070000E0070000E0070000E0070000E0070000E0070000E0070000E0070
+  000E0070000E0070000E0070000FFFF0000E0070000E0070000E0070000E0070000E0070000E00
+  70000E0070000E0070000E0070000E0070000E007000FFE7FF00> 32 26 -2 0 28.792] 72 @dc
+[<306078F0F9F0B1608100810081004080408020401830> 16 11 -5 -15 19.198] 92 @dc
+[<C18020401020102008100810081068D0F9F0F1E060C0> 16 11 -1 -15 19.198] 34 @dc
+[<8040202010101070F0F060000000000000000060F0F060> 8 23 -3 7 10.666] 59 @dc
+[<FFFF800E01E00E00F00E00780E00380E003C0E003C0E003C0E003C0E003C0E00780E00700E01E0
+  0FFF800E03C00E00E00E00F00E00780E00780E00780E00780E00780E00700E00E00E01C0FFFF00> 24 26 -2 0 27.195] 66 @dc
+[<7F0FE00E07000E07000E07000E07000E07000E07000E07000E07000E07000E07000E07000E0700
+  0E07000E0700FFFF000E00000E00000E00000E00000E00000E020006070007030001820000FC00> 24 26 0 0 21.331] 12 @dc
+[<FFE00E000E000E000E000E000E000E000E000E000E000E000E000E000E000E000E000E000E000E
+  000E000E000E000E000E00FFE0> 16 26 -1 0 13.860] 73 @dc
+[<00800100020004000C00080018003000300030006000600060006000E000E000E000E000E000E0
+  00E000E000E000E0006000600060006000300030003000180008000C000400020001000080> 16 38 -3 10 14.932] 40 @dc
+[<8000400020001000180008000C0006000600060003000300030003000380038003800380038003
+  80038003800380038003000300030003000600060006000C00080018001000200040008000> 16 38 -2 10 14.932] 41 @dc
+[<FEFEC0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0FEFE> 8 37 -3 9 10.666] 91 @dc
+[<FFF007000700070007000700070007000700070007000700070007000700070007000700070007
+  000700FF0007000300> 16 24 -3 0 19.198] 49 @dc
+[<07C01860303030187018601C601CE01CE01CE01CE018F018F030E860E7C0E00060007000300030
+  3818380C18061001E0> 16 24 -2 0 19.198] 54 @dc
+[<0FC0186020106008C00CC00CC00CC00C401C603830F819F007C00F803E603C3070106018601860
+  182018303018600780> 16 24 -2 0 19.198] 56 @dc
+[<FEFE060606060606060606060606060606060606060606060606060606060606060606FEFE> 8 37 0 9 10.666] 93 @dc
+[<003F820001C06600030016000E000E001C000E001C000E0038000E0078000E0070000E0070000E
+  00F001FFC0F0000000F0000000F0000000F0000000F00000007000020070000200780002003800
+  06001C0006001C000E000E001E0003002E0001C0C600003F0200> 32 26 -2 0 30.129] 71 @dc
+[<0020004000003000C000007000E000007000E000007801E000007801E00000E801D00000E40390
+  0000E403900001C403880001C403880001C20708000382070400038207040003810E040007010E
+  020007010E020007009C020007009C02000E009C01000E007801000E007801001C007800801C00
+  7800803C007801C0FF83FF0FF0> 40 26 -1 0 39.457] 87 @dc
+[<FF00FFC01C001E0008001C0008001C00040038000400380006007800020070000200700001FFE0
+  000100E0000100E0000081C0000081C0000081C000004380000043800000438000002700000027
+  0000003F0000001E0000001E0000000C0000000C0000000C0000> 32 26 -1 0 28.792] 65 @dc
+[<FFFF00000E01C0000E0070000E0038000E0038000E001C000E001E000E000E000E000E000E000F
+  000E000F000E000F000E000F000E000F000E000F000E000F000E000F000E000E000E000E000E00
+  1C000E001C000E0038000E0030000E00E0000E01C000FFFF0000> 32 26 -2 0 29.328] 68 @dc
+[<C020101008080868F8F060> 8 11 -3 -15 10.666] 39 @dc
+[<60F0F060000000000000000060F0F060> 8 16 -3 0 10.666] 58 @dc
+[<0F807C003873C300700F0100E00E0080E01E0080E0390000E0788000E0F0800060E0400031C020
+  0013C020000B801000078010000700080007001E0007807F800E4000000E4000000E2000000E10
+  00000E1000000E1000000E100000061000000320000001C00000> 32 26 -2 0 29.864] 38 @dc
+[<007F000001C1C000070070000E0038001C001C003C001E0038000E0078000F0078000F00F00007
+  80F0000780F0000780F0000780F0000780F0000780F0000780F00007807000070078000F003800
+  0E003C001E001C001C000E0038000700700001C1C000007F0000> 32 26 -2 0 29.864] 79 @dc
+[<87E000D81800E00400C00600C00200800300800300800300000300000700000E00003E0007FC00
+  1FF8003FE0007E0000700000E00000C00200C00200C00200C00600600600200E001836000FC200> 24 26 -2 0 21.331] 83 @dc
+[<FFE0000E00000E00000E00000E00000E00000E00000E00000E00000E00000E00000E00000FFF00
+  0E03C00E00E00E00700E00700E00780E00780E00780E00780E00700E00700E00E00E03C0FFFF00> 24 26 -2 0 26.128] 80 @dc
+[<FF8010001C0030000800300008007000080070000800F0000801D0000801D00008039000080390
+  0008071000080E1000080E1000081C1000081C100008381000087010000870100008E0100008E0
+  100009C010000B8010000B8010000F0010000F003800FE01FF00> 32 26 -2 0 28.792] 78 @dc
+[<FFF87FF83FF8300810040804040402000100018000C00060007000380038003C401CE01CC01C80
+  3C4038203010600F80> 16 24 -2 0 19.198] 50 @dc
+[<000C0000000C0000001E0000001E0000001E000000390000003900000039000000708000007080
+  0000E0400000E0400000E0400001C0200001C0200003C030000380100003801000070008000700
+  0800070008000E0004000E0004001C0006001E000F00FF801FC0> 32 26 -1 0 28.792] 86 @dc
+[<078018603030703860186018E01CE01CE01CE01CE01CE01CE01CE01CE01CE01CE01CE01C601860
+  183030303018600780> 16 24 -2 0 19.198] 48 @dc
+/cmsy5.300 @newfont
+cmsy5.300 @sf
+[<0C000C00EDC07F801E007F80EDC00C000C00> 16 9 -2 -1 15.278] 3 @dc
+/cmr7.300 @newfont
+cmr7.300 @sf
+[<07FF00007000007000007000007000007000007000007000007000007000007000007000007000
+  8070088070088070084070104070106070307FFFF0> 24 20 -1 0 23.695] 84 @dc
+[<FC7E3018301830183018301830183018301830183818343033E0300030003000300030003000F0
+  00> 16 20 -1 0 18.334] 104 @dc
+[<FC3030303030303030303030F00000000000207020> 8 21 -1 0 9.397] 105 @dc
+[<9F00E180C0C080C080C003C03F807E00E000C080C08061803E80> 16 13 -1 0 13.151] 115 @dc
+[<FE0030003000300030003000300030003000304038E034E0F3C0> 16 13 -1 0 12.972] 114 @dc
+[<0FC0182020106000C000C000C000FFF0C0106030202010400F80> 16 13 -1 0 14.759] 101 @dc
+[<3E3861E4C064C064C0606060386007E000604060E040E1C07F00> 16 13 -2 0 16.546] 97 @dc
+[<0FC0182020106000C000C000C000C000C0006020207018700FE0> 16 13 -1 0 14.759] 99 @dc
+[<0603000603000603000D06800D06800D0480188C40188C40188840305820305820707030F87CF8> 24 13 -1 0 23.695] 119 @dc
+[<0F9E18583038301830183018301830183018301830183018F078> 16 13 -1 0 18.334] 117 @dc
+[<FC003000300030003000300033E034303808300C30063006300630063006300C38083430F3E0> 16 19 -1 6 18.334] 112 @dc
+[<0FC0387060186018C00CC00CC00CC00CC00C6018201018600FC0> 16 13 -1 0 16.546] 111 @dc
+[<0E0011003080308030803000300030003000300030003000FF8070003000100010001000> 16 18 -1 0 12.972] 116 @dc
+[<0F9E105820386018C018C018C018C018C0186018203818780F9800180018001800180018001800
+  78> 16 20 -1 0 18.334] 100 @dc
+[<23E034303808300C30063006300630063006300C3808341033E0300030003000300030003000F0
+  00> 16 20 -1 0 18.334] 98 @dc
+[<7000E800E400E60002000200030003000780068006800C400C4018201820182030103018F87C> 16 19 -1 6 17.440] 121 @dc
+[<FE00203800601000E01000E01001E01003A0100720100F20100E20101C20103820107020107020
+  10E02011C0201380201780201700201E0070FC01FC> 24 20 -1 0 24.503] 78 @dc
+[<FC7E30183018301830183018301830183018301838183430F3E0> 16 13 -1 0 18.334] 110 @dc
+[<FC303030303030303030303030303030303030F0> 8 20 -1 0 9.397] 108 @dc
+[<8FC0F060C0308018801880180018003800F00FF03FC07F007000E000C010C010C030603030F01F
+  10> 16 20 -2 0 18.334] 83 @dc
+[<FFC0001C00001C00001C00001C00001C00001C00001C10001C10001C30001FF0001C30001C1000
+  1C10401C00401C00401C00801C00801C0380FFFF80> 24 20 -1 0 21.418] 70 @dc
+[<FF00FF00> 16 2 0 -5 11.185] 45 @dc
+[<0100020004000800100030002000600060004000C000C000C000C000C000C000C000C000C000C0
+  004000600060002000300010000800040002000100> 16 30 -2 8 12.972] 40 @dc
+[<0FC030306018C00CC00CC00C60183FF03FE0600060002F0030C02040606060606060204030E60F
+  3C> 16 20 -1 7 16.546] 103 @dc
+[<FC7E3F0030180C0030180C0030180C0030180C0030180C0030180C0030180C0030180C0030180C
+  00381C0C0034321800F3E1F000> 32 13 -1 0 27.270] 109 @dc
+[<FE083FE0381C0700101C0700101C0700103A0700103A0700107107001071070010E0870010E087
+  0010E0870011C0470011C0470013802700138027001700170017001700170017001E000F00FE00
+  0FE0> 32 20 -1 0 29.864] 77 @dc
+[<FF801C001C001C001C001C001C001C001C001C001C001C001C001C001C001C001C001C001C00FF
+  80> 16 20 -1 0 11.992] 73 @dc
+[<FF80001C00001C00001C00001C00001C00001C00001C00001C00001FFC001C07001C03801C01C0
+  1C01C01C01C01C01C01C01C01C03801C0700FFFC00> 24 20 -1 0 22.312] 80 @dc
+[<0FC030306018C00CC00CC00CC01C607831F00FE00F803F603C10700860084008000800300FC0> 16 19 -1 0 16.546] 56 @dc
+[<1F0021C040E0E060E070E07000700070006040E070C04F0040004000400044007F807FC06060> 16 19 -2 0 16.546] 53 @dc
+[<0F0030C0606060604020C030C030C030C030C030C030C030C030C03040206060606030C00F00> 16 19 -2 0 16.546] 48 @dc
+[<04000E000E000E000E000E00060006000200030001000100008000408020801040107FF87FFC40
+  00> 16 20 -2 0 16.546] 55 @dc
+[<800040002000100008000C00040006000600020003000300030003000300030003000300030003
+  0002000600060004000C0008001000200040008000> 16 30 -2 8 12.972] 41 @dc
+[<80404020202060E040> 8 9 -3 6 9.397] 44 @dc
+[<FFFC001C03801C01C01C00E01C00601C00701C00301C00381C00381C00381C00381C00381C0038
+  1C00301C00701C00601C00E01C01C01C0700FFFC00> 24 20 -1 0 24.993] 68 @dc
+[<7F0018001800180018001800180018001800180018001800FF00180018001800184018E00CE003
+  C0> 16 20 0 0 10.291] 102 @dc
+[<FE07FC3800E01000E00801C00801C004038007FF80040380020700020700010E00010E00011E00
+  009C00009C00007800007800007800003000003000> 24 20 -1 0 24.503] 65 @dc
+[<030003000780068006800C400C4018201820182030103018F87C> 16 13 -1 0 17.440] 118 @dc
+[<FF80F81C01CC1C03841C03841C03801C03801C03801C03801C07001C0E001FF8001C07001C0380
+  1C01C01C01C01C01C01C01C01C03801C0700FFF800> 24 20 -1 0 24.099] 82 @dc
+[<7C00E600E2004300030003000300030003000300030003000300030003000300030003000F0000
+  000000000000000000020007000200> 16 27 2 6 10.291] 106 @dc
+[<1FC06070E038F018F01C601C001C0018003800700FC000E00030003870387038703830700FC0> 16 19 -1 0 16.546] 51 @dc
+[<3E004100E080E0400060002000300F3030B060704030C030C030C030C0204060604030800F00> 16 19 -2 0 16.546] 57 @dc
+[<FFC00C000C000C000C000C000C000C000C000C000C000C000C000C000C000C00EC001C000C00> 16 19 -3 0 16.546] 49 @dc
+[<00FC000703000C0080180040300020700020600020E00000E00000E00000E00000E00000E00000
+  6000207000203000601800600C00E007036000FC20> 24 20 -2 0 23.695] 67 @dc
+[<FFFFC01C01C01C00C01C00401C00601C00201C00201C08201C08001C18001FF8001C18001C0800
+  1C08401C00401C00401C00801C00801C0380FFFF80> 24 20 -1 0 22.312] 69 @dc
+[<40E040> 8 3 -3 0 9.397] 46 @dc
+[<FC7C30303070306030C031803B803700330030803040306030F8300030003000300030003000F0
+  00> 16 20 -1 0 17.440] 107 @dc
+[<007E001800180018001800180F98185820386018C018C018C018C018C0186018203818480F88> 16 19 -1 6 17.440] 113 @dc
+/cmbx9.300 @newfont
+cmbx9.300 @sf
+[<FFF80000FFF800000F8000000F8000000F8000000F8000000F8000000F8000000F8000000F8000
+  000F8000000F8000000FFFF8000F807C000F803E000F801F000F801F800F801F800F801F800F80
+  1F800F801F800F801F000F803F000F807E00FFFFF800FFFFE000> 32 26 -2 0 30.187] 80 @dc
+[<FFC0FFC01E001E001E001E001E001E001E001E001E001E1C1E3E1D3E1D3EFC9CFC78> 16 17 -1 0 18.235] 114 @dc
+[<03F8000E0E003C07807C07C07803C0F803E0F803E0F803E0F803E0F803E0F803E07803C07803C0
+  3803803C07800E0E0003F800> 24 17 -1 0 22.104] 111 @dc
+[<03E00F301E181E181E181E181E181E001E001E001E001E001E001E001E00FFF03FF01E000E000E
+  000600060006000600> 16 24 -1 0 17.192] 116 @dc
+[<03FC000F06001C03003C0180780000780000F80000F80000F80000F80000F80000780E00781F00
+  3C1F001C1F000F0E0003FC00> 24 17 -1 0 19.648] 99 @dc
+[<FFC0FFC01E001E001E001E001E001E001E001E001E001E001E001E001E001E001E001E001E001E
+  001E001E001E001E00FE00FE00> 16 26 -1 0 12.280] 108 @dc
+[<000300000007800000078000000FC000000FC000000FC000001F6000001F6000003E3000003E30
+  00007E3800007C180000FC1C0000F80C0000F80C0001F0060001F0060003F0070003E0030007E0
+  038007C0018007C001800F8000C00F8000C0FFF007FCFFF007FC> 32 26 -1 0 33.358] 86 @dc
+[<03FC000E06001C03003C0180780000780000F80000F80000FFFF80F80780F80780780780780700
+  3C07001C0E000E1C0003F000> 24 17 -1 0 20.285] 101 @dc
+[<FF80FF801E001E001E001E001E001E001E001E001E001E001E001E001E007E007E000000000000
+  0000001C003E003E003E003E001C00> 16 27 -1 0 12.280] 105 @dc
+[<7FC3FE7FC3FE0F00F00F00F00F00F00F00F00F00F00F00F00F00F00F00F00F00F00F00F00F00F0
+  0F00F00F00F0FFFFF0FFFFF00F00000F00000F00E00F01F00F01F00F01F00780E001E0C0007F80> 24 26 0 0 24.560] 12 @dc
+[<1FC3E07C27E0F81700F80F00F80F00F80F007C0F003E0F000FCF0000FF00000F001C0F003E0F00
+  3E0E003E1E001C3C000FF000> 24 17 -1 0 21.490] 97 @dc
+[<FFCFFCFFCFFC1E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01F01E0
+  1F01E01E81C0FE63C0FE1F00> 24 17 -1 0 24.560] 110 @dc
+cmr9.300 @sf
+[<FFF0000E00000E00000E00000E00000E00000E00000E00000E00000E04000E04000E04000E0C00
+  0FFC000E0C000E04000E04000E04000E00100E00100E00100E00300E00200E00600E00E0FFFFE0> 24 26 -2 0 25.061] 70 @dc
+[<FFFFFFFFF8> 40 1 0 -9 38.397] 124 @dc
+1 @bop1
+cmr17.300 @sf 295 160 p (Proto)s
+2(col)m
+22 r 86 c
+-5(eri\014cation)m
+21(as)m
+21 r 97 c
+22(Hardw)m
+-1(are)m
+21(Design)m
+20(Aid)m
+cmsy10.360 @sf 1663 135 p 3 c
+cmr10.329 @sf 261 286 p (Da)s
+(vi)s
+-1 r 100 c
+14(L.)m
+15(Dill)m
+105(Andreas)m
+15(J.)m
+15(Drexler)m
+106(Alan)m
+14(J.)m
+16(Hu)m
+106(C.)m
+15(Han)m
+15 r 89 c
+-3(ang)m
+672 332 p (Computer)s
+15(Systems)m
+15(Lab)m
+1(oratory)m
+784 377 p (Stanford)s
+15(Univ)m
+(ersit)s
+-2 r 121 c
+782 423 p (Stanford,)s
+14(CA)m
+15(94305)m
+cmbx10.329 @sf -51 577 p (Abstract)s
+cmti9.300 @sf 24 633 p (The)s
+21 r 114 c
+-1(ole)m
+19(of)m
+20(automatic)m
+18(formal)m
+20(pr)m
+-1(oto)m
+-2 r 99 c
+-2(ol)m
+18(veri\014c)m
+-1(a)m
+-1 r 45 c
+24 670 p (tion)s
+13(in)m
+13(har)m
+-1(dwar)m
+-2 r 101 c
+12(design)m
+12(is)m
+13 r 99 c
+-1(onsi)m
+-1(der)m
+-2 r 101 c
+-2(d)m
+-1 r 46 c
+16(Principles)m
+24 707 p (ar)s
+-1 r 101 c
+16(identi\014e)m
+-2 r 100 c
+15(that)m
+16(maximize)m
+16(the)m
+17 r 98 c
+-1(ene)m
+-1(\014ts)m
+15(of)m
+17(pr)m
+-1(o-)m
+24 745 p (to)s
+-1 r 99 c
+-2(ol)m
+14(veri\014c)m
+-2(at)m
+-1(ion)m
+13(while)m
+15(minimizing)m
+15(the)m
+14(lab)m
+-1(or)m
+14(and)m
+24 782 p 99 c
+-1(omputa)m
+-1(tion)m
+10 r 114 c
+-1 r 101 c
+-2(qui)m
+-1 r 114 c
+-1 r 101 c
+-3(d.)m
+15 r 65 c
+12(new)m
+12(pr)m
+-1(oto)m
+-2 r 99 c
+-3(ol)m
+10(descriptio)m
+-1 r 110 c
+24 819 p (language)s
+12(and)m
+14(veri\014er)m
+14(\(b)m
+-1(oth)m
+12 r 99 c
+-1(al)m
+2(le)m
+-2 r 100 c
+12(Mur)m
+cmmi9.300 @sf 39 c
+cmti9.300 @sf 41 c
+15(ar)m
+-1 r 101 c
+14(de-)m
+24 857 p (scrib)s
+-1 r 101 c
+-2(d,)m
+14(along)m
+14(with)m
+16(exp)m
+-1(erie)m
+-1(nc)m
+-3(es)m
+14(in)m
+15(applying)m
+14(them)m
+24 894 p (to)s
+13(two)m
+14(indust)m
+-1(rial)m
+11(pr)m
+-1(oto)m
+-2 r 99 c
+-2(o)m
+-1(ls)m
+11(that)m
+13(wer)m
+-1 r 101 c
+12(develop)m
+-2 r 101 c
+-3 r 100 c
+12(as)m
+24 932 p 112 c
+-1(art)m
+12(of)m
+13(har)m
+-1(dwar)m
+-1 r 101 c
+11(designs.)m
+cmbx10.329 @sf -51 1029 p 49 c
+51(In)m
+(tro)s
+1(duction)m
+cmr9.300 @sf -51 1084 p (Most)s
+11(complex)m
+13(digital)m
+12(designs)m
+13 r 109 c
+(ust)s
+11 r 98 c
+1 r 101 c
+13(regarded)m
+13(as)m
+cmti9.300 @sf 13 r 99 c
+-1(onc)m
+-1(ur-)m
+-51 1121 p 114 c
+-1(en)m
+-1 r 116 c
+11(systems:)m
+cmr9.300 @sf 15(individual)m
+13(mo)m
+1(dules)m
+13(run)m
+13(in)m
+12(parallel)m
+12(and)m
+13 r 109 c
+(ust)s
+-51 1159 p (co)s
+1(ordinate)m
+8 r 98 c
+121 c
+8(explicit)m
+8(sync)m
+(hronization)s
+10(and)m
+9(comm)m
+(unication.)s
+-51 1196 p (Complexit)s
+-1 r 121 c
+10(will)m
+11(con)m
+(tin)s
+(ue)s
+10(to)m
+12(increase,)m
+12 r 112 c
+1(ortending)m
+13 r 97 c
+12(shift)m
+12(in)m
+-51 1234 p (total)s
+10(design)m
+13(e\013ort)m
+13(from,)m
+12(for)m
+12(instance,)m
+12(faster)m
+12(arithmetic)m
+12(cir-)m
+-51 1271 p (cuits,)s
+11(to)m
+13(mec)m
+(hanisms)s
+13(for)m
+13(co)m
+1(ordination.)m
+17(Those)m
+14(mec)m
+(hanisms)s
+-51 1308 p (usually)s
+16(in)m
+118 c
+(olv)s
+101 c
+cmti9.300 @sf 15(pr)m
+-1(oto)m
+-2 r 99 c
+-2(o)m
+-1(ls:)m
+cmr9.300 @sf 24(rules)m
+17(that,)m
+19(if)m
+16(follo)m
+119 c
+-1(ed)m
+16 r 98 c
+121 c
+17(eac)m
+104 c
+-51 1346 p (part)s
+121 c
+11(in)m
+13 r 97 c
+13(co)m
+1(ordinated)m
+14(action,)m
+13(assure)m
+14 r 97 c
+13(desired)m
+13(outcome.)m
+-2 1385 p (Unfortunately)s
+-2 r 44 c
+19(proto)m
+1(col)m
+19(design)m
+19(is)m
+19 r 97 c
+19(subtle)m
+19(art.)m
+34(Ev)m
+(en)s
+-51 1423 p (when)s
+9 r 97 c
+10(designer)m
+11(exercises)m
+10(the)m
+10(utmost)m
+10(care,)m
+11(there)m
+10(is)m
+10 r 97 c
+10(strong)m
+-51 1460 p 112 c
+1(ossibilit)m
+-1 r 121 c
+10(that)m
+12(he)m
+12(or)m
+12(she)m
+12(will)m
+10(fail)m
+11(to)m
+11(an)m
+(ticipate)s
+11(some)m
+12 r 112 c
+1(ossi-)m
+-51 1498 p (ble)s
+13(in)m
+(teraction)s
+13(among)m
+16(rules,)m
+14(resulting)m
+15(in)m
+14(errors)m
+15(and)m
+15(dead-)m
+-51 1535 p (lo)s
+1 r 99 c
+(ks.)s
+14(Ev)m
+(en)s
+12 r 119 c
+(orse,)s
+11(the)m
+13(nondeterminism)m
+13(resulting)m
+12(from)m
+12(dif-)m
+-51 1572 p (fering)s
+11(in)m
+(ternal)s
+11(states)m
+13(or)m
+12(dela)m
+(ys)s
+12(means)m
+13(that)m
+13(resulting)m
+12(errors)m
+-51 1610 p (are)s
+14(often)m
+16(not)m
+15(reliably)m
+15(rep)m
+1(eatable,)m
+17(making)m
+16(testing)m
+15(and)m
+16(de-)m
+-51 1647 p (bugging)s
+13(extremely)m
+13(di\016cult.)m
+-2 1687 p (Consequen)s
+(tly)s
+-2 r 44 c
+20(the)m
+20(proto)m
+1(col)m
+20(design)m
+21(problem)m
+20(seems)m
+20(an)m
+-51 1724 p (ob)s
+(vious)s
+17(target)m
+18(for)m
+19(computer)m
+19(assistance.)m
+34(Ho)m
+119 c
+(ev)s
+-1(er,)m
+17(while)m
+-51 1762 p (proto)s
+1(col)m
+12(sim)m
+(ulation)s
+13(is)m
+13(an)m
+14(e\013ectiv)m
+101 c
+13 r 119 c
+97 c
+-1 r 121 c
+12(to)m
+13(catc)m
+104 c
+13(\\ob)m
+(vious")s
+-51 1799 p (errors,)s
+13(man)m
+121 c
+14(proto)m
+1(col)m
+14(problems)m
+15(arise)m
+14(when)m
+15(man)m
+121 c
+13(un)m
+(usual)s
+-51 1836 p (conditions)s
+14(arise)m
+15(at)m
+14(once;)m
+16(catc)m
+(hing)s
+14(these)m
+15(problems)m
+16(reliably)m
+-51 1874 p 119 c
+(oul)s
+-1 r 100 c
+11(require)m
+14(unrealistic)m
+13(amoun)m
+(ts)s
+13(of)m
+12(sim)m
+(ulation.)s
+-2 1913 p (Because)s
+19(of)m
+18(these)m
+19(long-standing)m
+19(problems,)m
+20(formal)m
+19 r 118 c
+(er-)s
+-51 1951 p (i\014cation)s
+18(of)m
+19(proto)m
+1(cols)m
+20(has)m
+20(stim)m
+(ulated)s
+19 r 97 c
+19(great)m
+20(deal)m
+20(of)m
+19(in-)m
+-51 1988 p (terest.)s
+28(In)m
+18(particular,)m
+18(automatic)m
+18(metho)m
+1(ds)m
+18(\(\\p)m
+1(erturbation)m
+-51 2026 p (analysis"\))s
+14(that)m
+15(explicitly)m
+15(en)m
+(umerate)s
+14(all)m
+15(the)m
+15(system)m
+15(states)m
+-51 2063 p (reac)s
+(hed)s
+18(under)m
+20 r 97 c
+19(particular)m
+20(proto)m
+1(col)m
+20(ha)m
+118 c
+101 c
+18 r 98 c
+1(een)m
+20(used)m
+20(for)m
+-51 2100 p (man)s
+121 c
+10 r 121 c
+(ears)s
+12 r 91 c
+(16)s
+44 c
+12 r 49 c
+44 c
+12 r 56 c
+(].)s
+17(Generally)m
+-2 r 44 c
+11(these)m
+13(metho)m
+1(ds)m
+13(ha)m
+118 c
+101 c
+11 r 98 c
+1(een)m
+-51 2138 p (applied)s
+12(to)m
+13(comm)m
+(unication)s
+13(and)m
+13(net)m
+119 c
+(ork)s
+11(proto)m
+1(cols.)m
+-2 2178 p 87 c
+-2 r 101 c
+16 r 98 c
+1(eliev)m
+101 c
+17(that)m
+19(proto)m
+1(col)m
+18 r 118 c
+(eri\014cation)s
+17(is)m
+18(no)m
+119 c
+17 r 97 c
+18(digital)m
+-51 2215 p (CAD)s
+10(problem;)m
+13(proto)m
+1(col)m
+12 r 118 c
+(eri\014ers)s
+12(should)m
+12 r 98 c
+1 r 101 c
+13(in)m
+12(ev)m
+(ery)s
+11(digital)m
+-51 2252 p (designer's)s
+15(to)m
+1(olb)m
+1 r 111 c
+(x.)s
+24(There)m
+15(ha)m
+118 c
+101 c
+14(already)m
+17 r 98 c
+1(een)m
+16(some)m
+16(initial)m
+-51 2290 p (steps)s
+12(in)m
+13(this)m
+13(area:)m
+18 r 65 c
+-2(T&T')m
+-1 r 115 c
+12(COSP)m
+-2(AN)m
+11(proto)m
+1(col)m
+14 r 118 c
+(eri\014er)s
+12(has)m
+-51 2327 p 98 c
+1(een)m
+11(used)m
+13(for)m
+12(hardw)m
+(are)s
+12(designs)m
+12 r 91 c
+(12)s
+1(],)m
+11(and)m
+13(McMillan's)m
+11(SMV)m
+-51 2364 p (program)s
+8 r 119 c
+(as)s
+9(recen)m
+(tly)s
+8(applied)m
+10(to)m
+9 r 97 c
+9(cac)m
+(he)s
+9(coherence)m
+10(proto)m
+1(col)m
+-51 2402 p (for)s
+11 r 97 c
+13(shared-memory)m
+15 r 109 c
+(ultipro)s
+1(cessor)m
+12 r 91 c
+(10)s
+(].)s
+-51 2448 p 389 2 ru
+cmsy5.300 @sf -9 2474 p 3 c
+cmr7.300 @sf 7 2486 p (This)s
+14(researc)m
+104 c
+11 r 119 c
+(as)s
+12(supp)m
+1(orted)m
+14 r 98 c
+121 c
+13(the)m
+13(National)m
+12(Science)m
+14 r 70 c
+-2(ounda-)m
+-51 2521 p (tion)s
+10(\(gran)m
+116 c
+9 r 110 c
+(um)s
+98 c
+1(er)m
+10(MIP-885880)m
+-1(7\),)m
+9(the)m
+11(Defense)m
+11(Adv)m
+-1(anced)m
+10(Researc)m
+104 c
+-51 2557 p (Pro)s
+2(jects)m
+9(Agency)m
+11(\(con)m
+(tract)s
+9 r 110 c
+(um)s
+98 c
+1(er)m
+10(N00039)m
+-1(-91-C)m
+-1(-013)m
+-1(8\))m
+9(and)m
+11 r 98 c
+121 c
+11(gifts)m
+-51 2592 p (from)s
+13(the)m
+15 r 80 c
+111 c
+119 c
+-1(ell)m
+13 r 70 c
+-2(oundation)m
+15(and)m
+15(Mitsubishi)m
+17(Electronics.)m
+26(Most)m
+14(of)m
+-51 2627 p (this)s
+15 r 119 c
+(ork)s
+15 r 119 c
+(as)s
+15(done)m
+15(using)m
+17(equipmen)m
+116 c
+17(generously)m
+16(donated)m
+16 r 98 c
+121 c
+16(Sun)m
+-51 2662 p (Microsystems.)s
+cmr9.300 @sf 1088 577 p 87 c
+-2 r 101 c
+11(rep)m
+1(ort)m
+14(here)m
+13(on)m
+13(our)m
+13(exp)m
+1(eriences)m
+14(using)m
+13 r 97 c
+13(proto)m
+1(col)m
+13(de-)m
+1038 615 p (scription)s
+17(language)m
+18(and)m
+18 r 118 c
+(eri\014er)s
+17(\(b)m
+1(oth)m
+18(of)m
+16(our)m
+18 r 111 c
+(wn)s
+16(design\))m
+1038 652 p (called)s
+17(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 18(on)m
+18(some)m
+18(industrial)m
+17(digital)m
+17(design)m
+19(problems.)m
+1038 689 p 87 c
+-2 r 101 c
+13(discuss)m
+16(factors)m
+14(that)m
+15(increase)m
+15(the)m
+15 r 99 c
+(hance)s
+14(for)m
+14(successful)m
+1038 727 p (use)s
+14(of)m
+14 r 97 c
+14(proto)m
+1(col)m
+15 r 118 c
+(eri\014er,)s
+13 r 111 c
+118 c
+(erview)s
+12(the)m
+14(particular)m
+15(descrip-)m
+1038 764 p (tion)s
+10(language)m
+11(and)m
+11 r 118 c
+(eri\014er)s
+10 r 119 c
+101 c
+9(used,)m
+11(and)m
+11(describ)m
+1 r 101 c
+11(the)m
+11(results)m
+1038 801 p (of)s
+13(our)m
+13(e\013orts.)m
+cmbx9.300 @sf 1038 882 p (Proto)s
+1(col)m
+16 r 86 c
+-3(eri\014cation)m
+cmr9.300 @sf 1038 961 p (Proto)s
+1(cols)m
+16(are)m
+16(needed)m
+17(in)m
+15(hardw)m
+(are)s
+16(to)m
+15(ac)m
+(hiev)s
+101 c
+15(co)m
+1(ordinated)m
+1038 998 p (action)s
+11(in)m
+11(the)m
+11(presence)m
+12(of)m
+11(complicating)m
+11(factors)m
+11(suc)m
+104 c
+11(as)m
+11(com-)m
+1038 1035 p 109 c
+(unication)s
+14 r 99 c
+(hannels)s
+15(that)m
+16(imp)m
+1(ose)m
+15(long)m
+15(and)m
+16 r 112 c
+1(ossibly)m
+16 r 118 c
+-1(ary-)m
+1038 1073 p (ing)s
+16(dela)m
+(ys)s
+15(or)m
+16(deliv)m
+(er)s
+15(messages)m
+17(unreliably)m
+17(or)m
+16(out-of-order,)m
+1038 1110 p 98 c
+1(ounded)m
+16(bu\013ers)m
+15(or)m
+14(other)m
+14(scarce)m
+15(resources)m
+15(that)m
+14(ma)m
+121 c
+13(cause)m
+1038 1147 p (deadlo)s
+1 r 99 c
+(ks,)s
+11(and)m
+11(comp)m
+1(onen)m
+(ts)s
+11(that)m
+11(ha)m
+118 c
+101 c
+9(unpredictable)m
+11(dela)m
+(ys)s
+1038 1185 p (and)s
+10(other)m
+11(nondeterministic)m
+11 r 98 c
+1(eha)m
+(vior.)s
+15(Of)m
+10(sp)m
+1(ecial)m
+10(in)m
+(terest)s
+9(at)m
+1038 1222 p (this)s
+16(time)m
+16(are)m
+16(proto)m
+1(cols)m
+17(for)m
+16(comm)m
+(unication)s
+16 r 111 c
+118 c
+(er)s
+14(net)m
+119 c
+(orks)s
+1038 1259 p (or)s
+16(in)m
+(ter-pro)s
+1(cessor)m
+15(switc)m
+(hes)s
+15(and)m
+16(proto)m
+1(cols)m
+17(for)m
+16(main)m
+(taining)s
+1038 1297 p (cac)s
+(he)s
+12(coherence)m
+14(in)m
+13(shared-memory)m
+14 r 109 c
+(ultipro)s
+1(cessors.)m
+1088 1353 p 70 c
+-2(ormal)m
+10 r 118 c
+(eri\014cation)s
+10(of)m
+11 r 97 c
+11(proto)m
+1(col)m
+12(pro)m
+1(ceeds)m
+13 r 98 c
+121 c
+10(describing)m
+1038 1391 p (the)s
+11(proto)m
+1(col)m
+12(in)m
+12(some)m
+11(language)m
+13(and)m
+12(then)m
+12(comparing)m
+12(the)m
+12 r 98 c
+1(e-)m
+1038 1428 p (ha)s
+(vior)s
+9(of)m
+10(this)m
+10(description)m
+11(with)m
+9 r 97 c
+10(sp)m
+1(eci\014cation)m
+11(of)m
+10(the)m
+10(desired)m
+1038 1466 p 98 c
+1(eha)m
+(vior.)s
+17 r 65 c
+13 r 118 c
+(eri\014er)s
+12(generates)m
+14(states)m
+13(from)m
+13(the)m
+14(description,)m
+1038 1503 p (comparing)s
+17(them)m
+16(with)m
+16(the)m
+17(sp)m
+1(eci\014cation)m
+17(as)m
+17(it)m
+15(go)m
+1(es.)m
+28(If)m
+16(the)m
+1038 1540 p 118 c
+(eri\014er)s
+9(detects)m
+10(an)m
+10(inconsistency)m
+-2 r 44 c
+9(this)m
+10(fact)m
+9(is)m
+10(rep)m
+1(orted,)m
+10(along)m
+1038 1578 p (with)s
+9(an)m
+11(example)m
+11(sequence)m
+11(of)m
+10(states)m
+10(that)m
+11(illustrates)m
+9(ho)m
+119 c
+10(the)m
+1038 1615 p (problem)s
+13(can)m
+13 r 111 c
+1(ccur,)m
+13(to)m
+12(aid)m
+13(in)m
+12(diagnosis.)m
+17(The)m
+13(description)m
+13(of)m
+1038 1652 p (the)s
+15(proto)m
+1(col)m
+15(can)m
+16 r 98 c
+1 r 101 c
+15(in)m
+14(man)m
+121 c
+15(forms:)m
+21 r 97 c
+14(program-lik)m
+101 c
+14(nota-)m
+1038 1690 p (tion,)s
+10 r 97 c
+10(collection)m
+9(of)m
+10(\014nite-state)m
+10(mac)m
+(hines,)s
+10(or)m
+9 r 97 c
+10 r 80 c
+(etri)s
+9(net,)m
+10(for)m
+1038 1727 p (example.)s
+19(The)m
+14(simplest)m
+13(sp)m
+1(eci\014cations)m
+15(are)m
+13(for)m
+14(\014xed)m
+14(prop)m
+1(er-)m
+1038 1764 p (ties,)s
+12(suc)m
+104 c
+13(as)m
+13(absence)m
+15(of)m
+13(deadlo)m
+1 r 99 c
+(k,)s
+12(or)m
+cmti9.300 @sf 14(invarian)m
+-1(ts,)m
+cmr9.300 @sf 11(whic)m
+104 c
+12(are)m
+1038 1802 p (prop)s
+1(erties)m
+15(that)m
+15(should)m
+16 r 98 c
+1 r 101 c
+15(true)m
+15(of)m
+15(individual)m
+15(states.)m
+22(More)m
+1038 1839 p (sophisticated)s
+11 r 118 c
+(eri\014cation)s
+9(systems)m
+11(can)m
+10(handle)m
+11(sp)m
+1(eci\014cations)m
+1038 1877 p (in)s
+13(the)m
+13(form)m
+12(of)m
+13(temp)m
+1(oral)m
+13(logic)m
+13(form)m
+(ulas)s
+12(or)m
+13(automata.)m
+1088 1933 p (The)s
+12(usual)m
+12(assumption)m
+13(ab)m
+1(out)m
+13(the)m
+12(role)m
+12(of)m
+12(formal)m
+12 r 118 c
+(eri\014ca-)s
+1038 1971 p (tion)s
+16(is)m
+16(to)m
+17(pro)m
+(vide)s
+16 r 97 c
+16(guaran)m
+(tee)s
+16(of)m
+17(design)m
+17(correctness.)m
+28(Al-)m
+1038 2008 p (though)s
+13(this)m
+13(is)m
+12 r 97 c
+13 r 119 c
+(orth)s
+121 c
+10(goal,)m
+13(it)m
+12(is)m
+12 r 118 c
+(ery)s
+12(di\016cult)m
+12(to)m
+13(ac)m
+(hiev)s
+(e.)s
+1038 2045 p 87 c
+-2 r 101 c
+15(tak)m
+101 c
+15 r 97 c
+17(more)m
+16(\\economic")m
+17(view:)m
+22(the)m
+17(main)m
+16 r 112 c
+1(oten)m
+(tial)s
+15(of)m
+1038 2083 p (formal)s
+9 r 118 c
+(eri\014cation)s
+9(is)m
+9(to)m
+9(reduce)m
+10(the)m
+9(cost)m
+10(and)m
+10(time)m
+9(of)m
+9(pro)m
+1(duct)m
+1038 2120 p (dev)s
+(elopmen)s
+(t.)s
+1088 2177 p (One)s
+11(of)m
+11(the)m
+12(most)m
+12(imp)m
+1(ortan)m
+116 c
+10 r 119 c
+97 c
+(ys)s
+10(to)m
+11(mak)m
+101 c
+11 r 118 c
+(eri\014cation)s
+11(of)m
+1038 2214 p (large)s
+15(systems)m
+15 r 112 c
+1(ossible)m
+16(is)m
+cmti9.300 @sf 15(down-sc)m
+-2(a)m
+-1(ling)m
+cmr9.300 @sf 12 r 124 c
+15(pretending)m
+17(that)m
+1038 2251 p (they)s
+14(are)m
+13(small)m
+13(systems.)m
+19(Most)m
+13(of)m
+14(the)m
+13(bugs)m
+14(in)m
+14 r 97 c
+13(proto)m
+1(col)m
+14(to)m
+1038 2289 p (co)s
+1(ordinate)m
+11(thousands)m
+11(of)m
+10(pro)m
+1(cesses)m
+11(can)m
+10 r 98 c
+1 r 101 c
+10(demonstrated)m
+12(us-)m
+1038 2326 p (ing)s
+9 r 116 c
+119 c
+-1 r 111 c
+7(or)m
+10(three)m
+9(pro)m
+1(cesses.)m
+17(In)m
+9(this)m
+8(case,)m
+10(do)m
+(wn-scaling)s
+9 r 119 c
+(ould)s
+1038 2364 p 98 c
+1 r 101 c
+15(formally)m
+15 r 118 c
+(erifying)s
+14(the)m
+16(proto)m
+1(col)m
+15(with)m
+15 r 116 c
+119 c
+111 c
+13(or)m
+15(three)m
+16(pro-)m
+1038 2401 p (cesses.)s
+17(In)m
+13(some)m
+12(sense,)m
+13(this)m
+12(is)m
+13(the)m
+12(opp)m
+1(osite)m
+14(end)m
+13(of)m
+12(the)m
+12(sp)m
+1(ec-)m
+1038 2438 p (trum)s
+10(from)m
+10(sim)m
+(ulation:)s
+14(instead)m
+11(of)m
+10(testing)m
+10 r 97 c
+10(small)m
+10(fraction)m
+10(of)m
+1038 2476 p (the)s
+13 r 112 c
+1(ossibilities)m
+14(for)m
+13 r 97 c
+13(large)m
+14(mo)m
+1(del)m
+14(of)m
+13(the)m
+13(system,)m
+14 r 119 c
+101 c
+12 r 99 c
+(hec)s
+107 c
+1038 2513 p (all)s
+15(of)m
+15(the)m
+16 r 112 c
+1(ossibilities)m
+15(for)m
+16 r 97 c
+15(small)m
+15(instance)m
+17(of)m
+15(the)m
+16(system.)m
+1038 2550 p (Neither)s
+11(metho)m
+1 r 100 c
+12(is)m
+11(guaran)m
+(teed)s
+12(to)m
+11(catc)m
+104 c
+10(all)m
+11(of)m
+11(the)m
+12(problems,)m
+1038 2588 p (but)s
+18(do)m
+(wn-scaling)s
+17(will)m
+16(almost)m
+17(certainly)m
+18(catc)m
+104 c
+17(some)m
+17(prob-)m
+1038 2625 p (lems)s
+11(that)m
+11(sim)m
+(ulation)s
+10(will)m
+9(not)m
+12(\(and)m
+11(vice-v)m
+(ersa)s
+11 r 124 c
+11 r 119 c
+101 c
+9(are)m
+11(not)m
+1038 2662 p (adv)s
+111 c
+1(cating)m
+13(the)m
+13(elimination)m
+13(of)m
+12(sim)m
+(ulation\).)s
+@eop
+%%Page: ? 2
+2 @bop0
+cmbx10.329 @sf
+[<FFFFC0FFFFC07FFFC03FFFC01FFFC01C00E00E006007006003806001C00000E00000F000007800
+  003E00001F00001F80000FC0000FC0000FE03807E07C07E0FE07E0FE0FE0FE0FC0FE0FC07C1F80
+  383F001FFE0007F000> 24 29 -3 0 26.136] 50 @dc
+[<FFFFFE0000FFFFFFC00007E007F00007E001F80007E000FC0007E0007E0007E0003F0007E0003F
+  0007E0001F8007E0001F8007E0001F8007E0001FC007E0001FC007E0001FC007E0001FC007E000
+  1FC007E0001FC007E0001FC007E0001FC007E0001FC007E0001F8007E0001F8007E0001F8007E0
+  003F0007E0003F0007E0007E0007E000FC0007E001F80007E007F000FFFFFFC000FFFFFE0000> 40 31 -2 0 40.087] 68 @dc
+[<00FF8007FFE00F80703F00383E00187E00007C0000FC0000FC0000FC0000FFFFF8FFFFF8FC00F8
+  FC00F87E00F87E00F03F01F01F83E007FF8001FE00> 24 20 -1 0 23.958] 101 @dc
+[<FFE00000FFE000001F0000001F0000001F0000001F0000001F0000001F0000001F0000001F1F80
+  001F7FE0001FC1F8001F80FC001F007C001F007E001F003E001F003F001F003F001F003F001F00
+  3F001F003F001F003F001F003E001F007E001F007E001F80FC001FE1F800FF7FF000FF1FC000> 32 29 -2 9 29.040] 112 @dc
+[<FFE0FFE01F001F001F001F001F001F001F001F001F001F001F001F001F001F001F001F001F001F
+  001F001F001F001F001F001F001F001F001F001F00FF00FF00> 16 32 -2 0 14.520] 108 @dc
+[<01FF000FFFE03F01F878003C78003CF0001EF0001EF0001E70003E3C007C1FFFFC07FFF80FFFF0
+  1FFF801C000018000018000009FC000FFF000F07801E03C03E03E03E03E03E03E03E03E03E03E0
+  1E03DE0F079E07FFFE01FC3C> 24 30 -1 10 26.136] 103 @dc
+cmr9.300 @sf
+[<0F8030E040704038C03CE03CE03C003C003C0038007000E00F8000C00060007000700078203870
+  386078207010E00F80> 16 24 -2 0 19.198] 51 @dc
+[<1F002180604070607030003800180018001C0F9C185C303C603C601CE01CE01CE01CE018E01860
+  187030303018600780> 16 24 -2 0 19.198] 57 @dc
+[<07FF00007000007000007000007000007000007000FFFF00C07000407000207000307000107000
+  0870000C700004700002700003700001700000F00000F000007000003000003000> 24 24 -1 0 19.198] 52 @dc
+cmbx9.300 @sf
+[<FFFF00FFFF007FFF003FFF001003800C018006018003018001800000E000007000007800003C00
+  001E00001F00001F80780F80FC0F80FC0F80FC1F80FC1F00787E003FFC000FF000> 24 24 -2 0 22.104] 50 @dc
+[<78FCFCFCFC78> 8 6 -3 0 12.280] 46 @dc
+[<7FFE7FFE03C003C003C003C003C003C003C003C003C003C003C003C003C003C003C003C003C003
+  C0FFC0FFC003C000C0> 16 24 -3 0 22.104] 49 @dc
+[<FFC0E07FF8FFC0E07FF80C01F007800C01F007800C01F007800C03D807800C03D807800C078C07
+  800C078C07800C0F0607800C0F0607800C1E0307800C1E0307800C1E0307800C3C0187800C3C01
+  87800C7800C7800C7800C7800CF00067800CF00067800DE00037800DE00037800DE00037800FC0
+  001F80FFC0001FF8FF80000FF8> 40 26 -2 0 41.902] 77 @dc
+[<03F9FC0F05FC1E03E01E03E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E0
+  1E01E01E01E0FE0FE0FE0FE0> 24 17 -1 0 24.560] 117 @dc
+[<FFFFF8FFFFF80F80F80F80780F80380F801C0F801C0F800C0F800C0F800C0F80000F80000F8000
+  0F80000F80000F80000F80000F80000F80000F80000F80000F80000F80000F8000FFFC00FFFC00> 24 26 -2 0 26.555] 76 @dc
+[<07FC003C07807001C0E000E0E000E0E000E0E000E07003C01FFFC01FFF803FFE00300000200000
+  20000027E0001C3800381C00781E00781E00781E00781E00781EC0381CE01C3CE007E3C0> 24 25 -1 8 22.104] 103 @dc
+cmr9.300 @sf
+[<FFE03E000E0071000E00F0800E01E0800E01E0000E01E0000E01E0000E01C0000E01C0000E01C0
+  000E0180000E0300000E0600000FFC00000E0780000E01C0000E00E0000E00F0000E00F0000E00
+  F0000E00F0000E00F0000E00E0000E01C0000E078000FFFC0000> 32 26 -2 0 28.261] 82 @dc
+cmbx9.300 @sf
+[<FFF80FF0FFF83F180F807E0C0F80FC0C0F80FC000F80FC000F80FC000F80F8000F80F8000F80F8
+  000F80F0000F81E0000F81C0000FFFC0000F80F8000F807C000F803E000F803F000F803F000F80
+  3F000F803F000F803E000F807E000F80FC00FFFFF000FFFFC000> 32 26 -2 0 33.127] 82 @dc
+cmti9.300 @sf
+[<FFFF00001C03C0000E00E0000E0070000E0038000E00380007001C0007001C0007001C0007001C
+  0003801C00038038000380700003FFE00001C0700001C0380001C01C0001C00E0000E0070000E0
+  070000E0070000E00700007007000070060000700E0003FFF800> 32 26 -3 0 26.993] 66 @dc
+[<FFFF80> 24 1 -3 -9 19.602] 123 @dc
+/cmsy9.300 @newfont
+cmsy9.300 @sf
+[<0000100000000018000000000C000000000C000000000600000000030000FFFFFF8000FFFFFFC0
+  00000000600000000038000000001E0000000007800000001E000000007000FFFFFFE000FFFFFF
+  80000000030000000006000000000C000000000C000000001800000000100000> 40 22 -2 2 38.397] 41 @dc
+cmti9.300 @sf
+[<87E000C81800700C00600600600300600300200180200180000180000180000380000F80007F00
+  01FE0003F80007C000070000060000060020060020060020030020010070018070006090003F10> 24 26 -3 0 21.562] 83 @dc
+cmmi9.300 @sf
+[<3F0040C08060E030E0300030007007F00FE01FC01C00183018380818061803E0> 16 16 -2 0 17.887] 115 @dc
+/cmr6.300 @newfont
+cmr6.300 @sf
+[<1F00318060C04040C060C060C060C060C060C060C060C060404060C031801F00> 16 16 -1 0 15.220] 48 @dc
+cmmi9.300 @sf
+[<8040202010101070F0F060> 8 11 -3 7 10.666] 59 @dc
+cmr6.300 @sf
+[<FF800C000C000C000C000C000C000C000C000C000C000C000C00CC003C000C00> 16 16 -2 0 15.220] 49 @dc
+/cmmi6.300 @newfont
+cmmi6.300 @sf
+[<306864646030309898587000000000000C04> 8 18 -2 0 11.098] 105 @dc
+cmr6.300 @sf
+[<00C00000C00000C00000C00000C00000C00000C00000C00000C000FFFF80FFFF8000C00000C000
+  00C00000C00000C00000C00000C00000C00000C000> 24 20 -2 4 23.291] 43 @dc
+cmr9.300 @sf
+[<7E00E300E18041C001C001C001C001C001C001C001C001C001C001C001C001C001C001C001C001
+  C001C001C00FC0000000000000000000000000018003C003C00180> 16 33 2 7 11.732] 106 @dc
+cmmi9.300 @sf
+[<300E00701900383880383840381C40381C401C1C001C0E001C0E001C0E008E07008E07008E0700
+  8F07004CC600383C00> 24 16 -2 0 23.162] 110 @dc
+/cmtt9.300 @newfont
+cmtt9.300 @sf
+[<FE3E00FE3E00383E00386E00386E00386E00386E0038EE0038CE0038CE0039CE0039CE0039CE00
+  398E00398E003B8E003B0E003B0E003B0E003B0E003E0E00FE3F80FE3F80> 24 23 -1 0 19.613] 78 @dc
+[<03E7E00FFFE01E1F001C0F001C07001C07001C07001C07001C07001C07001C07001C07001C0700
+  1C0700FC3F00FC3F00> 24 16 0 0 19.613] 117 @dc
+[<FEFBE0FEFBE038E38038E38038E38038E38038E38038E38038E38038E38038E38038E3803CF380
+  3EFB80FFFF80FB8E00> 24 16 0 0 19.613] 109 @dc
+[<FF8000FF80001C00001C00001C00001C00001C00001C00001C00001C00001FF8001FFE001C0F00
+  1C07001C03801C03801C03801C03801C03801C07001C0F00FFFE00FFF800> 24 23 0 0 19.613] 80 @dc
+[<FFFC00FFFC0007000007000007000007000007000007000007000007000007800007C00007C080
+  07F1C0FF3FC0FF0F80> 24 16 0 0 19.613] 114 @dc
+[<07C01FF03C78783C701CE00EE00EE00EE00EE00EE00E701C701C3C781FF007C0> 16 16 -2 0 19.613] 111 @dc
+[<03F00FFC3C1E780E7000F000E000E000E000E000F000700078083C1C0FFC03F8> 16 16 -2 0 19.613] 99 @dc
+[<03F00FFC3C1E780E7000F000E000FFFEFFFEE00EF00E701E781C3C3C1FF807E0> 16 16 -2 0 19.613] 101 @dc
+[<CFE0FFF8F81CF006E006E00E001E07FC3FF07F80F000C038C038E0787FF80FD8> 16 16 -2 0 19.613] 115 @dc
+[<70F8F8F87000000000000070F8F8F870> 8 16 -7 0 19.613] 58 @dc
+[<07C00FE01C7038383838701C701CE00EE00EE00EE00EE00EE00EE00EE00EE00E701C701C301838
+  381C700FE007C0> 16 23 -2 0 19.613] 48 @dc
+[<70F8F8F870> 8 5 -7 0 19.613] 46 @dc
+[<FFFEFFFEFFFE> 16 3 -2 -10 19.613] 45 @dc
+[<FFF0FFF0070007000700070007000700070007000700070007000700070007004700F7003F000F
+  00070007000300> 16 23 -4 0 19.613] 49 @dc
+cmbx9.300 @sf
+[<CFE0F830E008E00CC00CC00C003C07F83FF87FE0FF80F000C030C030403020701FB0> 16 17 -1 0 17.437] 115 @dc
+[<FFFFF000FFFFFE000F803F000F800F800F8007C00F8003E00F8003F00F8001F00F8001F00F8001
+  F80F8001F80F8001F80F8001F80F8001F80F8001F80F8001F80F8001F80F8001F00F8001F00F80
+  03E00F8003E00F8007C00F800F800F803F00FFFFFC00FFFFF000> 32 26 -2 0 33.871] 68 @dc
+[<FFFFFE00FFFFFE000F803E000F800F000F8007000F8003000F8003000F8003000F8001800F8301
+  800F8300000F8300000F8700000FFF00000FFF00000F8700000F8300000F8303000F8303000F80
+  03000F8007000F8006000F800E000F803E00FFFFFE00FFFFFE00> 32 26 -2 0 29.010] 69 @dc
+[<03F9FC0F0DFC1C03E03C01E07801E07801E0F801E0F801E0F801E0F801E0F801E07801E07801E0
+  3C01E01C03E00F07E003F9E00001E00001E00001E00001E00001E00001E00001E0000FE0000FE0> 24 26 -1 0 24.560] 100 @dc
+cmr9.300 @sf
+[<00001C0000003E0000007F0000007F000000E1800000C0800000C080007F808001E1C0000741F0
+  000E4138001C221C003C1C1E0038000E0078000F0070000700F0000780F0000780F0000780F000
+  0780F0000780F0000780F0000780F00007807000070078000F0038000E003C001E001C001C000E
+  0038000700700001C1C000007F0000> 32 33 -2 7 29.864] 81 @dc
+cmbx9.300 @sf
+[<FFFC00FFFC000F80000F80000F80000F80000F80000F80000F83000F83000F83000F87000FFF00
+  0FFF000F87000F83000F83000F83060F80060F80060F800E0F800C0F801C0F803CFFFFFCFFFFFC> 24 26 -2 0 27.782] 70 @dc
+cmmi9.300 @sf
+[<3C386264E1E2C0E2C0E2C0E2E070E070E070E07070383038383818380C5C0398> 16 16 -2 0 20.341] 97 @dc
+[<07800C4018203810380838081C081C041C040E048E068E068706470E261E1C0C> 16 16 -2 0 18.651] 118 @dc
+cmr9.300 @sf
+[<FFFFFF80FFFFFF80000000000000000000000000000000000000000000000000FFFFFF80FFFFFF
+  80> 32 10 -2 -4 29.864] 61 @dc
+cmmi9.300 @sf
+[<07C3C0000C2620001C1C1000181C0800381C0400381C04001C0E04001C0E02001C0E02000E0E02
+  008E0703008E070300870703004707070026038F001C030600> 32 16 -2 0 27.518] 119 @dc
+cmbx9.300 @sf
+[<7FE0007FE0000F00000F00000F00000F00000F00000F00000F00000F00000F00000F00000F0000
+  0F00000F0000FFF000FFF0000F00000F00000F00000F07000F0F800F0F80078F8003C70000FE00> 24 26 0 0 13.508] 102 @dc
+[<FFFFF8> 24 1 0 -10 22.104] 123 @dc
+[<FFCFFCFFCFFC1E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01E01F01E0
+  1F01E01E81C01E63C01E1F001E00001E00001E00001E00001E00001E00001E0000FE0000FE0000> 24 26 -1 0 24.560] 104 @dc
+[<00C0180001E03C0001E03C0001E03C0003F07E0003F0760007B8F7000798E3000798E3000F0DE1
+  800F0DC1801F0DC1C01E07C0C01E0780C03C078060FF1FE1F8FF1FE1F8> 32 17 -1 0 31.928] 119 @dc
+[<83FE00EFFF80FC03C0F001E0E000E0C000F0C000F0C000F00001F00003F0000FE001FFE00FFFC0
+  1FFF803FFF007FF800FF0000F80000F000C0F000C0F001C07001C07803C03C0FC01FFDC007F040> 24 26 -2 0 24.560] 83 @dc
+[<FFC000FFC0001E00001E00001E00001E00001E00001E7F001F83C01F01E01E00F01E00F81E0078
+  1E007C1E007C1E007C1E007C1E007C1E00781E00F81E00F01F01E0FFC3C0FE7F00> 24 24 -1 7 24.560] 112 @dc
+cmti9.300 @sf
+[<603800E0640070E40070E20070E20070E20038E00039C0003F80003C00001F00001C80001C4300
+  1C27000E13000E0E000E00000E00000700000700000700000700000380000380000380001F8000> 24 26 -2 0 17.642] 107 @dc
+cmbx9.300 @sf
+[<FFF0FFF0FFF0> 16 3 0 -7 14.736] 45 @dc
+[<FFF8FFF80F800F800F800F800F800F800F800F800F800F800F800F800F800F800F800F800F800F
+  800F800F800F800F80FFF8FFF8> 16 26 -2 0 16.673] 73 @dc
+[<FFC07FFCFFC07FFC0E000FC006000F8006000F8003001F0003001F0003FFFF0001FFFE0001803E
+  0000C07C0000C07C0000E0FC000060F8000060F8000031F0000031F000001BE000001BE000001B
+  E000000FC000000FC00000078000000780000007800000030000> 32 26 -1 0 33.358] 65 @dc
+[<0FF0003FFC00703E00F81F00FC1F00FC1F80FC1F80781F80001F80001F00001E00003C0007F000
+  007800003C00003E00383F007C1F007C1F007C1F007C3E00383E001FFC0007F000> 24 24 -2 0 22.104] 51 @dc
+[<001FF00000FFFC0003F80F0007C003801F8000C01F0000C03E0000607E0000607C000060FC0000
+  00FC000000FC000000FC000000FC000000FC000000FC000000FC0000007C0000607E0000603E00
+  00E01F0000E01F8001E007C003E003F80FE000FFFCE0001FE020> 32 26 -2 0 31.928] 67 @dc
+[<FFCFFCFFC0FFCFFCFFC01E01E01E001E01E01E001E01E01E001E01E01E001E01E01E001E01E01E
+  001E01E01E001E01E01E001E01E01E001E01E01E001F01F01E001F01F01E001E81C81C00FE63C6
+  3C00FE1F01F000> 40 17 -1 0 36.840] 109 @dc
+cmtt9.300 @sf
+[<03C00FF01C383C1C381E700E700EF00EE000E000E000E000E000E000E000F00E700E700E381E3C
+  1E1C3E0FFE03C6> 16 23 -2 0 19.613] 67 @dc
+[<01C00001C00001C00001C00001C00001C00001C000FFFF80FFFF80FFFF8001C00001C00001C000
+  01C00001C00001C00001C000> 24 17 -1 -3 19.613] 43 @dc
+cmr9.300 @sf
+[<FFFFC0> 24 1 0 -9 19.198] 123 @dc
+cmbx10.329 @sf
+[<03FC001FFF803C0FC07807E0FC03F0FE03F0FE03F8FE03F87C03F83803F80003F80003F00003E0
+  0007C0000F8001FC0001FC00001F00000F80000FC01E0FC03F07E03F07E03F07E03F07E01E0FC0
+  0E0F8007FF0001FC00> 24 29 -2 0 26.136] 51 @dc
+[<FFFFFFF0FFFFFFF007E003F007E000F807E0007807E0003807E0001807E0001807E0001807E000
+  0C07E0600C07E0600C07E0600007E0E00007E1E00007FFE00007FFE00007E1E00007E0E00007E0
+  600007E0603007E0603007E0003007E0003007E0007007E0006007E000E007E001E007E007E0FF
+  FFFFE0FFFFFFE0> 32 31 -2 0 34.342] 69 @dc
+[<FF81FF80FF81FF800E00FC000701F8000381F0000183E00000C7C000006F8000007F8000003F00
+  00003E0000007E000000FF000001F3800003E1800007E0C00007C0E0000F807000FFE1FF00FFE1
+  FF00> 32 20 -1 0 27.588] 120 @dc
+[<FFE3FF8FFEFFE3FF8FFE1F007C01F01F007C01F01F007C01F01F007C01F01F007C01F01F007C01
+  F01F007C01F01F007C01F01F007C01F01F007C01F01F007C01F01F007C01F01F807E01F01E807E
+  01F01E407D01F01E70F9C3E0FE1FF07FC0FE0FE03F80> 40 20 -3 0 43.559] 109 @dc
+2 @bop1
+cmbx10.329 @sf -51 42 p 50 c
+51(Description)m
+16(language)m
+cmr9.300 @sf -51 93 p (The)s
+18(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 21(description)m
+20 r 119 c
+(as)s
+19(designed)m
+21(to)m
+19 r 98 c
+1 r 101 c
+21(the)m
+20(simplest)m
+-51 131 p 112 c
+1(ossible)m
+16(usable)m
+17(language)m
+18(that)m
+17(supp)m
+1(orts)m
+18(nondeterministic,)m
+-51 168 p (scalable)s
+15(descriptions.)m
+27(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 16(meets)m
+16(these)m
+17(particular)m
+16(goals)m
+-51 205 p (\(esp)s
+1(ecially)m
+15(simplicit)m
+(y\))s
+14 r 98 c
+1(etter)m
+16(than)m
+17(existing)m
+16(hardw)m
+(are)s
+16(and)m
+-51 243 p (proto)s
+1(col)m
+12(description)m
+14(languages.)m
+18 r 91 c
+50 c
+-1 r 44 c
+13 r 51 c
+44 c
+13(11)m
+44 c
+12 r 56 c
+1 r 44 c
+12 r 57 c
+44 c
+13(14)m
+44 c
+13(13)m
+(].)s
+-2 280 p (Mur)s
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 10(describ)m
+1(es)m
+11 r 97 c
+11(system)m
+10(using)m
+11 r 97 c
+10(set)m
+11(of)m
+10(iterated)m
+10(guarded)m
+-51 317 p (commands,)s
+31(lik)m
+101 c
+26(Chandy)m
+29(and)m
+29(Misra's)m
+28(Unit)m
+121 c
+26(language)m
+-51 355 p (\(whic)s
+-1 r 104 c
+11(inspired)m
+14(it\))m
+12 r 91 c
+52 c
+(].)s
+cmbx9.300 @sf -51 408 p (2.1)s
+43(Mur)m
+cmmi9.300 @sf 39 c
+cmbx9.300 @sf 15(Language)m
+cmr9.300 @sf -51 460 p 65 c
+15(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 16(description)m
+17(consists)m
+16(of)m
+16(constan)m
+116 c
+16(and)m
+17 r 116 c
+(yp)s
+1 r 101 c
+16(decla-)m
+-51 497 p (rations,)s
+11 r 118 c
+-1(ariable)m
+12(declarations,)m
+13(pro)m
+1(cedure)m
+14(declarations,)m
+13(rule)m
+-51 534 p (de\014nitions,)s
+16 r 97 c
+16(description)m
+17(of)m
+15(the)m
+17(start)m
+16(state,)m
+16(and)m
+17 r 97 c
+16(collec-)m
+-51 572 p (tion)s
+15(of)m
+cmti9.300 @sf 17(invariant)m
+-1 r 115 c
+cmr9.300 @sf 46 c
+26(An)m
+17(in)m
+118 c
+-1(arian)m
+116 c
+14(is)m
+17 r 97 c
+17(Bo)m
+1(olean)m
+17(expression)m
+-51 609 p (that)s
+12(references)m
+13(the)m
+13 r 118 c
+-1(ariables.)m
+-2 646 p (Rules)s
+13(are)m
+13(written)m
+cmbx9.300 @sf 7 712 p (Rule)s
+cmti9.300 @sf 66 750 p (Bo)s
+-1(ole)m
+-3(an)m
+-1({ex)m
+-1(pr)m
+-2(ess)m
+-1(ion)m
+cmsy9.300 @sf 7 787 p 41 c
+cmti9.300 @sf 66 824 p (stmSe)s
+-1 r 113 c
+cmr9.300 @sf -51 896 p (Eac)s
+104 c
+10(rule)m
+11(is)m
+12 r 97 c
+12(guarded)m
+13(command)m
+12 r 91 c
+54 c
+(],)s
+11(consisting)m
+12(of)m
+12 r 97 c
+cmti9.300 @sf 12 r 99 c
+-1(ond)m
+-1(i-)m
+-51 933 p (tion)s
+cmr9.300 @sf 12(and)m
+13(an)m
+cmti9.300 @sf 13(action)m
+cmr9.300 @sf 46 c
+14(The)m
+12(condition)m
+13(is)m
+12 r 97 c
+12(Bo)m
+1(olean)m
+13(expression)m
+-51 971 p (consisting)s
+13(of)m
+14(constan)m
+(ts,)s
+14(declared)m
+14 r 118 c
+-1(ariables,)m
+13(and)m
+15(op)m
+1(erators.)m
+-51 1008 p (The)s
+11(action)m
+14(is)m
+12 r 97 c
+13(sequence)m
+14(of)m
+13(statemen)m
+(ts,)s
+-2 1046 p 65 c
+cmti9.300 @sf 11(state)m
+cmr9.300 @sf 13(is)m
+12 r 97 c
+12(function)m
+12(that)m
+12(giv)m
+(es)s
+11 r 118 c
+-1(alues)m
+12(to)m
+12(all)m
+11(of)m
+12(the)m
+12 r 118 c
+-1(ari-)m
+-51 1083 p (ables.)s
+30(An)m
+cmti9.300 @sf 18(exe)m
+-1(c)m
+-1(uti)m
+-1(on)m
+cmr9.300 @sf 18(of)m
+18(the)m
+17(system)m
+19(is)m
+17 r 97 c
+18(\014nite)m
+18(or)m
+17(in\014nite)m
+-51 1120 p (sequence)s
+19(of)m
+18(states)m
+cmmi9.300 @sf 19 r 115 c
+cmr6.300 @sf 295 1124 p 48 c
+cmmi9.300 @sf 312 1120 p 59 c
+7 r 115 c
+cmr6.300 @sf 348 1124 p 49 c
+cmmi9.300 @sf 365 1120 p 59 c
+cmr9.300 @sf 6 r 46 c
+6 r 46 c
+6 r 46 c
+44 c
+19(where)m
+cmmi9.300 @sf 19 r 115 c
+cmr6.300 @sf 592 1124 p 48 c
+cmr9.300 @sf 628 1120 p (is)s
+19(determined)m
+19 r 98 c
+121 c
+-51 1158 p (the)s
+16(description)m
+18(of)m
+17(the)m
+17(start)m
+18(state)m
+17(that)m
+17(is)m
+17(part)m
+18(of)m
+17(the)m
+17(de-)m
+-51 1195 p (scription.)s
+24(If)m
+cmmi9.300 @sf 16 r 115 c
+cmmi6.300 @sf 189 1199 p 105 c
+cmr9.300 @sf 217 1195 p (is)s
+16(an)m
+121 c
+15(state)m
+16(in)m
+16(the)m
+16(sequence,)m
+cmmi9.300 @sf 18 r 115 c
+cmmi6.300 @sf 740 1199 p 105 c
+cmr6.300 @sf (+1)s
+cmr9.300 @sf 807 1195 p (can)s
+16 r 98 c
+1 r 101 c
+-51 1232 p (obtained)s
+12 r 98 c
+121 c
+12(applying)m
+14(some)m
+13(rule)m
+12(whose)m
+13(condition)m
+13(is)m
+13(true)m
+13(in)m
+cmmi9.300 @sf -51 1270 p 115 c
+cmmi6.300 @sf -33 1274 p 105 c
+cmr9.300 @sf -6 1270 p (and)s
+15(whose)m
+15(action)m
+15(transforms)m
+cmmi9.300 @sf 16 r 115 c
+cmmi6.300 @sf 514 1274 p 105 c
+cmr9.300 @sf 541 1270 p (to)s
+cmmi9.300 @sf 15 r 115 c
+cmmi6.300 @sf 608 1274 p 105 c
+cmr6.300 @sf (+1)s
+cmr9.300 @sf 660 1270 p 46 c
+22(In)m
+15(general,)m
+cmmi9.300 @sf 16 r 115 c
+cmmi6.300 @sf 907 1274 p 105 c
+cmr9.300 @sf -51 1307 p (can)s
+16(satisfy)m
+16(sev)m
+(eral)s
+16(conditions,)m
+18(so)m
+17(there)m
+17(is)m
+16(more)m
+17(than)m
+17(one)m
+-51 1344 p (execution)s
+12(\(nondeterminism\).)m
+17 r 65 c
+12(sim)m
+(ulator)s
+12(for)m
+12(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 13(migh)m
+116 c
+-51 1382 p 99 c
+(ho)s
+1(ose)m
+7(the)m
+10(rule)m
+9(randomly;)m
+11 r 97 c
+9 r 118 c
+(eri\014er)s
+8 r 109 c
+(ust)s
+8(someho)m
+119 c
+9(co)m
+118 c
+(er)s
+7(all)m
+-51 1419 p (the)s
+12 r 112 c
+1(ossibilities.)m
+19(In)m
+14(either)m
+13(case,)m
+14(the)m
+14(in)m
+118 c
+-1(arian)m
+(ts)s
+11(are)m
+14(applied)m
+-51 1456 p (whenev)s
+(er)s
+13 r 97 c
+16(state)m
+15(is)m
+15(explored;)m
+17(if)m
+14(an)m
+121 c
+15(in)m
+118 c
+-1(arian)m
+116 c
+13(is)m
+15(violated,)m
+-51 1494 p (an)s
+12(error)m
+13(is)m
+13(rep)m
+1(orted.)m
+-2 1531 p (Mur)s
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 17(is)m
+17 r 119 c
+(ell-suited)s
+16(for)m
+17(an)m
+18(async)m
+(hronous,)s
+19(in)m
+(terlea)s
+(ving)s
+-51 1569 p (mo)s
+1(del)m
+18(of)m
+20(concurrency)m
+-2 r 44 c
+21(where)m
+19(atomic)m
+20(steps)m
+20(of)m
+19(individual)m
+-51 1606 p (pro)s
+1(cesses)m
+10(are)m
+11(assumed)m
+11(to)m
+10(happ)m
+1(en)m
+12(in)m
+11(sequence,)m
+11(and)m
+11(one)m
+11(pro-)m
+-51 1643 p (cess)s
+10(can)m
+12 r 112 c
+1(erform)m
+12(an)m
+121 c
+11 r 110 c
+(um)s
+98 c
+1(er)m
+10(of)m
+11(steps)m
+12 r 98 c
+1(et)m
+119 c
+(een)s
+10(the)m
+12(steps)m
+12(of)m
+-51 1681 p (the)s
+11(other.)m
+16(When)m
+13 r 116 c
+119 c
+111 c
+10(steps)m
+12(are)m
+12(truly)m
+12(concurren)m
+(t,)s
+12(there)m
+12(will)m
+-51 1718 p 98 c
+1 r 101 c
+11(executions)m
+11(that)m
+12(allo)m
+119 c
+10(them)m
+11(to)m
+11(happ)m
+1(en)m
+13(in)m
+12(either)m
+11(order)m
+12(in)m
+-51 1755 p (the)s
+13(in)m
+(terlea)s
+-1(ving)m
+13(mo)m
+1(del.)m
+20(In)m
+14(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 44 c
+14(concurren)m
+116 c
+14(comp)m
+1(osition)m
+-51 1793 p (is)s
+12 r 118 c
+(ery)s
+12(easy:)m
+18(to)m
+14(mo)m
+1(del)m
+13 r 116 c
+119 c
+111 c
+11(pro)m
+1(cesses)m
+15(in)m
+13(parallel,)m
+12(just)m
+14(form)m
+-51 1830 p 97 c
+12(new)m
+12(description)m
+14(using)m
+13(the)m
+14(union)m
+13(of)m
+13(their)m
+13(rules.)m
+-2 1867 p (Giv)s
+(en)s
+17(the)m
+18(imp)m
+1(ortance)m
+19(of)m
+18(do)m
+(wn-scaling)s
+17(in)m
+18 r 118 c
+(eri\014cation,)s
+-51 1905 p 119 c
+101 c
+10(ha)m
+118 c
+101 c
+12(put)m
+14(some)m
+13(e\013ort)m
+14(in)m
+(to)s
+12(making)m
+13(it)m
+13 r 112 c
+1(ossible)m
+13(to)m
+14 r 99 c
+(hange)s
+-51 1942 p (the)s
+14(scale)m
+16(of)m
+15 r 97 c
+16(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 16(description)m
+16 r 98 c
+121 c
+15 r 99 c
+(hanging)s
+15 r 97 c
+16(single)m
+15(pa-)m
+-51 1979 p (rameter.)s
+37 r 65 c
+20(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 21(description)m
+21(of)m
+20 r 97 c
+20(proto)m
+1(col)m
+21(that)m
+20(co)m
+1(or-)m
+-51 2017 p (dinates)s
+cmmi9.300 @sf 16 r 110 c
+cmr9.300 @sf 18(pro)m
+1(cesses)m
+18(can)m
+18 r 98 c
+1 r 101 c
+17(written)m
+17(with)m
+17 r 97 c
+17(declared)m
+18(con-)m
+-51 2054 p (stan)s
+116 c
+10(\(e.g.)m
+cmtt9.300 @sf 16(NumProce)m
+-1(sse)m
+-1 r 115 c
+cmr9.300 @sf (\).)s
+14(Then)m
+13 r 97 c
+12(subrange)m
+cmtt9.300 @sf 14(Process)m
+-1(es)m
+17 r 58 c
+-51 2092 p (0..)s
+-1(Num)m
+-1(Pr)m
+-1(oce)m
+-1(ss)m
+-1(es-)m
+-1 r 49 c
+cmr9.300 @sf 10(can)m
+13 r 98 c
+1 r 101 c
+12(declared,)m
+13(and)m
+13(the)m
+12(states)m
+12(of)m
+12(the)m
+-51 2129 p (pro)s
+1(cesses)m
+17(stored)m
+18(in)m
+17(an)m
+18(arra)m
+121 c
+17(indexed)m
+18 r 98 c
+121 c
+cmtt9.300 @sf 17(Proces)m
+-1(ses)m
+cmr9.300 @sf -1 r 46 c
+28(Fi-)m
+-51 2166 p (nally)s
+-3 r 44 c
+13 r 97 c
+15(collection)m
+15(of)m
+15(nearly)m
+15(iden)m
+(tical)s
+14(rules)m
+15(can)m
+15 r 98 c
+1 r 101 c
+15(de\014ned)m
+-51 2204 p (using)s
+12(the)m
+13(ruleset)m
+13(construct:)m
+cmbx9.300 @sf 7 2269 p (Ruleset)s
+cmti9.300 @sf 14(formal)m
+cmr9.300 @sf 15 r 58 c
+cmti9.300 @sf 17 r 114 c
+-1(ange)m
+cmbx9.300 @sf 13(Do)m
+cmti9.300 @sf 66 2307 p (ruleSet)s
+cmbx9.300 @sf 7 2344 p (Endruleset)s
+cmr9.300 @sf 59 c
+-51 2410 p 65 c
+11(ruleset)m
+10(can)m
+12 r 98 c
+1 r 101 c
+12(de\014ned)m
+13(that)m
+12(allo)m
+(ws)s
+9(the)m
+12(rules)m
+12(for)m
+11 r 97 c
+12(pro)m
+1(cess)m
+-51 2447 p (to)s
+17 r 98 c
+1 r 101 c
+17(instan)m
+(tiated)s
+17(for)m
+18(ev)m
+(ery)s
+17(pro)m
+1(cess)m
+18 r 110 c
+(um)s
+98 c
+1(er)m
+17(in)m
+17(the)m
+18 r 116 c
+(yp)s
+1 r 101 c
+cmtt9.300 @sf -51 2485 p (Pro)s
+-1(ces)m
+-1(se)m
+-1 r 115 c
+cmr9.300 @sf 46 c
+-2 2522 p 65 c
+19(description)m
+21(written)m
+19(in)m
+20(this)m
+20(st)m
+(yle)s
+19(can)m
+20 r 98 c
+1 r 101 c
+21(scaled)m
+20 r 98 c
+121 c
+-51 2559 p 99 c
+(hanging)s
+12(only)m
+13(the)m
+13(constan)m
+116 c
+13(declarations.)m
+-2 2597 p (Quan)s
+(ti\014ers)s
+12(in)m
+13(expressions)m
+14(also)m
+13(promote)m
+14(scalabilit)m
+(y:)s
+cmbx9.300 @sf 7 2662 p 70 c
+-3(orall)m
+cmmi9.300 @sf 13 r 97 c
+cmr9.300 @sf 58 c
+cmti9.300 @sf 6(addr)m
+-1(ess)m
+-1 r 84 c
+-2(y)m
+-1 r 112 c
+-2 r 101 c
+cmbx9.300 @sf 13(Do)m
+cmmi9.300 @sf 13 r 118 c
+cmr9.300 @sf 1 r 91 c
+cmmi9.300 @sf 97 c
+cmr9.300 @sf 93 c
+10 r 61 c
+cmmi9.300 @sf 11 r 119 c
+cmr9.300 @sf 1 r 91 c
+cmmi9.300 @sf 97 c
+cmr9.300 @sf 93 c
+cmbx9.300 @sf 12(Endforall)m
+cmr9.300 @sf 1038 42 p (is)s
+13 r 97 c
+13(Bo)m
+1(olean)m
+14(expression)m
+15(whic)m
+104 c
+12(is)m
+13(true)m
+14(if)m
+12(all)m
+cmmi9.300 @sf 13 r 118 c
+cmr9.300 @sf 1 r 91 c
+cmmi9.300 @sf 97 c
+cmr9.300 @sf 93 c
+13(equal)m
+cmmi9.300 @sf 14 r 119 c
+cmr9.300 @sf 1 r 91 c
+cmmi9.300 @sf 97 c
+cmr9.300 @sf 93 c
+1038 79 p 111 c
+118 c
+(er)s
+11(some)m
+13(giv)m
+(en)s
+12(address)m
+15(range.)m
+1088 118 p (Statemen)s
+(ts)s
+14(ha)m
+118 c
+101 c
+13(sequen)m
+(tial)s
+14(seman)m
+(tics,)s
+13(i.e.)m
+14(assignmen)m
+(ts)s
+1038 155 p (tak)s
+101 c
+14(place)m
+15(in)m
+15(the)m
+16(en)m
+(vironmen)s
+116 c
+14(that)m
+15(has)m
+16 r 98 c
+1(een)m
+15(mo)m
+1(di\014ed)m
+16 r 98 c
+121 c
+1038 193 p (all)s
+8(previous)m
+10(assignmen)m
+(ts.)s
+16(The)m
+9(usual)m
+10(conditional)m
+9(statemen)m
+(ts)s
+cmbx9.300 @sf 1038 230 p (if{then{elsif{else)s
+cmr9.300 @sf 17(and)m
+cmbx9.300 @sf 16(switc)m
+104 c
+cmr9.300 @sf 13(\(case\))m
+16(are)m
+15(part)m
+16(of)m
+15(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 46 c
+1038 267 p (There)s
+9(is)m
+9 r 97 c
+9(restricted)m
+cmbx9.300 @sf 10(for)m
+cmr9.300 @sf 9(statemen)m
+116 c
+8(that)m
+10 r 109 c
+(ust)s
+8(ha)m
+118 c
+101 c
+8(compile-)m
+1038 305 p (time)s
+16(constan)m
+116 c
+16(lo)m
+1(op)m
+17 r 98 c
+1(ounds.)m
+29(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 17(pro)m
+1(cedures)m
+18(are)m
+16(essen-)m
+1038 342 p (tially)s
+11(\\macros")m
+13(with)m
+12(parameter)m
+13 r 116 c
+(yp)s
+1(e-c)m
+(hec)s
+-1(king.)m
+15(These)m
+13(con-)m
+1038 379 p (structs)s
+11(will)m
+9(probably)m
+13 r 98 c
+1 r 101 c
+11(generalized)m
+11(in)m
+11(the)m
+11(future,)m
+11(but)m
+11(they)m
+1038 417 p 119 c
+(ere)s
+11(su\016cien)m
+116 c
+13(for)m
+12(examples)m
+14(describ)m
+1(ed)m
+14(here.)m
+cmbx9.300 @sf 1038 472 p (2.2)s
+44(Sp)m
+1(eci\014cations)m
+cmr9.300 @sf 1038 526 p (Mur)s
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 24(has)m
+24(sev)m
+(eral)s
+23(features)m
+23(for)m
+24(detecting)m
+24(design)m
+24(errors.)m
+1038 564 p (First,)s
+9(it)m
+9(can)m
+9(detect)m
+cmti9.300 @sf 10(de)m
+-1(ad)m
+1(lo)m
+-2(c)m
+-1(ks)m
+cmr9.300 @sf 44 c
+7(whic)m
+104 c
+8(are)m
+9(de\014ned)m
+11(to)m
+9 r 98 c
+1 r 101 c
+10(states)m
+1038 601 p (with)s
+12(no)m
+13(successors)m
+14(other)m
+13(than)m
+13(themselv)m
+(es.)s
+16(Second,)m
+14(an)m
+cmbx9.300 @sf 13(Er-)m
+1038 638 p (ror)s
+cmr9.300 @sf 12(statemen)m
+116 c
+10(can)m
+12(app)m
+1(ear)m
+13(in)m
+11(the)m
+12 r 98 c
+1 r 111 c
+1(dy)m
+12(of)m
+11 r 97 c
+12(rule)m
+11(\(almost)m
+11(al-)m
+1038 676 p 119 c
+97 c
+(ys)s
+9(im)m
+98 c
+1(edded)m
+10(in)m
+11 r 97 c
+11(conditional\).)m
+16(This)m
+10(feature)m
+11(is)m
+11(esp)m
+1(ecially)m
+1038 713 p (useful)s
+13(when)m
+12(some)m
+13(branc)m
+(hes)s
+13(of)m
+13(an)m
+cmbx9.300 @sf 13(If)m
+cmr9.300 @sf 11(or)m
+cmbx9.300 @sf 13(Switc)m
+104 c
+cmr9.300 @sf 10(statemen)m
+(ts)s
+1038 750 p (are)s
+16(not)m
+17(in)m
+(tended)s
+17(to)m
+16 r 98 c
+1 r 101 c
+17(reac)m
+(hable.)s
+28(The)m
+cmbx9.300 @sf 16(Error)m
+cmr9.300 @sf 17(statemen)m
+116 c
+1038 788 p (prin)s
+(ts)s
+15 r 97 c
+17(user-supplied)m
+18(error)m
+16(message)m
+17(and)m
+17(causes)m
+18(an)m
+17(error)m
+1038 825 p (trace)s
+16(to)m
+16 r 98 c
+1 r 101 c
+17(prin)m
+(ted.)s
+26(There)m
+16(is)m
+16(also)m
+16(an)m
+cmbx9.300 @sf 17(Assert)m
+cmr9.300 @sf 18(statemen)m
+(t,)s
+1038 863 p (whic)s
+104 c
+10(is)m
+11(an)m
+12(abbreviation)m
+13(for)m
+11 r 97 c
+11(conditional)m
+12(error)m
+12(statemen)m
+(t.)s
+1038 900 p (Finally)s
+-2 r 44 c
+14(the)m
+15(user)m
+16(can)m
+16(de\014ne)m
+cmti9.300 @sf 16(invariants)m
+cmr9.300 @sf 16(in)m
+15 r 97 c
+15(separate)m
+16(part)m
+1038 937 p (of)s
+17(the)m
+18(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 17(description.)m
+31(An)m
+18(in)m
+118 c
+-1(arian)m
+-1 r 116 c
+15(is)m
+17 r 97 c
+18(Bo)m
+1(olean)m
+18(ex-)m
+1038 975 p (pression)s
+17(that)m
+16(is)m
+16(desired)m
+16(to)m
+16 r 98 c
+1 r 101 c
+17(true)m
+16(in)m
+16(ev)m
+(ery)s
+15(state.)m
+27(When)m
+1038 1012 p (an)s
+15(in)m
+118 c
+-1(arian)m
+-1 r 116 c
+13(is)m
+14(violated,)m
+15(an)m
+15(error)m
+14(message)m
+16(and)m
+15(error)m
+15(trace)m
+1038 1049 p 97 c
+13(generated.)m
+1088 1088 p (These)s
+16(sp)m
+1(eci\014cation)m
+17(facilities)m
+15(are)m
+17(limited,)m
+16 r 98 c
+1(ecause)m
+17(they)m
+1038 1126 p (do)s
+14(not)m
+15(allo)m
+119 c
+12(one)m
+15(to)m
+14(directly)m
+14(express)m
+15(prop)m
+1(erties)m
+15(of)m
+14(sequen-)m
+1038 1163 p (tial)s
+13 r 98 c
+1(eha)m
+(vior.)s
+19(Another)m
+15(imp)m
+1(ortan)m
+116 c
+13(limitation)m
+13(is)m
+13(the)m
+14(lac)m
+107 c
+13(of)m
+1038 1200 p (general)s
+13(facilities)m
+11(for)m
+12(dealing)m
+13(with)m
+12(liv)m
+(eness)s
+12(or)m
+13(fairness)m
+12(prop-)m
+1038 1238 p (erties.)s
+16 r 70 c
+-2(or)m
+10(example,)m
+12 r 119 c
+101 c
+10(cannot)m
+12(detect)m
+cmti9.300 @sf 12(livelo)m
+-2(ck)m
+-1(s,)m
+cmr9.300 @sf 9 r 97 c
+12(deadlo)m
+1 r 99 c
+107 c
+1038 1275 p (in)s
+11(part)m
+12(of)m
+11(the)m
+11(system)m
+12(is)m
+11(mask)m
+(ed)s
+11 r 98 c
+121 c
+11(activit)m
+121 c
+10(in)m
+11(another)m
+12(part)m
+1038 1312 p (of)s
+15(the)m
+15(system.)m
+25(Ho)m
+119 c
+-1(ev)m
+-1(er,)m
+14 r 119 c
+101 c
+14(ha)m
+118 c
+101 c
+14 r 98 c
+1(een)m
+16(able)m
+15(to)m
+15 r 118 c
+(erify)s
+14(im-)m
+1038 1350 p 112 c
+1(ortan)m
+116 c
+16(prop)m
+1(erties)m
+18(of)m
+17(real)m
+16(examples)m
+18(using)m
+17(only)m
+17(deadlo)m
+1 r 99 c
+(k,)s
+1038 1387 p (error,)s
+17(and)m
+16(in)m
+118 c
+-1(arian)m
+116 c
+14 r 99 c
+(hec)s
+(king.)s
+25(The)m
+16(sp)m
+1(eci\014cation)m
+17(facilities)m
+1038 1425 p (of)s
+13(the)m
+13(system)m
+13(will)m
+12 r 98 c
+1 r 101 c
+13(expanded)m
+15(in)m
+12(the)m
+14(future.)m
+cmbx9.300 @sf 1038 1480 p (2.3)s
+44(Mur)m
+cmmi9.300 @sf 39 c
+cmbx9.300 @sf 15(Compiler)m
+15(and)m
+15 r 86 c
+-3(eri\014er)m
+cmr9.300 @sf 1038 1534 p (The)s
+14(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 15(compiler)m
+15(tak)m
+(es)s
+13 r 97 c
+15(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 15(source)m
+15(description)m
+15(and)m
+1038 1572 p (generates)s
+13 r 97 c
+cmtt9.300 @sf 13(C++)m
+cmr9.300 @sf 12(program,)m
+13(whic)m
+104 c
+12(is)m
+12(compiled)m
+13(together)m
+13(with)m
+1038 1609 p (co)s
+1(de)m
+9(for)m
+9 r 97 c
+9 r 118 c
+(eri\014er)s
+9(whic)m
+104 c
+7 r 99 c
+(hec)s
+107 c
+8(for)m
+9(in)m
+118 c
+-1(arian)m
+-1 r 116 c
+7(violations,)m
+10(error)m
+1038 1646 p (statemen)s
+(ts,)s
+12(assertion)m
+13(violations,)m
+13(and)m
+14(deadlo)m
+1 r 99 c
+(k.)s
+1088 1685 p (The)s
+12 r 118 c
+(eri\014er)s
+11(attempts)m
+13(to)m
+12(en)m
+(umerate)s
+12(all)m
+12(the)m
+12(states)m
+13(of)m
+12(the)m
+1038 1723 p (system,)s
+16 r 99 c
+(hec)s
+(king)s
+15(for)m
+15(error)m
+16(conditions)m
+17(as)m
+15(it)m
+16(pro)m
+1(ceeds.)m
+26(Be-)m
+1038 1760 p (cause)s
+9(space)m
+10(is)m
+9(at)m
+9 r 97 c
+9(premium)m
+9(in)m
+9 r 118 c
+(eri\014cation,)s
+9(states)m
+9(are)m
+10(repre-)m
+1038 1797 p (sen)s
+(ted)s
+12(compactly)m
+12 r 98 c
+121 c
+12(enco)m
+1(ding)m
+13(all)m
+11(scalar)m
+13 r 116 c
+(yp)s
+1(es)m
+11(in)m
+12(the)m
+12(mini-)m
+1038 1835 p 109 c
+(um)s
+9 r 112 c
+1(ossible)m
+10 r 110 c
+(um)s
+98 c
+1(er)m
+9(of)m
+10(bits,)m
+10(then)m
+11(concatenating)m
+11(the)m
+10(\014elds)m
+1038 1872 p (without)s
+18(regard)m
+19(to)m
+18 r 98 c
+(yte)s
+17(and)m
+19 r 119 c
+(ord)s
+17(alignmen)m
+116 c
+17(constrain)m
+(ts.)s
+1038 1909 p (This)s
+12(slo)m
+(ws)s
+10(do)m
+(wn)s
+12(access)m
+12(to)m
+12(\014elds)m
+13(somewhat,)m
+12(but)m
+13(is)m
+11(justi\014ed)m
+1038 1947 p 98 c
+121 c
+17(the)m
+19(massiv)m
+101 c
+17(space)m
+19(sa)m
+(vings)s
+17(that)m
+19(result.)m
+32 r 65 c
+18(hash)m
+19(table)m
+1038 1984 p (with)s
+14(double)m
+16(hashing)m
+16(that)m
+15(stores)m
+15(reac)m
+(hed)s
+15(states)m
+16(is)m
+14(used)m
+16(to)m
+1038 2021 p (decide)s
+14(e\016cien)m
+(tly)s
+12(if)m
+13 r 97 c
+14(newly-reac)m
+(hed)s
+13(state)m
+14(is)m
+cmti9.300 @sf 13(old)m
+cmr9.300 @sf 16(\(has)m
+14 r 98 c
+1(een)m
+1038 2059 p (reac)s
+(hed)s
+15(already\))m
+17(or)m
+cmti9.300 @sf 16(new)m
+cmr9.300 @sf 19(\(has)m
+16(not)m
+16 r 98 c
+1(een)m
+17(reac)m
+(hed)s
+16(already\).)m
+1038 2096 p (New)s
+16(states)m
+16(are)m
+17(stored)m
+17(in)m
+16 r 97 c
+17(queue)m
+17(of)m
+cmti9.300 @sf 16(active)m
+15(states)m
+cmr9.300 @sf 18(\(states)m
+1038 2134 p (that)s
+14(still)m
+13(need)m
+15(to)m
+13 r 98 c
+1 r 101 c
+15(explored\).)m
+20(Dep)m
+1(ending)m
+16(on)m
+14(the)m
+15(organi-)m
+1038 2171 p (zation)s
+10(of)m
+9(this)m
+10(queue,)m
+11(the)m
+10 r 118 c
+(eri\014er)s
+9(do)m
+1(es)m
+11 r 97 c
+10(breadth{\014rst)m
+11(searc)m
+104 c
+1038 2208 p (or)s
+14 r 97 c
+13(depth{\014rst)m
+16(searc)m
+(h.)s
+19(Ev)m
+(ery)s
+13(state)m
+14(in)m
+14(the)m
+14(hash)m
+14(table)m
+14(has)m
+1038 2246 p 97 c
+12 r 112 c
+1(oin)m
+(ter)s
+11(to)m
+12 r 97 c
+12(predecessor)m
+13(state)m
+12(that)m
+12(can)m
+13 r 98 c
+1 r 101 c
+12(used)m
+13(to)m
+11(gener-)m
+1038 2283 p (ate)s
+15(an)m
+15(error)m
+14(trace)m
+15(if)m
+14 r 97 c
+15(problem)m
+15(is)m
+14(detected.)m
+23(Breadth{\014rst)m
+1038 2320 p (searc)s
+104 c
+10(is)m
+10(used)m
+12 r 98 c
+121 c
+10(default,)m
+10 r 98 c
+1(ecause)m
+12(it)m
+10(causes)m
+12(the)m
+10(error-traces)m
+1038 2358 p (to)s
+13 r 98 c
+1 r 101 c
+13(as)m
+13(short)m
+14(as)m
+13 r 112 c
+1(ossible.)m
+cmbx10.329 @sf 1038 2422 p 51 c
+52(Exp)m
+1(erience)m
+17(on)m
+18(larger)m
+16(examples)m
+cmr9.300 @sf 1038 2476 p 87 c
+-2 r 101 c
+19(ha)m
+118 c
+101 c
+18(used)m
+20(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 20(on)m
+20 r 116 c
+119 c
+111 c
+17(hardw)m
+(are)s
+19(designs)m
+21(that)m
+20(are)m
+1038 2513 p (\\real")s
+20(in)m
+20(the)m
+20(sense)m
+20(that)m
+20(they)m
+21 r 119 c
+(ere)s
+18(in)m
+(tended)s
+20(to)m
+20 r 98 c
+1(ecome)m
+1038 2550 p (commercial)s
+17(pro)m
+1(ducts:)m
+27 r 97 c
+18(directory-based)m
+19(cac)m
+(he)s
+17(coherence)m
+1038 2588 p (proto)s
+1(col)m
+12(for)m
+11 r 97 c
+11 r 109 c
+(ultipro)s
+1(cessor,)m
+11(and)m
+12 r 97 c
+11(sync)m
+(hronous)s
+13(link-lev)m
+(el)s
+1038 2625 p (comm)s
+(unication)s
+9(proto)m
+1(col.)m
+16(In)m
+10 r 98 c
+1(oth)m
+10(cases,)m
+11 r 119 c
+101 c
+8 r 98 c
+1(egan)m
+11 r 118 c
+(erifying)s
+1038 2662 p (early)s
+11(in)m
+10(the)m
+11(design)m
+12(phase,)m
+12(basing)m
+11(our)m
+12(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 11(descriptions)m
+11(on)m
+@eop
+%%Page: ? 3
+3 @bop0
+cmmi9.300 @sf
+[<FF00001C00001C00001C00001C00000E00000E00000E70000E8C00070600070700070300070380
+  0381C00381C00381C00381C011C0C011C0C011C0C011E1C0099180070F00> 24 23 1 7 19.275] 112 @dc
+cmsy9.300 @sf
+[<007001C0038007000700070007000700070007000700070007000700070007000E001C00F0001C
+  000E000700070007000700070007000700070007000700070007000700038001C00070> 16 37 -3 9 19.198] 102 @dc
+cmmi9.300 @sf
+[<3FE0038003800380038001C001C03DC063C0E1E0C0E0C0E0C0E0E070E070E070E0707038303838
+  3818380C5C0384> 16 23 -2 7 17.156] 113 @dc
+cmsy9.300 @sf
+[<F0001C000E000700070007000700070007000700070007000700070007000700038001C0007001
+  C0038007000700070007000700070007000700070007000700070007000E001C00F000> 16 37 -3 9 19.198] 103 @dc
+cmr9.300 @sf
+[<7F9FE00E07000E07000E07000E07000E07000E07000E07000E07000E07000E07000E07000E0700
+  0E07000E0700FFFF000E07000E07000E07000E07000E07000E070006070007070003870000FF00> 24 26 0 0 21.331] 13 @dc
+[<C000C000E000600060007000300030003800180018001C000C000C000E00060006000700030003
+  800180018001C000C000C000E000600060007000300030003800180018001C000C000C> 16 37 -2 9 19.198] 47 @dc
+cmbx9.300 @sf
+[<FFC7F8FFC7F81E03801E07801E0F001E0E001E1C001F3C001FF8001FF0001E60001E30001E1C00
+  1E0E001E07001E0FF01E0FF01E00001E00001E00001E00001E00001E00001E0000FE0000FE0000> 24 26 -1 0 23.332] 107 @dc
+[<00600000F00000F00001F80001F80001F80003CC0003CC000786000786000F07000F03001F0380
+  1E01801E0180FF03F0FF03F0> 24 17 -1 0 23.332] 118 @dc
+cmr9.300 @sf
+[<0F8030E0403040388018E01CE01C401C001C001C001800382030386027C0200020002000200020
+  003FC03FE03FF03018> 16 24 -2 0 19.198] 53 @dc
+3 @bop1
+cmr9.300 @sf -51 42 p (an)s
+14(informal)m
+14(design)m
+15(sp)m
+1(eci\014cation.)m
+23(In)m
+15 r 98 c
+1(oth)m
+15(cases,)m
+15 r 119 c
+101 c
+14(found)m
+-51 79 p (signi\014can)s
+116 c
+13(errors)m
+15(and)m
+15(omissions)m
+15(and)m
+15(sp)m
+1(en)m
+116 c
+14 r 97 c
+15(great)m
+15(deal)m
+15(of)m
+-51 116 p (time)s
+8(mo)m
+1(difying)m
+11(and)m
+11(enhancing)m
+12(the)m
+10(designs)m
+11(to)m
+11(meet)m
+10(our)m
+11(cor-)m
+-51 154 p (rectness)s
+12(conditions.)m
+-2 192 p 86 c
+-2(eri\014cation)m
+13(go)m
+1(es)m
+16(through)m
+16(sev)m
+(eral)s
+14(stages:)m
+22(deciding)m
+15(ho)m
+119 c
+-51 230 p (to)s
+16(mo)m
+1(del)m
+17(the)m
+17(problem)m
+17(\(esp)m
+1(ecially)m
+-2 r 44 c
+17(what)m
+17(details)m
+16(to)m
+17(omit\);)m
+-51 267 p (writing)s
+13(the)m
+15(description;)m
+15(using)m
+16 r 118 c
+(eri\014cation)s
+14(to)m
+15(\014nd)m
+15(descrip-)m
+-51 304 p (tion)s
+15(errors;)m
+17(and)m
+17(only)m
+17(then)m
+16(disco)m
+118 c
+(ering)s
+15(gen)m
+(uine)s
+16(design)m
+17(er-)m
+-51 342 p (rors.)s
+-2 380 p (When)s
+18(the)m
+18(\014rst)m
+18(serious)m
+18(design)m
+19(error)m
+17(is)m
+18(disco)m
+118 c
+(ered,)s
+17(the)m
+-51 418 p (system)s
+11(design)m
+12(needs)m
+13(to)m
+11 r 98 c
+1 r 101 c
+13(mo)m
+1(di\014ed.)m
+17(But,)m
+12(ev)m
+(en)s
+11(if)m
+11(the)m
+12(mo)m
+1(d-)m
+-51 455 p (i\014cation)s
+14 r 97 c
+118 c
+(oids)s
+15(in)m
+(tro)s
+1(ducing)m
+15(more)m
+16(bugs,)m
+17(more)m
+16(bugs)m
+17(in)m
+15(the)m
+-51 492 p (original)s
+18(design)m
+21(are)m
+21(unco)m
+118 c
+(ered.)s
+38(The)m
+20 r 118 c
+(eri\014cation)s
+20(pro)m
+1(cess)m
+-51 530 p (then)s
+16(en)m
+(ters)s
+16 r 97 c
+17(tigh)m
+116 c
+15(lo)m
+1(op)m
+17(redesign-rev)m
+(erify)s
+17(lo)m
+1(op)m
+17 r 109 c
+(uc)s
+104 c
+15(lik)m
+101 c
+-51 567 p (the)s
+9(more)m
+10(traditional)m
+10(edit-compile-debug)m
+11(that)m
+10(programmers)m
+-51 604 p (exp)s
+1(erience.)m
+cmbx9.300 @sf -51 660 p (3.1)s
+43(Cac)m
+(he)s
+14(coherence)m
+14(proto)m
+1(col)m
+cmr9.300 @sf -51 713 p (Directory-based)s
+12(cac)m
+(he)s
+12(coherence)m
+14(is)m
+12 r 97 c
+12 r 119 c
+97 c
+121 c
+10(of)m
+12(implemen)m
+(ting)s
+-51 751 p 97 c
+13(shared-memory)m
+13(abstraction)m
+14(on)m
+14(top)m
+14(of)m
+13 r 97 c
+13(message-passing)m
+-51 788 p (net)s
+119 c
+-2(ork,)m
+11 r 98 c
+121 c
+12(recording)m
+14(in)m
+12 r 97 c
+13(cen)m
+(tral)s
+11(directory)m
+13(whic)m
+104 c
+12(pro)m
+1(ces-)m
+-51 825 p (sors)s
+13(ha)m
+118 c
+101 c
+12(cac)m
+(hed)s
+13(readable)m
+15(or)m
+14(writable)m
+13(copies)m
+14(of)m
+13 r 97 c
+14(memory)m
+-51 863 p (lo)s
+1(cation.)m
+26(Main)m
+(taining)s
+16(cac)m
+(he)s
+16(coherence)m
+17(can)m
+17 r 98 c
+1 r 101 c
+17(somewhat)m
+-51 900 p (complicated.)s
+14 r 70 c
+-2(or)m
+9(example,)m
+10(if)m
+8 r 97 c
+9(pro)m
+1(cessor)m
+cmmi9.300 @sf 10 r 112 c
+cmr9.300 @sf 10 r 119 c
+(an)s
+(ts)s
+7 r 97 c
+9(writable)m
+-51 937 p (cop)s
+121 c
+10(of)m
+12 r 97 c
+13(lo)m
+1(cation)m
+12(whic)m
+104 c
+11(is)m
+12(cac)m
+(hed)s
+13(read-only)m
+13 r 98 c
+121 c
+11(pro)m
+1(cessors)m
+cmsy9.300 @sf -51 975 p 102 c
+cmmi9.300 @sf 113 c
+cmmi6.300 @sf -15 979 p 105 c
+cmsy9.300 @sf -2 975 p 103 c
+cmr9.300 @sf 44 c
+15 r 97 c
+15(request)m
+16(for)m
+15 r 97 c
+16(writable)m
+15(cop)m
+121 c
+15(is)m
+15(\014rst)m
+15(sen)m
+116 c
+15(from)m
+cmmi9.300 @sf 15 r 112 c
+cmr9.300 @sf 16(to)m
+-51 1012 p (the)s
+11(directory)m
+-2 r 46 c
+16(The)m
+12(directory)m
+12(then)m
+13(sends)m
+13 r 97 c
+12(writable)m
+12(cop)m
+121 c
+12(to)m
+cmmi9.300 @sf -51 1050 p 112 c
+cmr9.300 @sf 16(\(whic)m
+104 c
+15(can)m
+17(then)m
+17(pro)m
+1(ceed\))m
+17(and)m
+17(an)m
+17(in)m
+118 c
+-1(alidation)m
+15(message)m
+-51 1087 p (to)s
+17(ev)m
+(ery)s
+cmmi9.300 @sf 16 r 113 c
+cmmi6.300 @sf 122 1091 p 105 c
+cmr9.300 @sf 135 1087 p 46 c
+31(Eac)m
+104 c
+cmmi9.300 @sf 17 r 113 c
+cmmi6.300 @sf 294 1091 p 105 c
+cmr9.300 @sf 324 1087 p (in)s
+118 c
+-1(alidates)m
+16(its)m
+17(cop)m
+121 c
+17(and)m
+18(sends)m
+19(and)m
+-51 1124 p (ac)s
+(kno)s
+-1(wledge)m
+17(bac)m
+107 c
+19(to)m
+18(the)m
+19(directory)m
+-2 r 44 c
+19(whic)m
+104 c
+18(is)m
+18 r 119 c
+(aiting)s
+18(for)m
+-51 1162 p (all)s
+13(the)m
+15(in)m
+118 c
+-1(alidations)m
+13(to)m
+15(arriv)m
+101 c
+14 r 98 c
+1(efore)m
+16(pro)m
+1(cessing)m
+16(an)m
+121 c
+14(more)m
+-51 1199 p (transactions)s
+12(on)m
+14(that)m
+13(lo)m
+1(cation.)m
+-2 1238 p (Although)s
+12(this)m
+12(single)m
+12(transaction)m
+13(sounds)m
+13(simple)m
+12(enough,)m
+-51 1275 p (the)s
+13(problem)m
+14 r 98 c
+1(ecomes)m
+14(more)m
+14(complicated)m
+15(when)m
+14(one)m
+14(consid-)m
+-51 1312 p (ers)s
+11(scenarios)m
+13(in)m
+12(whic)m
+104 c
+11(sev)m
+(eral)s
+12(di\013eren)m
+116 c
+11(transactions)m
+14(on)m
+12(the)m
+-51 1350 p (same)s
+12(lo)m
+1(cation)m
+14(ha)m
+118 c
+101 c
+12 r 98 c
+1(een)m
+14(initiated)m
+13(at)m
+14(the)m
+14(same)m
+13(time,)m
+13(esp)m
+1(e-)m
+-51 1387 p (cially)s
+13(when)m
+16(messages)m
+17(are)m
+16(not)m
+16(guaran)m
+(teed)s
+16(to)m
+15(arriv)m
+101 c
+15(in)m
+15(the)m
+-51 1424 p (same)s
+15(order)m
+17(they)m
+17 r 119 c
+(ere)s
+15(sen)m
+(t.)s
+27 r 65 c
+16(proto)m
+1(col)m
+17 r 118 c
+(eri\014er)s
+15(metho)m
+1(di-)m
+-51 1462 p (cally)s
+11(explores)m
+14(all)m
+12(of)m
+13(these)m
+13 r 112 c
+1(ossibilities.)m
+-2 1500 p (Since)s
+16(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 16(has)m
+17(no)m
+16(built-in)m
+16(supp)m
+1(ort)m
+17(for)m
+16(message)m
+17(com-)m
+-51 1538 p 109 c
+(unication,)s
+13(the)m
+15(net)m
+119 c
+(ork)s
+13 r 119 c
+(as)s
+13(mo)m
+1(deled)m
+15(as)m
+15(an)m
+15(arra)m
+121 c
+14(with)m
+14 r 97 c
+-51 1575 p (coun)s
+(ter)s
+14(of)m
+16(the)m
+16 r 110 c
+(um)s
+98 c
+1(er)m
+14(of)m
+16(messages)m
+16(it)m
+16(con)m
+(tained.)s
+25(Out-of-)m
+-51 1613 p (order)s
+11(message)m
+13(reception)m
+12 r 119 c
+(as)s
+11(mo)m
+1(deled)m
+13(using)m
+12 r 97 c
+12(rule)m
+12(set)m
+12(that)m
+-51 1650 p (had)s
+14(the)m
+14 r 112 c
+1(osition)m
+15(of)m
+15(the)m
+14(message)m
+16(in)m
+14(the)m
+15(arra)m
+121 c
+14(as)m
+15 r 97 c
+14(param-)m
+-51 1687 p (eter.)s
+24(The)m
+15(has)m
+17(the)m
+16(e\013ect)m
+16(of)m
+15(nondeterministically)m
+17 r 99 c
+(ho)s
+1(osing)m
+-51 1725 p 97 c
+16(message)m
+17(to)m
+16(pro)m
+1(cess,)m
+18(regardless)m
+18(of)m
+16(the)m
+17(order)m
+17(of)m
+17(message)m
+-51 1762 p (transmission.)s
+-2 1801 p (The)s
+15(description)m
+16(has)m
+16(separate)m
+17(scaling)m
+16(parameters)m
+16(\(con-)m
+-51 1838 p (stan)s
+116 c
+11(declarations\))m
+14(for:)m
+17 r 110 c
+(um)s
+98 c
+1(er)m
+12(of)m
+13(main)m
+14(memories)m
+13(and)m
+14(di-)m
+-51 1875 p (rectories,)s
+11 r 110 c
+(um)s
+98 c
+1(er)m
+12(of)m
+13(cac)m
+(hes)s
+12(and)m
+14(pro)m
+1(cessors,)m
+14 r 110 c
+(um)s
+98 c
+1(er)m
+12(of)m
+12(ad-)m
+-51 1913 p (dresses,)s
+15 r 110 c
+(um)s
+98 c
+1(er)m
+14(of)m
+15(legal)m
+15(memory)m
+15 r 118 c
+-1(alues,)m
+15(size)m
+15(of)m
+15(directory)m
+-51 1950 p (en)s
+(try)s
+9(\(n)m
+(um)s
+98 c
+1(er)m
+9(of)m
+10(cac)m
+(hed)s
+11(en)m
+(tries)s
+9(that)m
+11(can)m
+11 r 98 c
+1 r 101 c
+11 r 107 c
+(ept)s
+10(trac)m
+107 c
+10(of)m
+3(\),)m
+-51 1987 p (and)s
+12(capacit)m
+121 c
+13(of)m
+12(the)m
+13(message)m
+14(net)m
+119 c
+(ork.)s
+-2 2026 p (The)s
+15(sp)m
+1(eci\014cation)m
+18(of)m
+16(the)m
+16(proto)m
+1(col)m
+17(is)m
+15(not)m
+17(complete.)m
+27(In-)m
+-51 2063 p (stead,)s
+16 r 119 c
+101 c
+14(ha)m
+118 c
+101 c
+15(sp)m
+1(eci\014ed)m
+17 r 97 c
+17(set)m
+16(of)m
+16(prop)m
+1(erties)m
+17(that)m
+16(seem)m
+17(to)m
+-51 2101 p 98 c
+1 r 101 c
+11(ob)m
+(vious)s
+10(necessary)m
+12(conditions)m
+11(for)m
+11(correct)m
+11(op)m
+1(eration.)m
+17(Our)m
+-51 2138 p (sp)s
+1(eci\014cation)m
+15(made)m
+16(use)m
+16(of)m
+15(in-line)m
+15(error)m
+16(statemen)m
+(ts,)s
+15(in)m
+118 c
+-1(ari-)m
+-51 2175 p (an)s
+(ts,)s
+11(and)m
+14(deadlo)m
+1 r 99 c
+107 c
+14 r 99 c
+(hec)s
+(king.)s
+17(The)m
+13(in-line)m
+13(error)m
+14(statemen)m
+(ts)s
+-51 2213 p 119 c
+(er)s
+-1 r 101 c
+8(used)m
+10(for)m
+9(sev)m
+(eral)s
+9(purp)m
+1(oses,)m
+11(including)m
+10(rep)m
+1(orting)m
+10(on)m
+10(com-)m
+-51 2250 p (mon)s
+17(description)m
+18(errors,)m
+20(suc)m
+104 c
+17(as)m
+18 r 111 c
+118 c
+(er\015o)s
+(wing)s
+16(the)m
+18(net)m
+119 c
+(ork)s
+-51 2288 p (arra)s
+121 c
+10(or)m
+13(the)m
+12(directory)m
+-2 r 46 c
+16(Ho)m
+119 c
+-1(ev)m
+(er,)s
+10(the)m
+12(most)m
+13(imp)m
+1(ortan)m
+116 c
+11(error)m
+-51 2325 p (statemen)s
+(ts)s
+8 r 119 c
+(ere)s
+8(those)m
+10(that)m
+10 r 119 c
+101 c
+8(inserted)m
+10(metho)m
+1(dically)m
+10(on)m
+10(ev-)m
+-51 2362 p (ery)s
+9(un)m
+(used)s
+11(branc)m
+104 c
+11(of)m
+10(an)m
+11(if)m
+10(or)m
+11(case,)m
+11(to)m
+11(\015ag)m
+11(presumed)m
+11(imp)m
+1(os-)m
+-51 2400 p (sible)s
+13 r 111 c
+1(ccurrences.)m
+24(These)m
+15(error)m
+15(statemen)m
+(ts)s
+15 r 119 c
+(ere)s
+13(esp)m
+1(ecially)m
+-51 2437 p (useful)s
+12(for)m
+12(detecting)m
+14(\\unsp)m
+1(eci\014ed)m
+15(receptions")m
+13(of)m
+13(messages.)m
+-2 2476 p (Other)s
+15(prop)m
+1(erties)m
+16 r 119 c
+(ere)s
+14(sp)m
+1(eci\014ed)m
+16(using)m
+16(three)m
+16(in)m
+118 c
+-1(ari)m
+-1(an)m
+(ts.)s
+-51 2513 p (The)s
+8(\014rst)m
+10 r 99 c
+(hec)s
+107 c
+(ed)s
+7(for)m
+10(conditions)m
+10(that)m
+10 r 119 c
+(ere)s
+8(empirically)m
+9(lik)m
+(ely)s
+-51 2550 p (to)s
+15 r 98 c
+1 r 101 c
+16(violated)m
+16 r 98 c
+121 c
+15(description)m
+17(errors.)m
+26 r 70 c
+-2(or)m
+15(example,)m
+17(if)m
+15(the)m
+-51 2588 p (directory)s
+13(state)m
+15(for)m
+15 r 97 c
+14(particular)m
+15(memory)m
+15(address)m
+16(is)m
+14(\\INV")m
+-51 2625 p (\(indicating)s
+11(that)m
+14(there)m
+13(are)m
+13(no)m
+13(cac)m
+(hed)s
+12(copies\),)m
+13(the)m
+13(directory)m
+-51 2662 p (list)s
+11(of)m
+12(cac)m
+(hed)s
+13(copies)m
+14(should)m
+13 r 98 c
+1 r 101 c
+14(empt)m
+121 c
+-2 r 46 c
+1088 42 p (The)s
+18(other)m
+19 r 116 c
+119 c
+111 c
+16(in)m
+118 c
+-1(arian)m
+(ts)s
+16 r 99 c
+(hec)s
+107 c
+17(for)m
+19(cac)m
+(he)s
+18(consistency)m
+1038 79 p (prop)s
+1(erties.)m
+29(One)m
+17(of)m
+17(these)m
+17(basically)m
+17(asserts)m
+17(that)m
+17(there)m
+18(are)m
+1038 116 p (nev)s
+(er)s
+16 r 116 c
+119 c
+111 c
+15(mo)m
+1(di\014able)m
+17(cac)m
+(hed)s
+17(copies)m
+17(of)m
+17(the)m
+17(same)m
+17(address,)m
+1038 154 p (although)s
+12(the)m
+11(condition)m
+11(is)m
+11(made)m
+12 r 109 c
+(uc)s
+104 c
+9(more)m
+11(complicated)m
+11 r 98 c
+121 c
+1038 191 p 118 c
+-1(arious)m
+17(exceptions)m
+19(for)m
+18(transien)m
+116 c
+18(states.)m
+32 r 70 c
+-2(or)m
+17(example,)m
+20(in)m
+1038 228 p (this)s
+16(particular)m
+16(proto)m
+1(col)m
+17(there)m
+16(ma)m
+121 c
+15(legally)m
+16 r 98 c
+1 r 101 c
+16 r 116 c
+119 c
+111 c
+14(mo)m
+1(di\014-)m
+1038 266 p (able)s
+17(copies)m
+17(if)m
+16(one)m
+18(is)m
+17(already)m
+17 r 98 c
+1(eing)m
+18(written)m
+16(bac)m
+107 c
+17(to)m
+17(main)m
+1038 303 p (memory)s
+-2 r 46 c
+16(Most)m
+12(of)m
+12(these)m
+13(conditions)m
+13 r 119 c
+(ere)s
+10(determined)m
+13(exp)m
+1(er-)m
+1038 340 p (imen)s
+(tally)s
+16 r 98 c
+121 c
+16(starting)m
+18(with)m
+17(simple)m
+17(in)m
+118 c
+-1(arian)m
+-1(t,)m
+16(running)m
+19(the)m
+1038 378 p 118 c
+(eri\014er,)s
+12(and)m
+14(insp)m
+1(ecting)m
+14(the)m
+13(results)m
+14(to)m
+13(see)m
+13(whether)m
+14(the)m
+13(vio-)m
+1038 415 p (lation)s
+14(is)m
+14 r 98 c
+1(ecause)m
+15(the)m
+14(in)m
+118 c
+-1(arian)m
+116 c
+12(is)m
+13(to)m
+1 r 111 c
+15(strong)m
+15(or)m
+14 r 98 c
+1(ecause)m
+15(of)m
+1038 452 p 97 c
+13(gen)m
+(uine)s
+13(error.)m
+1088 491 p (The)s
+12(\014nal)m
+13(in)m
+118 c
+-1(arian)m
+-1 r 116 c
+10(asserts)m
+13(that)m
+13(if)m
+11 r 97 c
+13(cac)m
+(he)s
+12(en)m
+(try)s
+11(is)m
+13(read-)m
+1038 529 p (only)s
+-2 r 44 c
+16(its)m
+16 r 118 c
+-1(alue)m
+15(is)m
+17(the)m
+16(same)m
+17(as)m
+16(the)m
+17(corresp)m
+1(onding)m
+18 r 118 c
+-1(alue)m
+16(in)m
+1038 566 p (main)s
+17(memory)m
+-2 r 46 c
+28(This,)m
+17(to)m
+1(o,)m
+18(is)m
+16(temp)m
+1(ered)m
+18 r 98 c
+121 c
+16 r 118 c
+-1(arious)m
+16(excep-)m
+1038 604 p (tions)s
+16(for)m
+15(transien)m
+116 c
+15(conditions.)m
+26 r 70 c
+-2(or)m
+15(example,)m
+16(the)m
+16(proto)m
+1(col)m
+1038 641 p (allo)s
+(ws)s
+16 r 97 c
+17(mo)m
+1(di\014able)m
+18(cop)m
+121 c
+17(to)m
+18 r 98 c
+1 r 101 c
+18(con)m
+118 c
+(erted)s
+16(to)m
+18 r 97 c
+17(read-only)m
+1038 678 p (cop)s
+121 c
+13 r 98 c
+121 c
+13(writing)m
+13(bac)m
+107 c
+14(the)m
+13(mo)m
+1(di\014ed)m
+15 r 118 c
+-1(alue)m
+13(to)m
+14(main)m
+13(memory)m
+1038 716 p (and)s
+15 r 99 c
+(hanging)s
+15(the)m
+15(cac)m
+(he)s
+14(en)m
+(try)s
+14(state.)m
+22(While)m
+15(the)m
+15(writebac)m
+107 c
+1038 753 p (message)s
+20(is)m
+20(in)m
+20(transit,)m
+21(the)m
+20 r 118 c
+-1(alue)m
+19(of)m
+20(the)m
+20(\(no)m
+(w\))s
+19(read-only)m
+1038 790 p (cac)s
+(he)s
+18(en)m
+(try)s
+19(ma)m
+121 c
+18 r 98 c
+1 r 101 c
+19(di\013eren)m
+116 c
+19(from)m
+19(the)m
+19(\(not-y)m
+(et-written-)s
+1038 828 p (bac)s
+(k\))s
+12(memory)m
+14 r 118 c
+-1(alue.)m
+1088 867 p (Surprisingly)s
+-2 r 44 c
+33(almost)m
+29(all)m
+29(of)m
+29(the)m
+30(errors)m
+30(found)m
+30 r 119 c
+(ere)s
+1038 904 p (found)s
+22(with)m
+21 r 97 c
+21(description)m
+22(consisting)m
+22(of)m
+21(one)m
+22(main)m
+21(mem-)m
+1038 941 p (ory/directory)s
+-2 r 44 c
+12 r 116 c
+119 c
+111 c
+11(pro)m
+1(cessors/cac)m
+(hes,)s
+14(and)m
+13(one)m
+14(memory)m
+13(lo-)m
+1038 979 p (cation)s
+14(with)m
+13(one)m
+15 r 112 c
+1(ossible)m
+14 r 118 c
+-1(alue)m
+13(\(zero)m
+14(bits)m
+14(of)m
+14(data\).)m
+20 r 86 c
+-2(erify-)m
+1038 1016 p (ing)s
+16(at)m
+17(this)m
+16(scale)m
+17(required)m
+17(examining)m
+17(on)m
+17(the)m
+17(order)m
+17(of)m
+16 r 116 c
+119 c
+111 c
+1038 1053 p (thousand)s
+16(states.)m
+24(Scaling)m
+15(up)m
+16(to)m
+15(three)m
+15(pro)m
+1(cessors,)m
+17 r 116 c
+119 c
+-1 r 111 c
+13 r 118 c
+-1(al-)m
+1038 1091 p (ues,)s
+17(and)m
+17 r 116 c
+119 c
+-1 r 111 c
+14(main)m
+16(memories)m
+16(rev)m
+(ealed)s
+16(only)m
+16(trivial)m
+16(errors,)m
+1038 1128 p (suc)s
+104 c
+17(as)m
+18(the)m
+18(use)m
+18(of)m
+17(the)m
+18(constan)m
+116 c
+17 r 48 c
+18(for)m
+17 r 97 c
+18 r 118 c
+-1(alue)m
+17(instead)m
+18(of)m
+1038 1166 p (the)s
+16(prop)m
+1(er)m
+17 r 118 c
+-1(ariable.)m
+25(In)m
+16(this)m
+16(case,)m
+17 r 104 c
+(undreds)s
+16(of)m
+16(thousands)m
+1038 1203 p (of)s
+12(states)m
+12 r 119 c
+(ere)s
+10(examined.)m
+18(The)m
+12(state)m
+12(explosion)m
+13(problem)m
+12 r 119 c
+(as)s
+1038 1240 p (only)s
+12(an)m
+12(issue)m
+12(in)m
+12 r 118 c
+(erifying)s
+11(scaled-up)m
+13 r 118 c
+(ersions)s
+11(of)m
+12(the)m
+12(system,)m
+1038 1278 p (where,)s
+12(in)m
+13(fact,)m
+13(no)m
+13(additional)m
+13(problems)m
+14 r 119 c
+(ere)s
+12(disco)m
+118 c
+(ered.)s
+1088 1317 p (Man)s
+121 c
+11(of)m
+11(the)m
+12(in-line)m
+10(error)m
+12(statemen)m
+(ts)s
+11 r 119 c
+(ere)s
+10(triggered,)m
+12(ev-)m
+1038 1354 p (ery)s
+13(in)m
+118 c
+-1(arian)m
+-1 r 116 c
+11 r 119 c
+(as)s
+12(violated,)m
+13(and)m
+14(sev)m
+(eral)s
+12(deadlo)m
+1 r 99 c
+(ks)s
+13 r 119 c
+(ere)s
+12(de-)m
+1038 1391 p (tected.)s
+20(There)m
+14 r 119 c
+(ere)s
+12(man)m
+121 c
+14(errors)m
+14(in)m
+13(the)m
+14(mo)m
+1(deling,)m
+15(particu-)m
+1038 1429 p (larly)s
+11(in)m
+11(the)m
+12(handling)m
+13(of)m
+11(the)m
+12(net)m
+119 c
+(ork)s
+10(\(e.g.)m
+16(failing)m
+11(to)m
+11(remo)m
+118 c
+101 c
+1038 1466 p 97 c
+10(message)m
+10(after)m
+10(it)m
+10(had)m
+10 r 98 c
+1(een)m
+11(handled\).)m
+17(Another)m
+10(more)m
+10(signif-)m
+1038 1503 p (ican)s
+116 c
+11(common)m
+14(error)m
+13 r 119 c
+(as)s
+11 r 97 c
+13(message)m
+13(arriving)m
+13(at)m
+13 r 97 c
+13(pro)m
+1(cessor)m
+1038 1541 p (in)s
+13(an)m
+13(unexp)m
+1(ected)m
+15(state,)m
+13(detected)m
+14 r 98 c
+121 c
+13(an)m
+13(error)m
+13(statemen)m
+116 c
+13(in)m
+1038 1578 p (the)s
+11(default)m
+12(case)m
+12(of)m
+11 r 97 c
+12(switc)m
+104 c
+10(statemen)m
+(t.)s
+15(In)m
+12(man)m
+121 c
+11(cases,)m
+12(this)m
+1038 1615 p (represen)s
+(ted)s
+13 r 97 c
+14(legitimate)m
+13 r 112 c
+1(ossibilit)m
+121 c
+12(that)m
+14(could)m
+14 r 98 c
+1 r 101 c
+14(handled)m
+1038 1653 p 98 c
+121 c
+13(augmen)m
+(ting)s
+13(the)m
+14(design.)m
+18(In)m
+14(other)m
+14(cases,)m
+13(deep)m
+1(er)m
+15 r 99 c
+(hanges)s
+1038 1690 p 119 c
+(ere)s
+13(required.)m
+21(Man)m
+121 c
+14(other)m
+14(errors)m
+15 r 119 c
+(ere)s
+13(manifested)m
+14(in)m
+14(ille-)m
+1038 1728 p (gal)s
+16(global)m
+16(states,)m
+17(suc)m
+104 c
+16(as)m
+17 r 116 c
+119 c
+-1 r 111 c
+15(pro)m
+1(cessors)m
+17(ha)m
+(ving)s
+16(writable)m
+1038 1765 p (copies)s
+13(of)m
+12 r 97 c
+13(lo)m
+1(cation.)m
+17(Only)m
+13(one)m
+13(memory)m
+13 r 118 c
+-1(alue)m
+12 r 119 c
+(as)s
+11(required)m
+1038 1802 p 98 c
+1(ecause)m
+15(most)m
+13(problems)m
+14(that)m
+14 r 119 c
+(ould)s
+13(lead)m
+14(to)m
+13(inconsistencies)m
+1038 1840 p (sho)s
+119 c
+(ed)s
+11(up)m
+14(earlier)m
+12(as)m
+13(illegal)m
+12(states.)m
+cmbx9.300 @sf 1038 1895 p (3.2)s
+44(Link-lev)m
+(el)s
+15(proto)m
+1(col)m
+cmr9.300 @sf 1038 1949 p 87 c
+-2 r 101 c
+13(also)m
+15(applied)m
+14(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 15(to)m
+14(the)m
+15(problem)m
+15(of)m
+14 r 118 c
+(erifying)s
+13 r 97 c
+14(link-)m
+1038 1987 p (lev)s
+(el)s
+16(comm)m
+(unication)s
+18(proto)m
+1(col.)m
+32(The)m
+18(proto)m
+1(col)m
+18(is)m
+18(basically)m
+1038 2024 p 97 c
+19(complicated)m
+20 r 118 c
+(ersion)s
+18(of)m
+19(the)m
+20 r 119 c
+(ell-kno)s
+-1(wn)m
+17(alternating)m
+20(bit)m
+1038 2061 p (proto)s
+1(col,)m
+11(in)m
+11(that)m
+12(it)m
+10(uses)m
+12(one-bit)m
+11(sequence)m
+12 r 110 c
+(um)s
+98 c
+1(ers)m
+10(to)m
+11(catc)m
+104 c
+1038 2099 p (lost)s
+17(and)m
+18(duplicated)m
+18(messages.)m
+31(One)m
+18(of)m
+17(the)m
+17(complications)m
+1038 2136 p (is)s
+17(that)m
+17(the)m
+17(proto)m
+1(col)m
+18(has)m
+17(the)m
+17(capabilit)m
+121 c
+17(of)m
+16(transmitting)m
+18 r 97 c
+1038 2174 p (group)s
+14(of)m
+12(sev)m
+(eral)s
+13(pac)m
+107 c
+(ets)s
+11(as)m
+13 r 97 c
+13(single)m
+13(unit.)m
+1088 2213 p 86 c
+-2(eri\014cation)m
+12(with)m
+13(Mur)m
+cmmi9.300 @sf 39 c
+cmr9.300 @sf 14(caugh)m
+116 c
+13(sev)m
+(eral)s
+13(fundamen)m
+(tal)s
+13(er-)m
+1038 2250 p (rors)s
+18(in)m
+17(the)m
+18(initial)m
+16(design.)m
+31(Man)m
+121 c
+18(of)m
+17(these)m
+18(stemmed)m
+18(from)m
+1038 2287 p 97 c
+15(group)m
+16(of)m
+14(pac)m
+107 c
+(ets)s
+14 r 98 c
+1(eing)m
+16(disrupted)m
+16 r 98 c
+121 c
+14(the)m
+15(retransmission)m
+1038 2325 p (of)s
+13(another)m
+15(single)m
+14(pac)m
+107 c
+(et)s
+12(or)m
+14(group)m
+15(of)m
+13(pac)m
+107 c
+(ets.)s
+19(Redesigning)m
+1038 2362 p (the)s
+10(proto)m
+1(col)m
+11(to)m
+10 r 98 c
+1 r 101 c
+11(correct)m
+10(and)m
+11(also)m
+10(meet)m
+10(giv)m
+(en)s
+10 r 112 c
+1(erformance)m
+1038 2399 p (goals)s
+14 r 119 c
+(as)s
+12(quite)m
+14(di\016cult,)m
+14(and)m
+14(required)m
+15 r 111 c
+118 c
+(er)s
+12 r 97 c
+13(mon)m
+(th)s
+14(of)m
+13(ef-)m
+1038 2437 p (fort)s
+12(\(with)m
+12(coun)m
+(tless)s
+12(iterations)m
+13(of)m
+12(the)m
+13 r 118 c
+(eri\014cation{)s
+12(redesign)m
+1038 2474 p (cycle\).)s
+1088 2513 p (Three)s
+17(ma)m
+2(jor)m
+18(prop)m
+1(erties)m
+18 r 119 c
+(ere)s
+17(sp)m
+1(eci\014ed.)m
+32(The)m
+17(\014rst)m
+18 r 116 c
+119 c
+111 c
+1038 2550 p 119 c
+(ere)s
+9(that)m
+10(that)m
+10(messages)m
+11 r 119 c
+(ere)s
+9(not)m
+11(lost)m
+10(or)m
+10(duplicated.)m
+17(These)m
+1038 2588 p 119 c
+(ere)s
+10(sp)m
+1(eci\014ed)m
+12(en)m
+(tirely)s
+11 r 98 c
+121 c
+10(in-line)m
+11(error)m
+12 r 99 c
+(hec)s
+(ks)s
+10 r 98 c
+121 c
+11(exploiting)m
+cmti9.300 @sf 1038 2625 p (data)s
+16(indep)m
+-2(en)m
+-1(den)m
+-1 r 99 c
+-2 r 101 c
+cmr9.300 @sf 14 r 91 c
+(15)s
+1(]:)m
+24(the)m
+18(con)m
+(trol)s
+16(of)m
+17(the)m
+17(proto)m
+1(col)m
+18(do)m
+1(es)m
+1038 2662 p (not)s
+13(dep)m
+1(end)m
+14(on)m
+14(the)m
+13(data)m
+13 r 98 c
+1(eing)m
+14(sen)m
+(t.)s
+@eop
+%%Page: ? 4
+4 @bop0
+cmbx10.329 @sf
+[<00FFFE00FFFE0007C00007C00007C00007C00007C00007C0FFFFFEFFFFFEE003C07003C03803C0
+  1803C00C03C00E03C00703C00383C00183C000C3C00063C00073C0003BC0001FC0000FC00007C0
+  0007C00003C00001C0> 24 29 -1 0 26.136] 52 @dc
+[<0007FC00003FFF8000FE01C003F0007007E000380FC000181F80000C3F00000C3F0000067F0000
+  067E0000067E000000FE000000FE000000FE000000FE000000FE000000FE000000FE0000007E00
+  00067E0000067F0000063F00000E3F00000E1F80001E0FC0001E07E0003E03F000FE00FE03DE00
+  3FFF0E0007FC02> 32 31 -3 0 37.751] 67 @dc
+cmsy9.300 @sf
+[<07801FE03FF07FF87FF8FFFCFFFCFFFCFFFCFFFCFFFC7FF87FF83FF01FE00780> 16 16 -2 -1 19.198] 15 @dc
+cmr9.300 @sf
+[<020007000700070007000700070003000300030003000100018001800080004000408020801080
+  1040087FFC7FFC7FFE4000> 16 25 -2 0 19.198] 55 @dc
+cmbx10.329 @sf
+[<FFC3FF00FFC3FF001E00F8001E01F0001E03F0001E07E0001E07C0001E0F80001F1F00001FFF00
+  001FFE00001F7C00001F3800001F1E00001F0700001F0380001F01C0001F00F0001F01FE001F01
+  FE001F0000001F0000001F0000001F0000001F0000001F0000001F0000001F0000001F0000001F
+  000000FF000000FF000000> 32 32 -2 0 27.588] 107 @dc
+[<0030018000007803C000007803C000007803C00000FC07E00000FC07E00001F60FB00001F60F30
+  0001F60F300003E31E180003E31E180007C1BE0C0007C1BC0C0007C1BC0C000F80F806000F80F8
+  06001F00F803001F00F00700FFE7FE1FE0FFE7FE1FE0> 40 20 -1 0 37.751] 119 @dc
+cmr9.300 @sf
+[<FFE0FF800E003E000E001C000E0038000E0070000E0070000E00E0000E00E0000E01C0000E0380
+  000F0380000E8700000E4E00000E2E00000E1C00000E0800000E0400000E0200000E0100000E00
+  80000E0040000E0020000E0010000E0018000E001E00FFE07F80> 32 26 -2 0 29.858] 75 @dc
+cmbx10.329 @sf
+[<FFFF007F80FFFF01FFE007E007F86007E00FF07007E00FF03007E00FE03007E00FE00007E00FE0
+  0007E00FE00007E00FC00007E00FC00007E00FC00007E01F800007E01F000007E03E000007FFFC
+  000007FFFF000007E01FC00007E007E00007E003F00007E003F00007E003F80007E003F80007E0
+  03F80007E003F80007E003F00007E003F00007E007E00007E01FC000FFFFFF0000FFFFF80000> 40 31 -2 0 39.203] 82 @dc
+[<3FFC003FFC0007C00007C00007C00007C00007C00007C00007C00007C00007C00007C00007C000
+  07C00007C00007C00007C00007C000FFFC00FFFC0007C00007C00007C00007C00007C00007C3C0
+  07C7E003C7E003E7E001F3E000FFC0001F80> 24 32 -1 0 15.972] 102 @dc
+cmr9.300 @sf
+[<1E00618041C0E0E0E0E040E000E000E000E000E000E000E000E000E000E000E000E000E000E000
+  E000E000E000E000E000E01FFC> 16 26 -3 0 19.729] 74 @dc
+cmti9.300 @sf
+[<0600000006000000070000000780000007800000074000000740000007200000071000000E1000
+  000E0800000E0C00000E0400000E0200000E0200000E0100000E0080000E0080001E0040001C00
+  40001C0020001C0010001C0010001C0008001C001C00FF803F80> 32 26 -8 0 28.504] 86 @dc
+[<FFE0000E000007000007000007000007000003800003800003800003800001C00001C00001C000
+  01C00000E00000E00000E00000E00000700000700000700000700000380000380000380001FF80> 24 26 -2 0 14.782] 73 @dc
+[<03E0000C1800100600300100600080600040E00040E00020E00020E00020E00000E00000E00000
+  E0000070000070000030000838000818000C1C000C0E000C07000C03801E00C016007062000F82> 24 26 -6 0 27.443] 67 @dc
+[<FF002000380020001800700008007000080070000800F0000400E8000400E8000401C8000401C8
+  000201C400020384000203840002038400010702000107020001060200010E0200008E0100009C
+  0100009C0100009C01000078008000780080007801C003F007F8> 32 26 -3 0 28.504] 78 @dc
+[<FFFE00001C0380000E00E0000E0070000E0038000E001C0007000C0007000E0007000700070007
+  000380030003800380038003800380038001C001C001C001C001C001C001C001C000E001C000E0
+  018000E0018000E00180007003000070070000700E0003FFF800> 32 26 -3 0 28.954] 68 @dc
+[<FFFFFFFFC0> 40 1 -4 -9 39.204] 124 @dc
+[<FFE000001E0000000E0000000E0000000E0000000E000000070000000700000007000000070200
+  0003810000038100000381000003FF000001C1800001C0800001C0800001C0800000E0010000E0
+  010000E0010000E0010000700100007003000070070003FFFF00> 32 26 -3 0 25.033] 70 @dc
+[<FFFF801C03800E00C00E00400E00600E0020070020070010070010070000038000038000038000
+  03800001C00001C00001C00001C00000E00000E00000E00000E00000700000700000700003FF80> 24 26 -3 0 24.053] 76 @dc
+cmr9.300 @sf
+[<FFFFC00E03C00E00C00E00400E00400E00600E00200E00200E00200E00000E00000E00000E0000
+  0E00000E00000E00000E00000E00000E00000E00000E00000E00000E00000E00000E0000FFF000> 24 26 -2 0 23.995] 76 @dc
+cmti9.300 @sf
+[<FFC7FE001C00E0000E0070000E0070000E0070000E007000070038000700380007003800070038
+  0003801C0003801C0003801C0003FFFC0001C00E0001C00E0001C00E0001C00E0000E0070000E0
+  070000E0070000E0070000700380007003800070038003FF1FF8> 32 26 -3 0 28.504] 72 @dc
+[<FFFFE0001C00E0000E0030000E0010000E0018000E000800070008000700040007000400070200
+  0003810000038100000381000003FF000001C1800001C0800001C0800001C0800000E0010000E0
+  010000E0010000E0010000700100007003000070070003FFFF00> 32 26 -3 0 26.013] 69 @dc
+[<FFC03C001C0062000E00E2000E00E1000E00E0000E00E000070070000700700007007000070070
+  0003807000038060000380C00003FF800001C0E00001C0380001C01C0001C00E0000E0070000E0
+  070000E0070000E007000070070000700E0000701C0003FFF000> 32 26 -3 0 27.973] 82 @dc
+[<FFF00F000700070007000700038003800380038001C001C001C001C000E000E000E000E00E7001
+  F00070003000180008> 16 24 -4 0 19.602] 49 @dc
+[<1F800020E000403000803800E01C00E01C00600E00000E00000E00000C00000C0000180001F000
+  000C000006000703000483800883800441C00481C002018001018000C300003E00> 24 24 -3 0 19.602] 51 @dc
+cmr9.300 @sf
+[<FFFF807007807003803801803800801C00C00E00400E004007004007004003800001C00001C000
+  00E00000E000007000003800003800401C00401C00400E004007006007007003807803807FFFC0> 24 26 -2 0 23.465] 90 @dc
+4 @bop1
+cmr9.300 @sf -2 42 p (The)s
+14(description)m
+15 r 99 c
+(hec)s
+(ks)s
+13(for)m
+15(lost)m
+14(and)m
+15(duplicated)m
+16(pac)m
+107 c
+(ets)s
+-51 79 p 98 c
+121 c
+12(sending)m
+16(exactly)m
+15(one)m
+15(pac)m
+107 c
+(et)s
+13(with)m
+14 r 97 c
+14(\\1")m
+15 r 118 c
+-1(alue;)m
+14(all)m
+14(other)m
+-51 116 p (pac)s
+107 c
+-1(ets)m
+13(ha)m
+118 c
+101 c
+13 r 118 c
+-1(alue)m
+14(0.)m
+21(The)m
+15(time)m
+14(at)m
+14(whic)m
+104 c
+14(to)m
+14(send)m
+15(the)m
+15(\\1")m
+-51 154 p (pac)s
+107 c
+-1(et)m
+16(pac)m
+107 c
+(et)s
+16(is)m
+17 r 99 c
+(hosen)s
+18(nondeterministically)m
+-2 r 46 c
+30(If)m
+17(there)m
+18(is)m
+-51 191 p 97 c
+14 r 112 c
+1(ossibilit)m
+121 c
+12(of)m
+15 r 97 c
+14(pac)m
+107 c
+(et)s
+13 r 98 c
+1(eing)m
+15(lost)m
+14(or)m
+15(duplicated,)m
+15(there)m
+15(is)m
+-51 228 p 97 c
+15 r 112 c
+1(ossibilit)m
+121 c
+14(that)m
+16(that)m
+16(pac)m
+107 c
+(et)s
+14(will)m
+14 r 98 c
+1 r 101 c
+16(the)m
+16(\\1")m
+16(pac)m
+107 c
+(et.)s
+24(So)m
+-51 266 p (it)s
+14(is)m
+14(su\016cien)m
+116 c
+14(to)m
+15 r 118 c
+(erify)s
+14(that)m
+16(the)m
+15(\\1")m
+16(pac)m
+107 c
+(et)s
+13(is)m
+15(not)m
+16(lost)m
+14(or)m
+-51 303 p (duplicated.)s
+16(This)m
+12(tric)m
+107 c
+11 r 119 c
+(orks)s
+11 r 98 c
+1(ecause)m
+13(the)m
+12 r 118 c
+(eri\014er)s
+12(considers)m
+cmti9.300 @sf -51 340 p (al)s
+2 r 108 c
+cmr9.300 @sf 14(of)m
+13(the)m
+13 r 112 c
+1(ossible)m
+14(rule)m
+12(executions.)m
+-2 378 p (The)s
+12(third)m
+12(prop)m
+1(ert)m
+121 c
+13 r 119 c
+(as)s
+11(that)m
+13 r 97 c
+12(group)m
+14(of)m
+12(pac)m
+107 c
+(ets)s
+11(arriv)m
+(ed)s
+-51 415 p (together.)s
+21(This)m
+14(prop)m
+1(ert)m
+121 c
+14 r 119 c
+(as)s
+14 r 99 c
+(hec)s
+107 c
+-1(ed)m
+13 r 98 c
+121 c
+14 r 99 c
+(ho)s
+1(osing)m
+14(to)m
+15(send)m
+-51 452 p (no)s
+13(more)m
+15(than)m
+14(one)m
+15(group)m
+15(of)m
+14(pac)m
+107 c
+(ets,)s
+13(all)m
+14(of)m
+14(where)m
+15(the)m
+14(data)m
+-51 490 p 118 c
+-1(alue)m
+9(in)m
+11(ev)m
+(ery)s
+10(pac)m
+107 c
+(et)s
+10(of)m
+11(the)m
+11(group)m
+12 r 119 c
+(as)s
+10(1.)m
+16(All)m
+10(other)m
+12(pac)m
+107 c
+(ets)s
+-51 527 p (carried)s
+12(the)m
+14 r 118 c
+-1(alue)m
+13(0.)m
+19(The)m
+14(description)m
+14(con)m
+(tains)s
+13(in-line)m
+13(error)m
+-51 565 p (statemen)s
+(ts)s
+17(that)m
+19(lo)m
+1(ok)m
+18(for)m
+19(the)m
+19(acceptance)m
+19(of)m
+19(at)m
+18(most)m
+19(one)m
+-51 602 p (group)s
+13(of)m
+12(pac)m
+107 c
+(ets)s
+12(with)m
+13(the)m
+13(all)m
+13 r 118 c
+-1(alues)m
+12(set)m
+14(to)m
+13(1.)m
+17 r 65 c
+13(group)m
+14(has)m
+-51 639 p 98 c
+1(een)m
+12(disrupted)m
+13(if)m
+12(and)m
+13(only)m
+13(if)m
+12(some)m
+12(of)m
+12(its)m
+13(pac)m
+107 c
+(ets)s
+11(are)m
+12 r 49 c
+13(and)m
+-51 677 p (some)s
+12(are)m
+13(0.)m
+-2 714 p 87 c
+-2 r 101 c
+18 r 98 c
+1(eliev)m
+101 c
+19(that)m
+20(this)m
+20(sp)m
+1(eci\014cation)m
+21(is)m
+20(essen)m
+(tially)s
+19(com-)m
+-51 751 p (plete.)s
+29(Ho)m
+119 c
+(ev)s
+-1(er,)m
+16(the)m
+18(same)m
+18(approac)m
+104 c
+18(as)m
+18 r 119 c
+101 c
+16(suggested)m
+19(for)m
+-51 789 p (the)s
+12(cac)m
+(he)s
+13(coherence)m
+15(proto)m
+1(col)m
+14(of)m
+14(comparing)m
+14(the)m
+14(implemen-)m
+-51 826 p (tation)s
+9(proto)m
+1(col)m
+11(with)m
+10(another,)m
+12(more)m
+11(abstract)m
+11(proto)m
+1(col)m
+11(could)m
+-51 863 p 98 c
+1 r 101 c
+12(applied.)m
+16(In)m
+12(this)m
+13(case,)m
+12(the)m
+12(more)m
+13(abstract)m
+13(proto)m
+1(col)m
+12 r 119 c
+(ould)s
+-51 901 p (mo)s
+1(del)m
+12(comm)m
+(unication)s
+12 r 111 c
+118 c
+(er)s
+12 r 97 c
+13(reliable)m
+12 r 99 c
+(hannel.)s
+-2 938 p 86 c
+-2(erif)m
+-1(ying)m
+9(the)m
+10(link-lev)m
+(el)s
+9(proto)m
+1(col)m
+10(generally)m
+11(required)m
+11(deal-)m
+-51 975 p (ing)s
+11(with)m
+12(larger)m
+13(state)m
+13(spaces)m
+13(than)m
+13(the)m
+13(cac)m
+(he-coherence)s
+13(pro-)m
+-51 1013 p (to)s
+1(col;)m
+9(ho)m
+119 c
+(ev)s
+-1(er,)m
+9(all)m
+9(detected)m
+10(design)m
+11(errors)m
+10 r 119 c
+(ere)s
+9(found)m
+10(exam-)m
+-51 1050 p (ining)s
+9(few)m
+(er)s
+10(than)m
+11 r 49 c
+11(million)m
+10(states,)m
+12(whic)m
+104 c
+10(used)m
+11(11)m
+12(megab)m
+(ytes)s
+-51 1088 p (of)s
+12(memory)m
+-2 r 46 c
+cmbx10.329 @sf -51 1149 p 52 c
+51(Conclusions)m
+cmr9.300 @sf -51 1201 p (In)s
+11(summary)m
+-2 r 44 c
+10(automatic)m
+11(formal)m
+11(proto)m
+1(col)m
+12 r 118 c
+(eri\014cation)s
+11(can)m
+11 r 98 c
+1 r 101 c
+-51 1238 p 97 c
+12 r 118 c
+-1(aluable)m
+12(design)m
+13(aid)m
+13(if)m
+cmsy9.300 @sf -15 1304 p 15 c
+cmr9.300 @sf 20(it)m
+13(is)m
+12(used)m
+14 r 98 c
+121 c
+12 r 97 c
+13(designer)m
+14(in)m
+13(the)m
+13(earliest)m
+12(design)m
+14(phases;)m
+cmsy9.300 @sf -15 1357 p 15 c
+cmr9.300 @sf 20(it)m
+13(is)m
+13(regarded)m
+14(as)m
+13 r 97 c
+13(debugging)m
+15(to)m
+1(ol,)m
+13(not)m
+13 r 97 c
+13(guaran)m
+(tee)s
+14(of)m
+24 1394 p (total)s
+13(correctness;)m
+cmsy9.300 @sf -15 1447 p 15 c
+cmr9.300 @sf 20(the)m
+15(system)m
+15(is)m
+15(mo)m
+1(deled)m
+15(at)m
+15 r 97 c
+15(high)m
+15(lev)m
+(el)s
+13(of)m
+15(abstraction;)m
+24 1484 p (and)s
+cmsy9.300 @sf -15 1537 p 15 c
+cmr9.300 @sf 20(the)m
+13(system)m
+14(description)m
+13(is)m
+13(do)m
+(wn-scaled.)s
+-51 1603 p (The)s
+14(adoption)m
+16(of)m
+15(these)m
+16(principles)m
+15(maximizes)m
+16(the)m
+15(utilit)m
+121 c
+14(of)m
+-51 1640 p 118 c
+(eri)s
+-1(\014cation)m
+16(giv)m
+(en)s
+15(the)m
+17(curren)m
+116 c
+16(state)m
+17(of)m
+16(the)m
+17(art:)m
+24(they)m
+17(gain)m
+-51 1677 p (maxim)s
+(um)s
+15(economic)m
+17(adv)m
+-1(an)m
+(tage)s
+17 r 98 c
+121 c
+16(catc)m
+(hing)s
+17(the)m
+17(most)m
+18(ex-)m
+-51 1715 p 112 c
+1(ensiv)m
+101 c
+13(design)m
+15(errors)m
+15(as)m
+15(early)m
+15(as)m
+14 r 112 c
+1(ossible,)m
+16(and)m
+15(reduce)m
+15(the)m
+-51 1752 p (sizes)s
+12(of)m
+13(the)m
+13(state)m
+13(spaces)m
+14(that)m
+14(need)m
+14(to)m
+13 r 98 c
+1 r 101 c
+13(explored,)m
+14(making)m
+-51 1789 p 118 c
+(eri)s
+-1(\014cation)m
+12(computationally)m
+14(feasible.)m
+-2 1827 p (Our)s
+15(\014ndings)m
+16(on)m
+16(the)m
+15(industrial)m
+15(examples)m
+16 r 119 c
+101 c
+14(ha)m
+118 c
+101 c
+14(tried)m
+-51 1864 p (are:)s
+cmsy9.300 @sf -15 1930 p 15 c
+cmr9.300 @sf 20(There)m
+14(are)m
+14(man)m
+121 c
+13(bugs)m
+15(to)m
+14 r 98 c
+1 r 101 c
+14(found)m
+14(in)m
+14(the)m
+14(early)m
+14(design)m
+24 1967 p (phase.)s
+18 r 86 c
+-2(eri\014cation)m
+12(\014nds)m
+14(them)m
+13(quic)m
+(kly)s
+-2 r 46 c
+cmsy9.300 @sf -15 2020 p 15 c
+cmr9.300 @sf 20(The)m
+14(state)m
+14(explosion)m
+14(problem)m
+15 r 119 c
+(as)s
+12(not)m
+14(sev)m
+(ere)s
+13(\(b)m
+1(ecause)m
+24 2057 p (of)s
+13(adherence)m
+14(to)m
+13(the)m
+13(principles)m
+14(ab)m
+1 r 111 c
+118 c
+(e\).)s
+cmsy9.300 @sf -15 2110 p 15 c
+cmr9.300 @sf 20 r 87 c
+-2 r 101 c
+18 r 119 c
+(ere)s
+17(able)m
+18(to)m
+18(catc)m
+104 c
+18(man)m
+121 c
+18(errors)m
+18(using)m
+19(relativ)m
+(ely)s
+24 2147 p 119 c
+(eak)s
+19(sp)m
+1(eci\014cation)m
+21(metho)m
+1(ds,)m
+22(suc)m
+104 c
+20(as)m
+20(in)m
+118 c
+-1(arian)m
+-1(ts)m
+18(and)m
+24 2185 p (deadlo)s
+1 r 99 c
+107 c
+13 r 99 c
+(hec)s
+(king.)s
+-2 2250 p 70 c
+-2(ormal)m
+19 r 118 c
+(eri\014cation)s
+20(is)m
+20(also)m
+21(feasible)m
+20(without)m
+21(these)m
+21(as-)m
+-51 2288 p (sumptions,)s
+15(for)m
+14(example)m
+16(in)m
+14(comparing)m
+16(lo)m
+(w-lev)s
+(el)s
+12(sequen)m
+(tial)s
+-51 2325 p (circuits)s
+16 r 91 c
+53 c
+44 c
+17 r 55 c
+(].)s
+30 r 84 c
+-2(ec)m
+(hniques)s
+17(will)m
+16(adv)m
+-1(ance)m
+17(in)m
+18(the)m
+18(future)m
+18(to)m
+-51 2363 p (increase)s
+12(the)m
+13(pa)m
+121 c
+(o\013)s
+12(for)m
+13 r 97 c
+13(broader)m
+14(range)m
+14(of)m
+13(problems.)m
+17(Ho)m
+(w-)s
+-51 2400 p (ev)s
+(er,)s
+10(for)m
+13(the)m
+13(near-term)m
+14(future,)m
+13 r 119 c
+101 c
+11 r 98 c
+1(eliev)m
+101 c
+12(that)m
+14(the)m
+13(highest)m
+-51 2437 p (pa)s
+121 c
+-1(o\013)m
+12(can)m
+13 r 98 c
+1 r 101 c
+13(obtained)m
+14(with)m
+13(these)m
+13(principles.)m
+-2 2475 p 98 c
+1(etter)m
+19(supp)m
+1(ort)m
+21(for)m
+19(sync)m
+(hronous,)s
+22(as)m
+20(opp)m
+1(osed)m
+20(to)m
+20(asyn-)m
+-51 2512 p 99 c
+(hronous,)s
+12(parallelism;)m
+cmbx10.329 @sf -51 2573 p (Ac)s
+-1(k)m
+-1(no)m
+-1(wl)m
+-1(edgemen)m
+-1(ts)m
+cmr9.300 @sf -51 2625 p 87 c
+-2 r 101 c
+12 r 119 c
+(ould)s
+13(lik)m
+101 c
+13(to)m
+15(thank)m
+15(Ken)m
+14(McMillan)m
+15(for)m
+14(his)m
+14(advice)m
+15(and)m
+-51 2662 p (help)s
+12(with)m
+12(the)m
+13(examples.)m
+cmbx10.329 @sf 1038 42 p (References)s
+cmr9.300 @sf 1057 85 p ([1])s
+20(J.)m
+9(Billing)m
+8(and)m
+10(M.C.)m
+9(Wilbur-Ham.)m
+10(Automated)m
+10(proto)m
+1(col)m
+1118 124 p 118 c
+(eri\014cation.)s
+12(In)m
+10(M.)m
+10(Diaz,)m
+11(editor,)m
+cmti9.300 @sf 10(Pr)m
+-1(oto)m
+-2 r 99 c
+-2(o)m
+-1 r 108 c
+9(Sp)m
+-1 r 101 c
+-2(ci\014)m
+-1 r 99 c
+-2(at)m
+-1(ion)m
+-1 r 44 c
+1118 162 p 84 c
+-2(esting,)m
+15(and)m
+16 r 86 c
+-2(eri\014c)m
+-2(a)m
+-1(tio)m
+-1(n,)m
+16(II)m
+cmr9.300 @sf 44 c
+15(pages)m
+18(77{100.)m
+17(Elsevier)m
+1118 201 p (Science)s
+14(Publishers)m
+13(B.V.)m
+12(\(North-Holland\),)m
+13(1982.)m
+1057 270 p ([2])s
+20(Ed)m
+12(Brinksma.)m
+15 r 65 c
+11(tutorial)m
+11(on)m
+12(lotos.)m
+14(In)m
+cmti9.300 @sf 12(Pr)m
+-1(oto)m
+-2 r 99 c
+-2(o)m
+-1 r 108 c
+10(Sp)m
+-1 r 101 c
+-2(ci\014)m
+-1 r 45 c
+1118 310 p 99 c
+-1(ation)m
+-1 r 44 c
+18 r 84 c
+-2(esting,)m
+18(and)m
+17 r 86 c
+-2(eri\014c)m
+-2(a)m
+-1(tio)m
+-1 r 110 c
+17 r 86 c
+cmr9.300 @sf 44 c
+18(pages)m
+19(171{194.)m
+1118 349 p (Elsevier)s
+26(Science)m
+26(Publishers)m
+27(B.V.)m
+25(\(North-Holland\),)m
+1118 387 p (1986.)s
+1057 443 p ([3])s
+20(S.)m
+20(Budk)m
+111 c
+(wski)s
+19(and)m
+21 r 80 c
+-2 r 46 c
+19(Dem)m
+(binski.)s
+38(An)m
+20(in)m
+(tro)s
+1(duction)m
+1118 483 p (to)s
+21(estelle:)m
+31 r 65 c
+20(sp)m
+1(eci\014cation)m
+21(language)m
+21(for)m
+20(distributed)m
+1118 520 p (systems.)s
+cmti9.300 @sf 46(Computer)m
+21(Networks)m
+21(and)m
+21(ISDN)m
+21(Systems)m
+cmr9.300 @sf 44 c
+1118 560 p (14\(1\):3{24,)s
+14(1987.)m
+1057 629 p ([4])s
+20(K.)m
+16(Mani)m
+17(Chandy)m
+18(and)m
+18(Ja)m
+121 c
+(adev)s
+15(Misra.)m
+cmti9.300 @sf 29(Par)m
+-1(al)m
+2(le)m
+-1 r 108 c
+15(Pr)m
+-1(o-)m
+1118 668 p (gr)s
+-1(am)m
+13(Design)m
+12 r 124 c
+14 r 97 c
+13(foundat)m
+-1(ion)m
+cmr9.300 @sf -1 r 46 c
+15(Addison-W)m
+-2(esley)m
+-2 r 44 c
+11(1988.)m
+1057 735 p ([5])s
+20(Olivier)m
+62(Coudert,)m
+75(Christian)m
+62(Berthet,)m
+75(and)m
+1118 775 p (Jean)s
+16(Christophe)m
+15(Madre.)m
+25 r 86 c
+-2(eri\014cation)m
+14(of)m
+15(sync)m
+(hronous)s
+1118 812 p (sequen)s
+(tial)s
+13(mac)m
+(hines)s
+14(based)m
+14(on)m
+14(sym)m
+98 c
+1(olic)m
+13(execution.)m
+20(In)m
+1118 849 p (J.)s
+13(Sifakis,)m
+12(editor,)m
+cmti9.300 @sf 13 r 65 c
+(utomat)s
+-1(ic)m
+12 r 86 c
+-2(eri\014)m
+-1 r 99 c
+-2(at)m
+-1(ion)m
+11(Metho)m
+-1(ds)m
+11(for)m
+1118 887 p (Finite)s
+13(State)m
+12(Systems)m
+cmr9.300 @sf 44 c
+11 r 118 c
+(olume)s
+12(407)m
+13(of)m
+cmti9.300 @sf 13 r 76 c
+-1 r 101 c
+-1(ct)m
+-1(ur)m
+-2 r 101 c
+12(Notes)m
+12(in)m
+1118 924 p (Computer)s
+13(Scienc)m
+-2 r 101 c
+cmr9.300 @sf 46 c
+10(Springer-V)m
+-2(erlag,)m
+12(1989.)m
+1057 991 p ([6])s
+20(E.)m
+28(W.)m
+27(Dijkstra.)m
+cmti9.300 @sf 61 r 65 c
+27(Discipline)m
+25(of)m
+26(Pr)m
+-1 r 111 c
+-1(gr)m
+-2(amming)m
+cmr9.300 @sf -1 r 46 c
+1118 1030 p (Pren)s
+(tice-Hall,)s
+11(1976.)m
+1057 1097 p ([7])s
+20(Da)m
+(vid)s
+11(L.)m
+11(Dill.)m
+cmti9.300 @sf 12(Tr)m
+-1(ac)m
+-1 r 101 c
+10(The)m
+-1(ory)m
+10(for)m
+12 r 65 c
+(uto)s
+-1(matic)m
+9(Hier)m
+-1(ar)m
+-2(ch)m
+-1(i-)m
+1118 1137 p 99 c
+-1(al)m
+16 r 86 c
+-2(eri\014c)m
+-3(ati)m
+-1(on)m
+15(of)m
+17(Sp)m
+-1 r 101 c
+-2 r 101 c
+-2(d)m
+-1(-in)m
+-1(de)m
+-1 r 112 c
+-2(en)m
+-1(de)m
+-1(nt)m
+15(Cir)m
+-1(cuits)m
+cmr9.300 @sf 46 c
+27(MIT)m
+1118 1174 p (Press,)s
+13(1989.)m
+1057 1241 p ([8])s
+20(Gerard)m
+15(J.)m
+13(Holzmann.)m
+cmti9.300 @sf 20 r 65 c
+(utomat)s
+-1 r 101 c
+-2 r 100 c
+12(Pr)m
+-1(oto)m
+-1 r 99 c
+-3(ol)m
+12 r 86 c
+-2(alida)m
+-1(tio)m
+-1 r 110 c
+1118 1280 p (in)s
+19 r 65 c
+114 c
+-1(g)m
+-1(os,)m
+18(Assertion)m
+17(Pr)m
+-1(oving)m
+16(and)m
+19(Sc)m
+-1(a)m
+-1(tter)m
+17(Se)m
+-1(ar)m
+-2(ch)m
+-1(ing)m
+cmr9.300 @sf -1 r 44 c
+1118 1317 p (pages)s
+14(163{188.)m
+18(Computer)m
+14(Science)m
+13(Press,)m
+13(Inc.,)m
+12(1987.)m
+1057 1384 p ([9])s
+20(Gerard)m
+13(J.)m
+12(Holzmann.)m
+cmti9.300 @sf 17(Design)m
+11(and)m
+12 r 86 c
+-2(alida)m
+-1(tio)m
+-1 r 110 c
+11(of)m
+13(Com-)m
+1118 1424 p (puter)s
+13(Pr)m
+-1(oto)m
+-2 r 99 c
+-2(o)m
+-1(ls)m
+cmr9.300 @sf 46 c
+14(Pren)m
+(tice-Hall,)s
+11(1991.)m
+1038 1491 p ([10])s
+20(K.)m
+9(L.)m
+9(McMillan)m
+9(and)m
+10(J.Sc)m
+104 c
+119 c
+-2(alb)m
+1(e.)m
+9 r 70 c
+-2(ormal)m
+8 r 118 c
+(eri\014cation)s
+9(of)m
+1118 1530 p (the)s
+16(gigamax)m
+15(cac)m
+(he-consistency)s
+16(proto)m
+1(col.)m
+24(In)m
+cmti9.300 @sf 16(Pr)m
+-1 r 111 c
+-1 r 99 c
+-3 r 101 c
+-2 r 101 c
+-2(d)m
+-1 r 45 c
+1118 1567 p (ings)s
+14(of)m
+14(the)m
+14(Internat)m
+-1(ion)m
+-1(al)m
+13(Symp)m
+-1(o)m
+-1(ium)m
+13(on)m
+14(Shar)m
+-1 r 101 c
+-3 r 100 c
+13(Mem-)m
+1118 1605 p (ory)s
+13(Multipr)m
+-1 r 111 c
+-3 r 99 c
+-2(es)m
+-1(sin)m
+-1 r 103 c
+cmr9.300 @sf 44 c
+10(pages)m
+13(242{251.)m
+13(Information)m
+13(Pro-)m
+1118 1642 p (cessing)s
+14(So)m
+1(ciet)m
+121 c
+12(of)m
+13(Japan,)m
+13(1991.)m
+1038 1709 p ([11])s
+20(F.)m
+10(Ora)m
+118 c
+-1(a.)m
+11(Formal)m
+11(Seman)m
+(tics)s
+10(of)m
+10(SDL)m
+11(Sp)m
+1(eci\014cations.)m
+14(In)m
+cmti9.300 @sf 1118 1749 p (Pr)s
+-1(oto)m
+-2 r 99 c
+-2(ol)m
+11(Sp)m
+-1 r 101 c
+-2(c)m
+-1(i\014c)m
+-3(ati)m
+-1(on,)m
+11 r 84 c
+-2(esting)m
+-1 r 44 c
+11(and)m
+12 r 86 c
+-2(eri\014c)m
+-2(a)m
+-1(tion)m
+10(VIII)m
+cmr9.300 @sf 44 c
+1118 1784 p (1988.)s
+1038 1841 p ([12])s
+20(K.)m
+16(Sabnani)m
+18(S.)m
+17(Aggarw)m
+(al,)s
+16(R.P)m
+-2 r 46 c
+15(Kurshan.)m
+29 r 65 c
+16(calculus)m
+1118 1880 p (for)s
+15(proto)m
+1(col)m
+15(sp)m
+1(eci\014cation)m
+15(and)m
+15 r 118 c
+-1(alidation.)m
+21(In)m
+cmti9.300 @sf 15(Pr)m
+-1(oto)m
+-2 r 99 c
+-2(o)m
+-1 r 108 c
+1118 1917 p (Sp)s
+-1 r 101 c
+-2(ci\014)m
+-1 r 99 c
+-2(a)m
+-1(tion)m
+-1 r 44 c
+10 r 84 c
+-2(esting)m
+-1 r 44 c
+10(and)m
+11 r 86 c
+-2(eri\014)m
+-1 r 99 c
+-2(at)m
+-1(ion)m
+-1 r 44 c
+10(III)m
+cmr9.300 @sf 44 c
+10(pages)m
+11(19{)m
+1118 1957 p (34.)s
+11(Elsevier)m
+11(Science)m
+11(Publishers)m
+12(B.V.)m
+10(\(North-Holland\),)m
+1118 1994 p (1983.)s
+1038 2051 p ([13])s
+20(Donald)m
+11(E.)m
+9(Thomas)m
+10(and)m
+10(Philip)m
+10(R.)m
+9(Mo)m
+1(orb)m
+121 c
+-2 r 46 c
+cmti9.300 @sf 10(The)m
+11 r 86 c
+-2(erilo)m
+-3 r 103 c
+1118 2091 p (Har)s
+-1(dwar)m
+-2 r 101 c
+17(Description)m
+16 r 76 c
+-1(angu)m
+-1(age)m
+cmr9.300 @sf -1 r 46 c
+32(Klu)m
+119 c
+-1(er)m
+17(Academic)m
+1118 2128 p (Publishers,)s
+14(1991.)m
+1038 2195 p ([14])s
+cmti9.300 @sf 20(IEEE)m
+18(Standa)m
+-1 r 114 c
+-1 r 100 c
+15(VHDL)m
+16 r 76 c
+-1(angua)m
+-1(ge)m
+15 r 82 c
+-1(efer)m
+-1(e)m
+-1(nc)m
+-2 r 101 c
+15(Manual)m
+cmr9.300 @sf 46 c
+1118 2234 p (Marc)s
+104 c
+13(1988.)m
+1038 2291 p ([15])s
+20(Pierre)m
+18 r 87 c
+-2(olp)m
+1(er.)m
+31(Expressing)m
+19(in)m
+(teresting)s
+17(prop)m
+1(erties)m
+19(of)m
+1118 2330 p (programs)s
+13(in)m
+12(prop)m
+1(ositional)m
+12(temp)m
+1(oral)m
+12(logic.)m
+15(In)m
+cmti9.300 @sf 12(Pr)m
+-1 r 111 c
+-1 r 99 c
+-3 r 101 c
+-2 r 101 c
+-2(d)m
+-1 r 45 c
+1118 2368 p (ings)s
+18(of)m
+19(the)m
+18(13th)m
+18 r 65 c
+(CM)s
+19(Symp)m
+-1(o)m
+-1(sium)m
+17(on)m
+19(Principles)m
+17(of)m
+1118 2405 p (Pr)s
+-1 r 111 c
+-1(gr)m
+-2(amming)m
+13 r 76 c
+-1(angu)m
+-1(age)m
+-1 r 115 c
+cmr9.300 @sf 46 c
+12(Asso)m
+1(ciation)m
+16(for)m
+14(Computing)m
+1118 2442 p (Mac)s
+(hinery)s
+-2 r 44 c
+12(1986.)m
+1038 2509 p ([16])s
+20(Pitro)m
+16(Za\014ropulo,)m
+17(Colin)m
+15(H.)m
+15 r 87 c
+-2(est,)m
+15(Harry)m
+15(Rudin,)m
+17(D.D.)m
+1118 2549 p (Co)s
+119 c
+(an,)s
+17(and)m
+19(Daniel)m
+18(Brand.)m
+33 r 84 c
+-2 r 111 c
+-1 r 119 c
+-1(ards)m
+16(analyzing)m
+19(and)m
+1118 2586 p (syn)s
+(thesizing)s
+15(proto)m
+1(cols.)m
+cmti9.300 @sf 24(IEEE)m
+15 r 84 c
+-2 r 114 c
+-1(ansa)m
+-1(ctio)m
+-1(ns)m
+13(on)m
+15(Com-)m
+1118 2626 p (munic)s
+-1(ati)m
+-1(on)m
+-1 r 115 c
+cmr9.300 @sf 44 c
+11(COM-28\(4\),)m
+12(April)m
+12(1980.)m
+@eop
+@end
+%%Trailer

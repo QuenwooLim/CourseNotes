@@ -1,0 +1,7517 @@
+   0  $accept : prog $end
+
+   1  $$1 :
+
+   2  $$2 :
+
+   3  $$3 :
+
+   4  prog : $$1 decls $$2 procDecls $$3 rules
+
+   5  decls : decls decl
+   6        |
+
+   7  decl : CONST constDecls
+   8       | TYPE typeDecls
+   9       | VAR varDecls
+
+  10  constDecls : constDecls constDecl semi
+  11             |
+
+  12  semi : ';'
+
+  13  constDecl : ID ':' expr
+
+  14  typeDecls : typeDecls typeDecl semi
+  15            |
+
+  16  typeDecl : ID ':' typeExpr
+
+  17  typeExpr : typeid
+  18           | enumtype
+  19           | subrangetype
+  20           | recordtype
+  21           | arraytype
+  22           | scalarsettype
+  23           | uniontype
+  24           | multisettype
+
+  25  typeid : ID
+
+  26  $$4 :
+
+  27  enumtype : ENUM $$4 '{' enums '}'
+
+  28  enums : enums ',' ID
+  29        | enums ID
+  30        | ID
+
+  31  subrangetype : expr DOTDOT expr
+
+  32  $$5 :
+
+  33  $$6 :
+
+  34  recordtype : RECORD optInterleaved $$5 $$6 fields endrecord
+
+  35  endrecord : ENDRECORD
+  36            | END
+
+  37  optInterleaved :
+
+  38  fields : fields semi field
+  39         | fields semi
+  40         | field
+
+  41  $$7 :
+
+  42  field : $$7 ID fieldtail
+
+  43  fieldtail : ',' ID fieldtail
+  44            | ':' typeExpr
+
+  45  arraytype : ARRAY optInterleaved '[' typeExpr ']' OF typeExpr
+
+  46  multisettype : MULTISET optInterleaved '[' expr ']' OF typeExpr
+
+  47  scalarsettype : SCALARSET '(' expr ')'
+
+  48  uniontype : UNION '{' unionlist '}'
+
+  49  unionlist : unionlist ',' unionlistelt
+  50            | unionlistelt ',' unionlistelt
+
+  51  unionlistelt : ID
+  52               | scalarsettype
+  53               | enumtype
+
+  54  varDecls : varDecls varDecl semi
+  55           |
+
+  56  $$8 :
+
+  57  varDecl : $$8 ID vardecltail
+
+  58  vardecltail : ',' ID vardecltail
+  59              | ':' typeExpr
+
+  60  procDecls : procDecls procDecl
+  61            | procDecls funcDecl
+  62            |
+
+  63  $$9 :
+
+  64  $$10 :
+
+  65  $$11 :
+
+  66  procDecl : PROCEDURE ID $$9 '(' optformals ')' semi $$10 optdecls $$11 optstmts endprocedure semi
+
+  67  endprocedure : ENDPROCEDURE
+  68               | END
+
+  69  $$12 :
+
+  70  $$13 :
+
+  71  $$14 :
+
+  72  $$15 :
+
+  73  funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 ':' typeExpr semi $$14 optdecls $$15 optstmts endfunction semi
+
+  74  endfunction : ENDFUNCTION
+  75              | END
+
+  76  optformals : formals
+  77             |
+
+  78  formals : formals semi formal
+  79          | formals semi
+  80          | formal
+  81          | formals ',' formal
+
+  82  $$16 :
+
+  83  formal : VAR $$16 formalrest
+
+  84  $$17 :
+
+  85  formal : $$17 formalrest
+
+  86  formalrest : ID formaltail
+
+  87  formaltail : ',' ID formaltail
+  88             | ':' typeExpr
+
+  89  optdecls : decls bEGIN
+  90           |
+
+  91  designator : ID
+  92             | designator '[' expr ']'
+  93             | designator '.' ID
+
+  94  expr : expr '?' expr ':' expr
+  95       | expr IMPLIES expr
+  96       | expr '|' expr
+  97       | expr '&' expr
+  98       | NOT expr
+  99       | expr '<' expr
+ 100       | expr LEQ expr
+ 101       | expr '>' expr
+ 102       | expr GEQ expr
+ 103       | expr '=' expr
+ 104       | expr NEQ expr
+ 105       | expr '+' expr
+ 106       | expr '-' expr
+ 107       | '+' expr
+ 108       | '-' expr
+ 109       | expr '*' expr
+ 110       | expr '/' expr
+ 111       | expr '%' expr
+ 112       | INTCONST
+ 113       | designator
+ 114       | ID actuals
+ 115       | ISUNDEFINED '(' designator ')'
+ 116       | ISMEMBER '(' designator ',' typeExpr ')'
+ 117       | '(' expr ')'
+
+ 118  $$18 :
+
+ 119  expr : FORALL $$18 quantifiers do expr endforall
+
+ 120  $$19 :
+
+ 121  expr : EXISTS $$19 quantifiers do expr endexists
+ 122       | error
+
+ 123  $$20 :
+
+ 124  $$21 :
+
+ 125  expr : MULTISETCOUNT '(' $$20 ID ':' designator ',' $$21 expr ')'
+
+ 126  endforall : ENDFORALL
+ 127            | END
+
+ 128  endexists : ENDEXISTS
+ 129            | END
+
+ 130  actuals : '(' exprlist ')'
+ 131          | '(' ')'
+
+ 132  exprlist : exprlist ',' expr
+ 133           | expr
+ 134           | exprlist ',' UNDEFINED
+ 135           | UNDEFINED
+
+ 136  quantifier : ID ':' typeExpr
+ 137             | ID ASSIGN expr TO expr optBy
+
+ 138  quantifiers : quantifier ';' quantifiers
+ 139              | quantifier
+
+ 140  do : DO
+ 141     | ':'
+
+ 142  optBy : BY expr
+ 143        |
+
+ 144  $$22 :
+
+ 145  optstmts : $$22 stmts
+ 146           |
+
+ 147  stmts : stmts semi stmt
+ 148        | stmts semi
+ 149        | stmt
+
+ 150  stmt : assignment
+ 151       | ifstmt
+ 152       | whilestmt
+ 153       | switchstmt
+ 154       | forstmt
+ 155       | proccall
+ 156       | clearstmt
+ 157       | errorstmt
+ 158       | assertstmt
+ 159       | putstmt
+ 160       | aliasstmt
+ 161       | returnstmt
+ 162       | undefinestmt
+ 163       | multisetaddstmt
+ 164       | multisetremovestmt
+
+ 165  assignment : designator ASSIGN expr
+ 166             | designator ASSIGN UNDEFINED
+
+ 167  ifstmt : IF expr THEN optstmts optElses endif
+
+ 168  endif : ENDIF
+ 169        | END
+
+ 170  optElses : elsif optElses
+ 171           | optElse
+
+ 172  elsif : ELSIF expr THEN optstmts
+
+ 173  optElse : ELSE optstmts
+ 174          |
+
+ 175  whilestmt : WHILE expr do optstmts endwhile
+
+ 176  endwhile : ENDWHILE
+ 177           | END
+
+ 178  $$23 :
+
+ 179  $$24 :
+
+ 180  switchstmt : SWITCH expr $$23 $$24 optCases optElse endswitch
+
+ 181  endswitch : ENDSWITCH
+ 182            | END
+
+ 183  optCases : optCases case
+ 184           |
+
+ 185  case : CASE exprlist ':' optstmts
+
+ 186  $$25 :
+
+ 187  forstmt : FOR $$25 quantifiers do optstmts endfor
+
+ 188  endfor : ENDFOR
+ 189         | END
+
+ 190  proccall : ID actuals
+
+ 191  clearstmt : CLEAR designator
+
+ 192  undefinestmt : UNDEFINE designator
+
+ 193  multisetaddstmt : MULTISETADD '(' designator ',' designator ')'
+
+ 194  $$26 :
+
+ 195  $$27 :
+
+ 196  multisetremovestmt : MULTISETREMOVEPRED '(' $$26 ID ':' designator $$27 ',' expr ')'
+ 197                     | MULTISETREMOVE '(' expr ',' designator ')'
+
+ 198  errorstmt : ERROR STRING
+
+ 199  assertstmt : ASSERT expr optString
+
+ 200  putstmt : PUT expr
+ 201          | PUT STRING
+
+ 202  $$28 :
+
+ 203  aliasstmt : ALIAS $$28 aliases do optstmts endalias
+
+ 204  endalias : ENDALIAS
+ 205           | END
+
+ 206  aliases : aliases semi alias
+ 207          | aliases semi
+ 208          | aliases ',' alias
+ 209          | alias
+
+ 210  alias : ID ':' expr
+
+ 211  returnstmt : RETURN optretexpr
+
+ 212  optretexpr : expr
+ 213             |
+
+ 214  rules : rule semi rules
+ 215        | rule semi
+ 216        | rule
+
+ 217  rule : simplerule
+ 218       | aliasrule
+ 219       | ruleset
+ 220       | startstate
+ 221       | invariant
+ 222       | error
+ 223       | choose
+
+ 224  $$29 :
+
+ 225  simplerule : RULE optFair optPriority optString optCondition $$29 optdecls optstmts endrule
+
+ 226  optFair : UNFAIR
+ 227          |
+
+ 228  endrule : ENDRULE
+ 229          | END
+
+ 230  optCondition : expr LONGARROW
+ 231               |
+
+ 232  optString : STRING
+ 233            |
+
+ 234  optPriority : INTCONST
+ 235              |
+
+ 236  $$30 :
+
+ 237  aliasrule : ALIAS $$30 aliases do rules endalias
+
+ 238  $$31 :
+
+ 239  ruleset : RULESET $$31 quantifiers do rules endruleset
+
+ 240  endruleset : ENDRULESET
+ 241             | END
+
+ 242  $$32 :
+
+ 243  $$33 :
+
+ 244  choose : CHOOSE $$32 ID ':' designator $$33 do rules endchoose
+
+ 245  onerule : rule semi
+ 246          | rule
+
+ 247  endchoose : ENDCHOOSE
+ 248            | END
+
+ 249  $$34 :
+
+ 250  startstate : STARTSTATE $$34 optString optdecls optstmts endstartstate
+
+ 251  endstartstate : ENDSTARTSTATE
+ 252                | END
+
+ 253  invariant : INVARIANT optString expr
+
+ 254  fairness : FAIRNESS optString expr
+
+ 255  liveness : liveU
+ 256           | liveE
+ 257           | liveAE
+ 258           | liveEA
+ 259           | liveAIU
+ 260           | liveAIE
+
+ 261  liveU : LIVENESS optString expr UNTIL expr
+
+ 262  liveE : LIVENESS optString EVENTUALLY expr
+
+ 263  liveEA : LIVENESS optString EVENTUALLY ALWAYS expr
+
+ 264  liveAE : LIVENESS optString ALWAYS EVENTUALLY expr
+
+ 265  liveAIE : LIVENESS optString ALWAYS expr IMPLIES EVENTUALLY expr
+
+ 266  liveAIU : LIVENESS optString ALWAYS expr IMPLIES expr UNTIL expr
+
+state 0
+	$accept : . prog $end  (0)
+	$$1 : .  (1)
+
+	.  reduce 1
+
+	prog  goto 1
+	$$1  goto 2
+
+
+state 1
+	$accept : prog . $end  (0)
+
+	$end  accept
+
+
+state 2
+	prog : $$1 . decls $$2 procDecls $$3 rules  (4)
+	decls : .  (6)
+
+	.  reduce 6
+
+	decls  goto 3
+
+
+state 3
+	prog : $$1 decls . $$2 procDecls $$3 rules  (4)
+	decls : decls . decl  (5)
+	$$2 : .  (2)
+
+	CONST  shift 4
+	TYPE  shift 5
+	VAR  shift 6
+	error  reduce 2
+	PROCEDURE  reduce 2
+	FUNCTION  reduce 2
+	RULE  reduce 2
+	RULESET  reduce 2
+	ALIAS  reduce 2
+	STARTSTATE  reduce 2
+	INVARIANT  reduce 2
+	CHOOSE  reduce 2
+
+	$$2  goto 7
+	decl  goto 8
+
+
+state 4
+	decl : CONST . constDecls  (7)
+	constDecls : .  (11)
+
+	.  reduce 11
+
+	constDecls  goto 9
+
+
+state 5
+	decl : TYPE . typeDecls  (8)
+	typeDecls : .  (15)
+
+	.  reduce 15
+
+	typeDecls  goto 10
+
+
+state 6
+	decl : VAR . varDecls  (9)
+	varDecls : .  (55)
+
+	.  reduce 55
+
+	varDecls  goto 11
+
+
+state 7
+	prog : $$1 decls $$2 . procDecls $$3 rules  (4)
+	procDecls : .  (62)
+
+	.  reduce 62
+
+	procDecls  goto 12
+
+
+state 8
+	decls : decls decl .  (5)
+
+	.  reduce 5
+
+
+state 9
+	decl : CONST constDecls .  (7)
+	constDecls : constDecls . constDecl semi  (10)
+
+	ID  shift 13
+	error  reduce 7
+	PROCEDURE  reduce 7
+	FUNCTION  reduce 7
+	RULE  reduce 7
+	RULESET  reduce 7
+	ALIAS  reduce 7
+	bEGIN  reduce 7
+	CONST  reduce 7
+	TYPE  reduce 7
+	VAR  reduce 7
+	STARTSTATE  reduce 7
+	INVARIANT  reduce 7
+	CHOOSE  reduce 7
+
+	constDecl  goto 14
+
+
+state 10
+	decl : TYPE typeDecls .  (8)
+	typeDecls : typeDecls . typeDecl semi  (14)
+
+	ID  shift 15
+	error  reduce 8
+	PROCEDURE  reduce 8
+	FUNCTION  reduce 8
+	RULE  reduce 8
+	RULESET  reduce 8
+	ALIAS  reduce 8
+	bEGIN  reduce 8
+	CONST  reduce 8
+	TYPE  reduce 8
+	VAR  reduce 8
+	STARTSTATE  reduce 8
+	INVARIANT  reduce 8
+	CHOOSE  reduce 8
+
+	typeDecl  goto 16
+
+
+state 11
+	decl : VAR varDecls .  (9)
+	varDecls : varDecls . varDecl semi  (54)
+	$$8 : .  (56)
+
+	error  reduce 9
+	PROCEDURE  reduce 9
+	FUNCTION  reduce 9
+	RULE  reduce 9
+	RULESET  reduce 9
+	ALIAS  reduce 9
+	bEGIN  reduce 9
+	CONST  reduce 9
+	TYPE  reduce 9
+	VAR  reduce 9
+	STARTSTATE  reduce 9
+	INVARIANT  reduce 9
+	ID  reduce 56
+	CHOOSE  reduce 9
+
+	varDecl  goto 17
+	$$8  goto 18
+
+
+state 12
+	prog : $$1 decls $$2 procDecls . $$3 rules  (4)
+	procDecls : procDecls . procDecl  (60)
+	procDecls : procDecls . funcDecl  (61)
+	$$3 : .  (3)
+
+	PROCEDURE  shift 19
+	FUNCTION  shift 20
+	error  reduce 3
+	RULE  reduce 3
+	RULESET  reduce 3
+	ALIAS  reduce 3
+	STARTSTATE  reduce 3
+	INVARIANT  reduce 3
+	CHOOSE  reduce 3
+
+	$$3  goto 21
+	procDecl  goto 22
+	funcDecl  goto 23
+
+
+state 13
+	constDecl : ID . ':' expr  (13)
+
+	':'  shift 24
+	.  error
+
+
+state 14
+	constDecls : constDecls constDecl . semi  (10)
+
+	';'  shift 25
+	.  error
+
+	semi  goto 26
+
+
+state 15
+	typeDecl : ID . ':' typeExpr  (16)
+
+	':'  shift 27
+	.  error
+
+
+state 16
+	typeDecls : typeDecls typeDecl . semi  (14)
+
+	';'  shift 25
+	.  error
+
+	semi  goto 28
+
+
+state 17
+	varDecls : varDecls varDecl . semi  (54)
+
+	';'  shift 25
+	.  error
+
+	semi  goto 29
+
+
+state 18
+	varDecl : $$8 . ID vardecltail  (57)
+
+	ID  shift 30
+	.  error
+
+
+state 19
+	procDecl : PROCEDURE . ID $$9 '(' optformals ')' semi $$10 optdecls $$11 optstmts endprocedure semi  (66)
+
+	ID  shift 31
+	.  error
+
+
+state 20
+	funcDecl : FUNCTION . ID $$12 '(' optformals ')' $$13 ':' typeExpr semi $$14 optdecls $$15 optstmts endfunction semi  (73)
+
+	ID  shift 32
+	.  error
+
+
+state 21
+	prog : $$1 decls $$2 procDecls $$3 . rules  (4)
+
+	error  shift 33
+	RULE  shift 34
+	RULESET  shift 35
+	ALIAS  shift 36
+	STARTSTATE  shift 37
+	INVARIANT  shift 38
+	CHOOSE  shift 39
+	.  error
+
+	rules  goto 40
+	rule  goto 41
+	simplerule  goto 42
+	aliasrule  goto 43
+	ruleset  goto 44
+	startstate  goto 45
+	invariant  goto 46
+	choose  goto 47
+
+
+state 22
+	procDecls : procDecls procDecl .  (60)
+
+	.  reduce 60
+
+
+state 23
+	procDecls : procDecls funcDecl .  (61)
+
+	.  reduce 61
+
+
+state 24
+	constDecl : ID ':' . expr  (13)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 60
+	designator  goto 61
+
+
+state 25
+	semi : ';' .  (12)
+
+	.  reduce 12
+
+
+state 26
+	constDecls : constDecls constDecl semi .  (10)
+
+	.  reduce 10
+
+
+state 27
+	typeDecl : ID ':' . typeExpr  (16)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ENUM  shift 62
+	RECORD  shift 63
+	ARRAY  shift 64
+	ID  shift 65
+	INTCONST  shift 52
+	SCALARSET  shift 66
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNION  shift 67
+	MULTISET  shift 68
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	typeid  goto 69
+	typeExpr  goto 70
+	enumtype  goto 71
+	recordtype  goto 72
+	subrangetype  goto 73
+	arraytype  goto 74
+	multisettype  goto 75
+	expr  goto 76
+	designator  goto 61
+	scalarsettype  goto 77
+	uniontype  goto 78
+
+
+state 28
+	typeDecls : typeDecls typeDecl semi .  (14)
+
+	.  reduce 14
+
+
+state 29
+	varDecls : varDecls varDecl semi .  (54)
+
+	.  reduce 54
+
+
+state 30
+	varDecl : $$8 ID . vardecltail  (57)
+
+	':'  shift 79
+	','  shift 80
+	.  error
+
+	vardecltail  goto 81
+
+
+state 31
+	procDecl : PROCEDURE ID . $$9 '(' optformals ')' semi $$10 optdecls $$11 optstmts endprocedure semi  (66)
+	$$9 : .  (63)
+
+	.  reduce 63
+
+	$$9  goto 82
+
+
+state 32
+	funcDecl : FUNCTION ID . $$12 '(' optformals ')' $$13 ':' typeExpr semi $$14 optdecls $$15 optstmts endfunction semi  (73)
+	$$12 : .  (69)
+
+	.  reduce 69
+
+	$$12  goto 83
+
+
+state 33
+	rule : error .  (222)
+
+	.  reduce 222
+
+
+state 34
+	simplerule : RULE . optFair optPriority optString optCondition $$29 optdecls optstmts endrule  (225)
+	optFair : .  (227)
+
+	UNFAIR  shift 84
+	error  reduce 227
+	END  reduce 227
+	ENDRULE  reduce 227
+	ALIAS  reduce 227
+	IF  reduce 227
+	SWITCH  reduce 227
+	FOR  reduce 227
+	FORALL  reduce 227
+	EXISTS  reduce 227
+	WHILE  reduce 227
+	RETURN  reduce 227
+	bEGIN  reduce 227
+	CLEAR  reduce 227
+	ERROR  reduce 227
+	ASSERT  reduce 227
+	PUT  reduce 227
+	CONST  reduce 227
+	TYPE  reduce 227
+	VAR  reduce 227
+	STRING  reduce 227
+	ID  reduce 227
+	INTCONST  reduce 227
+	ISMEMBER  reduce 227
+	UNDEFINE  reduce 227
+	ISUNDEFINED  reduce 227
+	MULTISETREMOVE  reduce 227
+	MULTISETREMOVEPRED  reduce 227
+	MULTISETADD  reduce 227
+	MULTISETCOUNT  reduce 227
+	NOT  reduce 227
+	'+'  reduce 227
+	'-'  reduce 227
+	'('  reduce 227
+
+	optFair  goto 85
+
+
+state 35
+	ruleset : RULESET . $$31 quantifiers do rules endruleset  (239)
+	$$31 : .  (238)
+
+	.  reduce 238
+
+	$$31  goto 86
+
+
+state 36
+	aliasrule : ALIAS . $$30 aliases do rules endalias  (237)
+	$$30 : .  (236)
+
+	.  reduce 236
+
+	$$30  goto 87
+
+
+state 37
+	startstate : STARTSTATE . $$34 optString optdecls optstmts endstartstate  (250)
+	$$34 : .  (249)
+
+	.  reduce 249
+
+	$$34  goto 88
+
+
+state 38
+	invariant : INVARIANT . optString expr  (253)
+	optString : .  (233)
+
+	STRING  shift 89
+	error  reduce 233
+	FORALL  reduce 233
+	EXISTS  reduce 233
+	ID  reduce 233
+	INTCONST  reduce 233
+	ISMEMBER  reduce 233
+	ISUNDEFINED  reduce 233
+	MULTISETCOUNT  reduce 233
+	NOT  reduce 233
+	'+'  reduce 233
+	'-'  reduce 233
+	'('  reduce 233
+
+	optString  goto 90
+
+
+state 39
+	choose : CHOOSE . $$32 ID ':' designator $$33 do rules endchoose  (244)
+	$$32 : .  (242)
+
+	.  reduce 242
+
+	$$32  goto 91
+
+
+state 40
+	prog : $$1 decls $$2 procDecls $$3 rules .  (4)
+
+	.  reduce 4
+
+
+state 41
+	rules : rule . semi rules  (214)
+	rules : rule . semi  (215)
+	rules : rule .  (216)
+
+	';'  shift 25
+	$end  reduce 216
+	END  reduce 216
+	ENDRULESET  reduce 216
+	ENDALIAS  reduce 216
+	ENDCHOOSE  reduce 216
+
+	semi  goto 92
+
+
+state 42
+	rule : simplerule .  (217)
+
+	.  reduce 217
+
+
+state 43
+	rule : aliasrule .  (218)
+
+	.  reduce 218
+
+
+state 44
+	rule : ruleset .  (219)
+
+	.  reduce 219
+
+
+state 45
+	rule : startstate .  (220)
+
+	.  reduce 220
+
+
+state 46
+	rule : invariant .  (221)
+
+	.  reduce 221
+
+
+state 47
+	rule : choose .  (223)
+
+	.  reduce 223
+
+
+state 48
+	expr : error .  (122)
+
+	.  reduce 122
+
+
+state 49
+	expr : FORALL . $$18 quantifiers do expr endforall  (119)
+	$$18 : .  (118)
+
+	.  reduce 118
+
+	$$18  goto 93
+
+
+state 50
+	expr : EXISTS . $$19 quantifiers do expr endexists  (121)
+	$$19 : .  (120)
+
+	.  reduce 120
+
+	$$19  goto 94
+
+
+state 51
+	designator : ID .  (91)
+	expr : ID . actuals  (114)
+
+	'('  shift 95
+	$end  reduce 91
+	END  reduce 91
+	ENDPROCEDURE  reduce 91
+	ENDFUNCTION  reduce 91
+	ENDRULE  reduce 91
+	ENDRULESET  reduce 91
+	ENDALIAS  reduce 91
+	THEN  reduce 91
+	ELSIF  reduce 91
+	ELSE  reduce 91
+	ENDIF  reduce 91
+	CASE  reduce 91
+	ENDSWITCH  reduce 91
+	DO  reduce 91
+	ENDFOR  reduce 91
+	ENDFORALL  reduce 91
+	ENDEXISTS  reduce 91
+	ENDWHILE  reduce 91
+	TO  reduce 91
+	BY  reduce 91
+	LONGARROW  reduce 91
+	DOTDOT  reduce 91
+	ENDRECORD  reduce 91
+	ENDSTARTSTATE  reduce 91
+	STRING  reduce 91
+	ENDCHOOSE  reduce 91
+	'?'  reduce 91
+	':'  reduce 91
+	IMPLIES  reduce 91
+	'|'  reduce 91
+	'&'  reduce 91
+	'<'  reduce 91
+	LEQ  reduce 91
+	'='  reduce 91
+	NEQ  reduce 91
+	GEQ  reduce 91
+	'>'  reduce 91
+	'+'  reduce 91
+	'-'  reduce 91
+	'*'  reduce 91
+	'/'  reduce 91
+	'%'  reduce 91
+	';'  reduce 91
+	','  reduce 91
+	'['  reduce 91
+	']'  reduce 91
+	')'  reduce 91
+	'.'  reduce 91
+
+	actuals  goto 96
+
+
+state 52
+	expr : INTCONST .  (112)
+
+	.  reduce 112
+
+
+state 53
+	expr : ISMEMBER . '(' designator ',' typeExpr ')'  (116)
+
+	'('  shift 97
+	.  error
+
+
+state 54
+	expr : ISUNDEFINED . '(' designator ')'  (115)
+
+	'('  shift 98
+	.  error
+
+
+state 55
+	expr : MULTISETCOUNT . '(' $$20 ID ':' designator ',' $$21 expr ')'  (125)
+
+	'('  shift 99
+	.  error
+
+
+state 56
+	expr : NOT . expr  (98)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 100
+	designator  goto 61
+
+
+state 57
+	expr : '+' . expr  (107)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 101
+	designator  goto 61
+
+
+state 58
+	expr : '-' . expr  (108)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 102
+	designator  goto 61
+
+
+state 59
+	expr : '(' . expr ')'  (117)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 103
+	designator  goto 61
+
+
+state 60
+	constDecl : ID ':' expr .  (13)
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	';'  reduce 13
+
+
+state 61
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	expr : designator .  (113)
+
+	'['  shift 119
+	'.'  shift 120
+	$end  reduce 113
+	END  reduce 113
+	ENDPROCEDURE  reduce 113
+	ENDFUNCTION  reduce 113
+	ENDRULE  reduce 113
+	ENDRULESET  reduce 113
+	ENDALIAS  reduce 113
+	THEN  reduce 113
+	ELSIF  reduce 113
+	ELSE  reduce 113
+	ENDIF  reduce 113
+	CASE  reduce 113
+	ENDSWITCH  reduce 113
+	DO  reduce 113
+	ENDFOR  reduce 113
+	ENDFORALL  reduce 113
+	ENDEXISTS  reduce 113
+	ENDWHILE  reduce 113
+	TO  reduce 113
+	BY  reduce 113
+	LONGARROW  reduce 113
+	DOTDOT  reduce 113
+	ENDRECORD  reduce 113
+	ENDSTARTSTATE  reduce 113
+	STRING  reduce 113
+	ENDCHOOSE  reduce 113
+	'?'  reduce 113
+	':'  reduce 113
+	IMPLIES  reduce 113
+	'|'  reduce 113
+	'&'  reduce 113
+	'<'  reduce 113
+	LEQ  reduce 113
+	'='  reduce 113
+	NEQ  reduce 113
+	GEQ  reduce 113
+	'>'  reduce 113
+	'+'  reduce 113
+	'-'  reduce 113
+	'*'  reduce 113
+	'/'  reduce 113
+	'%'  reduce 113
+	';'  reduce 113
+	','  reduce 113
+	']'  reduce 113
+	')'  reduce 113
+
+
+state 62
+	enumtype : ENUM . $$4 '{' enums '}'  (27)
+	$$4 : .  (26)
+
+	.  reduce 26
+
+	$$4  goto 121
+
+
+state 63
+	recordtype : RECORD . optInterleaved $$5 $$6 fields endrecord  (34)
+	optInterleaved : .  (37)
+
+	.  reduce 37
+
+	optInterleaved  goto 122
+
+
+state 64
+	arraytype : ARRAY . optInterleaved '[' typeExpr ']' OF typeExpr  (45)
+	optInterleaved : .  (37)
+
+	.  reduce 37
+
+	optInterleaved  goto 123
+
+
+state 65
+	typeid : ID .  (25)
+	designator : ID .  (91)
+	expr : ID . actuals  (114)
+
+	'('  shift 95
+	END  reduce 25
+	DO  reduce 25
+	DOTDOT  reduce 91
+	ENDRECORD  reduce 25
+	'?'  reduce 91
+	':'  reduce 25
+	IMPLIES  reduce 91
+	'|'  reduce 91
+	'&'  reduce 91
+	'<'  reduce 91
+	LEQ  reduce 91
+	'='  reduce 91
+	NEQ  reduce 91
+	GEQ  reduce 91
+	'>'  reduce 91
+	'+'  reduce 91
+	'-'  reduce 91
+	'*'  reduce 91
+	'/'  reduce 91
+	'%'  reduce 91
+	';'  reduce 25
+	','  reduce 25
+	'['  reduce 91
+	']'  reduce 25
+	')'  reduce 25
+	'.'  reduce 91
+
+	actuals  goto 96
+
+
+state 66
+	scalarsettype : SCALARSET . '(' expr ')'  (47)
+
+	'('  shift 124
+	.  error
+
+
+state 67
+	uniontype : UNION . '{' unionlist '}'  (48)
+
+	'{'  shift 125
+	.  error
+
+
+state 68
+	multisettype : MULTISET . optInterleaved '[' expr ']' OF typeExpr  (46)
+	optInterleaved : .  (37)
+
+	.  reduce 37
+
+	optInterleaved  goto 126
+
+
+state 69
+	typeExpr : typeid .  (17)
+
+	.  reduce 17
+
+
+state 70
+	typeDecl : ID ':' typeExpr .  (16)
+
+	.  reduce 16
+
+
+state 71
+	typeExpr : enumtype .  (18)
+
+	.  reduce 18
+
+
+state 72
+	typeExpr : recordtype .  (20)
+
+	.  reduce 20
+
+
+state 73
+	typeExpr : subrangetype .  (19)
+
+	.  reduce 19
+
+
+state 74
+	typeExpr : arraytype .  (21)
+
+	.  reduce 21
+
+
+state 75
+	typeExpr : multisettype .  (24)
+
+	.  reduce 24
+
+
+state 76
+	subrangetype : expr . DOTDOT expr  (31)
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	DOTDOT  shift 127
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	.  error
+
+
+state 77
+	typeExpr : scalarsettype .  (22)
+
+	.  reduce 22
+
+
+state 78
+	typeExpr : uniontype .  (23)
+
+	.  reduce 23
+
+
+state 79
+	vardecltail : ':' . typeExpr  (59)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ENUM  shift 62
+	RECORD  shift 63
+	ARRAY  shift 64
+	ID  shift 65
+	INTCONST  shift 52
+	SCALARSET  shift 66
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNION  shift 67
+	MULTISET  shift 68
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	typeid  goto 69
+	typeExpr  goto 128
+	enumtype  goto 71
+	recordtype  goto 72
+	subrangetype  goto 73
+	arraytype  goto 74
+	multisettype  goto 75
+	expr  goto 76
+	designator  goto 61
+	scalarsettype  goto 77
+	uniontype  goto 78
+
+
+state 80
+	vardecltail : ',' . ID vardecltail  (58)
+
+	ID  shift 129
+	.  error
+
+
+state 81
+	varDecl : $$8 ID vardecltail .  (57)
+
+	.  reduce 57
+
+
+state 82
+	procDecl : PROCEDURE ID $$9 . '(' optformals ')' semi $$10 optdecls $$11 optstmts endprocedure semi  (66)
+
+	'('  shift 130
+	.  error
+
+
+state 83
+	funcDecl : FUNCTION ID $$12 . '(' optformals ')' $$13 ':' typeExpr semi $$14 optdecls $$15 optstmts endfunction semi  (73)
+
+	'('  shift 131
+	.  error
+
+
+state 84
+	optFair : UNFAIR .  (226)
+
+	.  reduce 226
+
+
+85: shift/reduce conflict (shift 132, reduce 235) on INTCONST
+state 85
+	simplerule : RULE optFair . optPriority optString optCondition $$29 optdecls optstmts endrule  (225)
+	optPriority : .  (235)
+
+	INTCONST  shift 132
+	error  reduce 235
+	END  reduce 235
+	ENDRULE  reduce 235
+	ALIAS  reduce 235
+	IF  reduce 235
+	SWITCH  reduce 235
+	FOR  reduce 235
+	FORALL  reduce 235
+	EXISTS  reduce 235
+	WHILE  reduce 235
+	RETURN  reduce 235
+	bEGIN  reduce 235
+	CLEAR  reduce 235
+	ERROR  reduce 235
+	ASSERT  reduce 235
+	PUT  reduce 235
+	CONST  reduce 235
+	TYPE  reduce 235
+	VAR  reduce 235
+	STRING  reduce 235
+	ID  reduce 235
+	ISMEMBER  reduce 235
+	UNDEFINE  reduce 235
+	ISUNDEFINED  reduce 235
+	MULTISETREMOVE  reduce 235
+	MULTISETREMOVEPRED  reduce 235
+	MULTISETADD  reduce 235
+	MULTISETCOUNT  reduce 235
+	NOT  reduce 235
+	'+'  reduce 235
+	'-'  reduce 235
+	'('  reduce 235
+
+	optPriority  goto 133
+
+
+state 86
+	ruleset : RULESET $$31 . quantifiers do rules endruleset  (239)
+
+	ID  shift 134
+	.  error
+
+	quantifier  goto 135
+	quantifiers  goto 136
+
+
+state 87
+	aliasrule : ALIAS $$30 . aliases do rules endalias  (237)
+
+	ID  shift 137
+	.  error
+
+	alias  goto 138
+	aliases  goto 139
+
+
+state 88
+	startstate : STARTSTATE $$34 . optString optdecls optstmts endstartstate  (250)
+	optString : .  (233)
+
+	STRING  shift 89
+	END  reduce 233
+	ALIAS  reduce 233
+	IF  reduce 233
+	SWITCH  reduce 233
+	FOR  reduce 233
+	WHILE  reduce 233
+	RETURN  reduce 233
+	bEGIN  reduce 233
+	CLEAR  reduce 233
+	ERROR  reduce 233
+	ASSERT  reduce 233
+	PUT  reduce 233
+	CONST  reduce 233
+	TYPE  reduce 233
+	VAR  reduce 233
+	ENDSTARTSTATE  reduce 233
+	ID  reduce 233
+	UNDEFINE  reduce 233
+	MULTISETREMOVE  reduce 233
+	MULTISETREMOVEPRED  reduce 233
+	MULTISETADD  reduce 233
+
+	optString  goto 140
+
+
+state 89
+	optString : STRING .  (232)
+
+	.  reduce 232
+
+
+state 90
+	invariant : INVARIANT optString . expr  (253)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 141
+	designator  goto 61
+
+
+state 91
+	choose : CHOOSE $$32 . ID ':' designator $$33 do rules endchoose  (244)
+
+	ID  shift 142
+	.  error
+
+
+state 92
+	rules : rule semi . rules  (214)
+	rules : rule semi .  (215)
+
+	error  shift 33
+	RULE  shift 34
+	RULESET  shift 35
+	ALIAS  shift 36
+	STARTSTATE  shift 37
+	INVARIANT  shift 38
+	CHOOSE  shift 39
+	$end  reduce 215
+	END  reduce 215
+	ENDRULESET  reduce 215
+	ENDALIAS  reduce 215
+	ENDCHOOSE  reduce 215
+
+	rules  goto 143
+	rule  goto 41
+	simplerule  goto 42
+	aliasrule  goto 43
+	ruleset  goto 44
+	startstate  goto 45
+	invariant  goto 46
+	choose  goto 47
+
+
+state 93
+	expr : FORALL $$18 . quantifiers do expr endforall  (119)
+
+	ID  shift 134
+	.  error
+
+	quantifier  goto 135
+	quantifiers  goto 144
+
+
+state 94
+	expr : EXISTS $$19 . quantifiers do expr endexists  (121)
+
+	ID  shift 134
+	.  error
+
+	quantifier  goto 135
+	quantifiers  goto 145
+
+
+state 95
+	actuals : '(' . exprlist ')'  (130)
+	actuals : '(' . ')'  (131)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNDEFINED  shift 146
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	')'  shift 147
+	.  error
+
+	expr  goto 148
+	designator  goto 61
+	exprlist  goto 149
+
+
+state 96
+	expr : ID actuals .  (114)
+
+	.  reduce 114
+
+
+state 97
+	expr : ISMEMBER '(' . designator ',' typeExpr ')'  (116)
+
+	ID  shift 150
+	.  error
+
+	designator  goto 151
+
+
+state 98
+	expr : ISUNDEFINED '(' . designator ')'  (115)
+
+	ID  shift 150
+	.  error
+
+	designator  goto 152
+
+
+state 99
+	expr : MULTISETCOUNT '(' . $$20 ID ':' designator ',' $$21 expr ')'  (125)
+	$$20 : .  (123)
+
+	.  reduce 123
+
+	$$20  goto 153
+
+
+state 100
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : NOT expr .  (98)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 98
+	END  reduce 98
+	ENDPROCEDURE  reduce 98
+	ENDFUNCTION  reduce 98
+	ENDRULE  reduce 98
+	ENDRULESET  reduce 98
+	ENDALIAS  reduce 98
+	THEN  reduce 98
+	ELSIF  reduce 98
+	ELSE  reduce 98
+	ENDIF  reduce 98
+	CASE  reduce 98
+	ENDSWITCH  reduce 98
+	DO  reduce 98
+	ENDFOR  reduce 98
+	ENDFORALL  reduce 98
+	ENDEXISTS  reduce 98
+	ENDWHILE  reduce 98
+	TO  reduce 98
+	BY  reduce 98
+	LONGARROW  reduce 98
+	DOTDOT  reduce 98
+	ENDRECORD  reduce 98
+	ENDSTARTSTATE  reduce 98
+	STRING  reduce 98
+	ENDCHOOSE  reduce 98
+	'?'  reduce 98
+	':'  reduce 98
+	IMPLIES  reduce 98
+	'|'  reduce 98
+	'&'  reduce 98
+	';'  reduce 98
+	','  reduce 98
+	']'  reduce 98
+	')'  reduce 98
+
+
+state 101
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : '+' expr .  (107)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	.  reduce 107
+
+
+state 102
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : '-' expr .  (108)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	.  reduce 108
+
+
+state 103
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	expr : '(' expr . ')'  (117)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	')'  shift 154
+	.  error
+
+
+state 104
+	expr : expr '?' . expr ':' expr  (94)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 155
+	designator  goto 61
+
+
+state 105
+	expr : expr IMPLIES . expr  (95)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 156
+	designator  goto 61
+
+
+state 106
+	expr : expr '|' . expr  (96)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 157
+	designator  goto 61
+
+
+state 107
+	expr : expr '&' . expr  (97)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 158
+	designator  goto 61
+
+
+state 108
+	expr : expr '<' . expr  (99)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 159
+	designator  goto 61
+
+
+state 109
+	expr : expr LEQ . expr  (100)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 160
+	designator  goto 61
+
+
+state 110
+	expr : expr '=' . expr  (103)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 161
+	designator  goto 61
+
+
+state 111
+	expr : expr NEQ . expr  (104)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 162
+	designator  goto 61
+
+
+state 112
+	expr : expr GEQ . expr  (102)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 163
+	designator  goto 61
+
+
+state 113
+	expr : expr '>' . expr  (101)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 164
+	designator  goto 61
+
+
+state 114
+	expr : expr '+' . expr  (105)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 165
+	designator  goto 61
+
+
+state 115
+	expr : expr '-' . expr  (106)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 166
+	designator  goto 61
+
+
+state 116
+	expr : expr '*' . expr  (109)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 167
+	designator  goto 61
+
+
+state 117
+	expr : expr '/' . expr  (110)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 168
+	designator  goto 61
+
+
+state 118
+	expr : expr '%' . expr  (111)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 169
+	designator  goto 61
+
+
+state 119
+	designator : designator '[' . expr ']'  (92)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 170
+	designator  goto 61
+
+
+state 120
+	designator : designator '.' . ID  (93)
+
+	ID  shift 171
+	.  error
+
+
+state 121
+	enumtype : ENUM $$4 . '{' enums '}'  (27)
+
+	'{'  shift 172
+	.  error
+
+
+state 122
+	recordtype : RECORD optInterleaved . $$5 $$6 fields endrecord  (34)
+	$$5 : .  (32)
+
+	.  reduce 32
+
+	$$5  goto 173
+
+
+state 123
+	arraytype : ARRAY optInterleaved . '[' typeExpr ']' OF typeExpr  (45)
+
+	'['  shift 174
+	.  error
+
+
+state 124
+	scalarsettype : SCALARSET '(' . expr ')'  (47)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 175
+	designator  goto 61
+
+
+state 125
+	uniontype : UNION '{' . unionlist '}'  (48)
+
+	ENUM  shift 62
+	ID  shift 176
+	SCALARSET  shift 66
+	.  error
+
+	enumtype  goto 177
+	scalarsettype  goto 178
+	unionlist  goto 179
+	unionlistelt  goto 180
+
+
+state 126
+	multisettype : MULTISET optInterleaved . '[' expr ']' OF typeExpr  (46)
+
+	'['  shift 181
+	.  error
+
+
+state 127
+	subrangetype : expr DOTDOT . expr  (31)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 182
+	designator  goto 61
+
+
+state 128
+	vardecltail : ':' typeExpr .  (59)
+
+	.  reduce 59
+
+
+state 129
+	vardecltail : ',' ID . vardecltail  (58)
+
+	':'  shift 79
+	','  shift 80
+	.  error
+
+	vardecltail  goto 183
+
+
+state 130
+	procDecl : PROCEDURE ID $$9 '(' . optformals ')' semi $$10 optdecls $$11 optstmts endprocedure semi  (66)
+	optformals : .  (77)
+	$$17 : .  (84)
+
+	VAR  shift 184
+	ID  reduce 84
+	')'  reduce 77
+
+	formals  goto 185
+	formal  goto 186
+	optformals  goto 187
+	$$17  goto 188
+
+
+state 131
+	funcDecl : FUNCTION ID $$12 '(' . optformals ')' $$13 ':' typeExpr semi $$14 optdecls $$15 optstmts endfunction semi  (73)
+	optformals : .  (77)
+	$$17 : .  (84)
+
+	VAR  shift 184
+	ID  reduce 84
+	')'  reduce 77
+
+	formals  goto 185
+	formal  goto 186
+	optformals  goto 189
+	$$17  goto 188
+
+
+state 132
+	optPriority : INTCONST .  (234)
+
+	.  reduce 234
+
+
+state 133
+	simplerule : RULE optFair optPriority . optString optCondition $$29 optdecls optstmts endrule  (225)
+	optString : .  (233)
+
+	STRING  shift 89
+	error  reduce 233
+	END  reduce 233
+	ENDRULE  reduce 233
+	ALIAS  reduce 233
+	IF  reduce 233
+	SWITCH  reduce 233
+	FOR  reduce 233
+	FORALL  reduce 233
+	EXISTS  reduce 233
+	WHILE  reduce 233
+	RETURN  reduce 233
+	bEGIN  reduce 233
+	CLEAR  reduce 233
+	ERROR  reduce 233
+	ASSERT  reduce 233
+	PUT  reduce 233
+	CONST  reduce 233
+	TYPE  reduce 233
+	VAR  reduce 233
+	ID  reduce 233
+	INTCONST  reduce 233
+	ISMEMBER  reduce 233
+	UNDEFINE  reduce 233
+	ISUNDEFINED  reduce 233
+	MULTISETREMOVE  reduce 233
+	MULTISETREMOVEPRED  reduce 233
+	MULTISETADD  reduce 233
+	MULTISETCOUNT  reduce 233
+	NOT  reduce 233
+	'+'  reduce 233
+	'-'  reduce 233
+	'('  reduce 233
+
+	optString  goto 190
+
+
+state 134
+	quantifier : ID . ':' typeExpr  (136)
+	quantifier : ID . ASSIGN expr TO expr optBy  (137)
+
+	ASSIGN  shift 191
+	':'  shift 192
+	.  error
+
+
+state 135
+	quantifiers : quantifier . ';' quantifiers  (138)
+	quantifiers : quantifier .  (139)
+
+	';'  shift 193
+	DO  reduce 139
+	':'  reduce 139
+
+
+state 136
+	ruleset : RULESET $$31 quantifiers . do rules endruleset  (239)
+
+	DO  shift 194
+	':'  shift 195
+	.  error
+
+	do  goto 196
+
+
+state 137
+	alias : ID . ':' expr  (210)
+
+	':'  shift 197
+	.  error
+
+
+state 138
+	aliases : alias .  (209)
+
+	.  reduce 209
+
+
+state 139
+	aliases : aliases . semi alias  (206)
+	aliases : aliases . semi  (207)
+	aliases : aliases . ',' alias  (208)
+	aliasrule : ALIAS $$30 aliases . do rules endalias  (237)
+
+	DO  shift 194
+	':'  shift 195
+	';'  shift 25
+	','  shift 198
+	.  error
+
+	semi  goto 199
+	do  goto 200
+
+
+state 140
+	startstate : STARTSTATE $$34 optString . optdecls optstmts endstartstate  (250)
+	decls : .  (6)
+	optdecls : .  (90)
+
+	END  reduce 90
+	ALIAS  reduce 90
+	IF  reduce 90
+	SWITCH  reduce 90
+	FOR  reduce 90
+	WHILE  reduce 90
+	RETURN  reduce 90
+	bEGIN  reduce 6
+	CLEAR  reduce 90
+	ERROR  reduce 90
+	ASSERT  reduce 90
+	PUT  reduce 90
+	CONST  reduce 6
+	TYPE  reduce 6
+	VAR  reduce 6
+	ENDSTARTSTATE  reduce 90
+	ID  reduce 90
+	UNDEFINE  reduce 90
+	MULTISETREMOVE  reduce 90
+	MULTISETREMOVEPRED  reduce 90
+	MULTISETADD  reduce 90
+
+	decls  goto 201
+	optdecls  goto 202
+
+
+state 141
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	invariant : INVARIANT optString expr .  (253)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 253
+	END  reduce 253
+	ENDRULESET  reduce 253
+	ENDALIAS  reduce 253
+	ENDCHOOSE  reduce 253
+	';'  reduce 253
+
+
+state 142
+	choose : CHOOSE $$32 ID . ':' designator $$33 do rules endchoose  (244)
+
+	':'  shift 203
+	.  error
+
+
+state 143
+	rules : rule semi rules .  (214)
+
+	.  reduce 214
+
+
+state 144
+	expr : FORALL $$18 quantifiers . do expr endforall  (119)
+
+	DO  shift 194
+	':'  shift 195
+	.  error
+
+	do  goto 204
+
+
+state 145
+	expr : EXISTS $$19 quantifiers . do expr endexists  (121)
+
+	DO  shift 194
+	':'  shift 195
+	.  error
+
+	do  goto 205
+
+
+state 146
+	exprlist : UNDEFINED .  (135)
+
+	.  reduce 135
+
+
+state 147
+	actuals : '(' ')' .  (131)
+
+	.  reduce 131
+
+
+state 148
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	exprlist : expr .  (133)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	':'  reduce 133
+	','  reduce 133
+	')'  reduce 133
+
+
+state 149
+	actuals : '(' exprlist . ')'  (130)
+	exprlist : exprlist . ',' expr  (132)
+	exprlist : exprlist . ',' UNDEFINED  (134)
+
+	','  shift 206
+	')'  shift 207
+	.  error
+
+
+state 150
+	designator : ID .  (91)
+
+	.  reduce 91
+
+
+state 151
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	expr : ISMEMBER '(' designator . ',' typeExpr ')'  (116)
+
+	','  shift 208
+	'['  shift 119
+	'.'  shift 120
+	.  error
+
+
+state 152
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	expr : ISUNDEFINED '(' designator . ')'  (115)
+
+	'['  shift 119
+	')'  shift 209
+	'.'  shift 120
+	.  error
+
+
+state 153
+	expr : MULTISETCOUNT '(' $$20 . ID ':' designator ',' $$21 expr ')'  (125)
+
+	ID  shift 210
+	.  error
+
+
+state 154
+	expr : '(' expr ')' .  (117)
+
+	.  reduce 117
+
+
+state 155
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr '?' expr . ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'?'  shift 104
+	':'  shift 211
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	.  error
+
+
+state 156
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr IMPLIES expr .  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 95
+	END  reduce 95
+	ENDPROCEDURE  reduce 95
+	ENDFUNCTION  reduce 95
+	ENDRULE  reduce 95
+	ENDRULESET  reduce 95
+	ENDALIAS  reduce 95
+	THEN  reduce 95
+	ELSIF  reduce 95
+	ELSE  reduce 95
+	ENDIF  reduce 95
+	CASE  reduce 95
+	ENDSWITCH  reduce 95
+	DO  reduce 95
+	ENDFOR  reduce 95
+	ENDFORALL  reduce 95
+	ENDEXISTS  reduce 95
+	ENDWHILE  reduce 95
+	TO  reduce 95
+	BY  reduce 95
+	LONGARROW  reduce 95
+	DOTDOT  reduce 95
+	ENDRECORD  reduce 95
+	ENDSTARTSTATE  reduce 95
+	STRING  reduce 95
+	ENDCHOOSE  reduce 95
+	'?'  reduce 95
+	':'  reduce 95
+	';'  reduce 95
+	','  reduce 95
+	']'  reduce 95
+	')'  reduce 95
+
+
+state 157
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr '|' expr .  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 96
+	END  reduce 96
+	ENDPROCEDURE  reduce 96
+	ENDFUNCTION  reduce 96
+	ENDRULE  reduce 96
+	ENDRULESET  reduce 96
+	ENDALIAS  reduce 96
+	THEN  reduce 96
+	ELSIF  reduce 96
+	ELSE  reduce 96
+	ENDIF  reduce 96
+	CASE  reduce 96
+	ENDSWITCH  reduce 96
+	DO  reduce 96
+	ENDFOR  reduce 96
+	ENDFORALL  reduce 96
+	ENDEXISTS  reduce 96
+	ENDWHILE  reduce 96
+	TO  reduce 96
+	BY  reduce 96
+	LONGARROW  reduce 96
+	DOTDOT  reduce 96
+	ENDRECORD  reduce 96
+	ENDSTARTSTATE  reduce 96
+	STRING  reduce 96
+	ENDCHOOSE  reduce 96
+	'?'  reduce 96
+	':'  reduce 96
+	IMPLIES  reduce 96
+	'|'  reduce 96
+	';'  reduce 96
+	','  reduce 96
+	']'  reduce 96
+	')'  reduce 96
+
+
+state 158
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr '&' expr .  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 97
+	END  reduce 97
+	ENDPROCEDURE  reduce 97
+	ENDFUNCTION  reduce 97
+	ENDRULE  reduce 97
+	ENDRULESET  reduce 97
+	ENDALIAS  reduce 97
+	THEN  reduce 97
+	ELSIF  reduce 97
+	ELSE  reduce 97
+	ENDIF  reduce 97
+	CASE  reduce 97
+	ENDSWITCH  reduce 97
+	DO  reduce 97
+	ENDFOR  reduce 97
+	ENDFORALL  reduce 97
+	ENDEXISTS  reduce 97
+	ENDWHILE  reduce 97
+	TO  reduce 97
+	BY  reduce 97
+	LONGARROW  reduce 97
+	DOTDOT  reduce 97
+	ENDRECORD  reduce 97
+	ENDSTARTSTATE  reduce 97
+	STRING  reduce 97
+	ENDCHOOSE  reduce 97
+	'?'  reduce 97
+	':'  reduce 97
+	IMPLIES  reduce 97
+	'|'  reduce 97
+	'&'  reduce 97
+	';'  reduce 97
+	','  reduce 97
+	']'  reduce 97
+	')'  reduce 97
+
+
+state 159
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr '<' expr .  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 99
+	END  reduce 99
+	ENDPROCEDURE  reduce 99
+	ENDFUNCTION  reduce 99
+	ENDRULE  reduce 99
+	ENDRULESET  reduce 99
+	ENDALIAS  reduce 99
+	THEN  reduce 99
+	ELSIF  reduce 99
+	ELSE  reduce 99
+	ENDIF  reduce 99
+	CASE  reduce 99
+	ENDSWITCH  reduce 99
+	DO  reduce 99
+	ENDFOR  reduce 99
+	ENDFORALL  reduce 99
+	ENDEXISTS  reduce 99
+	ENDWHILE  reduce 99
+	TO  reduce 99
+	BY  reduce 99
+	LONGARROW  reduce 99
+	DOTDOT  reduce 99
+	ENDRECORD  reduce 99
+	ENDSTARTSTATE  reduce 99
+	STRING  reduce 99
+	ENDCHOOSE  reduce 99
+	'?'  reduce 99
+	':'  reduce 99
+	IMPLIES  reduce 99
+	'|'  reduce 99
+	'&'  reduce 99
+	';'  reduce 99
+	','  reduce 99
+	']'  reduce 99
+	')'  reduce 99
+
+
+state 160
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr LEQ expr .  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 100
+	END  reduce 100
+	ENDPROCEDURE  reduce 100
+	ENDFUNCTION  reduce 100
+	ENDRULE  reduce 100
+	ENDRULESET  reduce 100
+	ENDALIAS  reduce 100
+	THEN  reduce 100
+	ELSIF  reduce 100
+	ELSE  reduce 100
+	ENDIF  reduce 100
+	CASE  reduce 100
+	ENDSWITCH  reduce 100
+	DO  reduce 100
+	ENDFOR  reduce 100
+	ENDFORALL  reduce 100
+	ENDEXISTS  reduce 100
+	ENDWHILE  reduce 100
+	TO  reduce 100
+	BY  reduce 100
+	LONGARROW  reduce 100
+	DOTDOT  reduce 100
+	ENDRECORD  reduce 100
+	ENDSTARTSTATE  reduce 100
+	STRING  reduce 100
+	ENDCHOOSE  reduce 100
+	'?'  reduce 100
+	':'  reduce 100
+	IMPLIES  reduce 100
+	'|'  reduce 100
+	'&'  reduce 100
+	';'  reduce 100
+	','  reduce 100
+	']'  reduce 100
+	')'  reduce 100
+
+
+state 161
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr '=' expr .  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 103
+	END  reduce 103
+	ENDPROCEDURE  reduce 103
+	ENDFUNCTION  reduce 103
+	ENDRULE  reduce 103
+	ENDRULESET  reduce 103
+	ENDALIAS  reduce 103
+	THEN  reduce 103
+	ELSIF  reduce 103
+	ELSE  reduce 103
+	ENDIF  reduce 103
+	CASE  reduce 103
+	ENDSWITCH  reduce 103
+	DO  reduce 103
+	ENDFOR  reduce 103
+	ENDFORALL  reduce 103
+	ENDEXISTS  reduce 103
+	ENDWHILE  reduce 103
+	TO  reduce 103
+	BY  reduce 103
+	LONGARROW  reduce 103
+	DOTDOT  reduce 103
+	ENDRECORD  reduce 103
+	ENDSTARTSTATE  reduce 103
+	STRING  reduce 103
+	ENDCHOOSE  reduce 103
+	'?'  reduce 103
+	':'  reduce 103
+	IMPLIES  reduce 103
+	'|'  reduce 103
+	'&'  reduce 103
+	';'  reduce 103
+	','  reduce 103
+	']'  reduce 103
+	')'  reduce 103
+
+
+state 162
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr NEQ expr .  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 104
+	END  reduce 104
+	ENDPROCEDURE  reduce 104
+	ENDFUNCTION  reduce 104
+	ENDRULE  reduce 104
+	ENDRULESET  reduce 104
+	ENDALIAS  reduce 104
+	THEN  reduce 104
+	ELSIF  reduce 104
+	ELSE  reduce 104
+	ENDIF  reduce 104
+	CASE  reduce 104
+	ENDSWITCH  reduce 104
+	DO  reduce 104
+	ENDFOR  reduce 104
+	ENDFORALL  reduce 104
+	ENDEXISTS  reduce 104
+	ENDWHILE  reduce 104
+	TO  reduce 104
+	BY  reduce 104
+	LONGARROW  reduce 104
+	DOTDOT  reduce 104
+	ENDRECORD  reduce 104
+	ENDSTARTSTATE  reduce 104
+	STRING  reduce 104
+	ENDCHOOSE  reduce 104
+	'?'  reduce 104
+	':'  reduce 104
+	IMPLIES  reduce 104
+	'|'  reduce 104
+	'&'  reduce 104
+	';'  reduce 104
+	','  reduce 104
+	']'  reduce 104
+	')'  reduce 104
+
+
+state 163
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr GEQ expr .  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 102
+	END  reduce 102
+	ENDPROCEDURE  reduce 102
+	ENDFUNCTION  reduce 102
+	ENDRULE  reduce 102
+	ENDRULESET  reduce 102
+	ENDALIAS  reduce 102
+	THEN  reduce 102
+	ELSIF  reduce 102
+	ELSE  reduce 102
+	ENDIF  reduce 102
+	CASE  reduce 102
+	ENDSWITCH  reduce 102
+	DO  reduce 102
+	ENDFOR  reduce 102
+	ENDFORALL  reduce 102
+	ENDEXISTS  reduce 102
+	ENDWHILE  reduce 102
+	TO  reduce 102
+	BY  reduce 102
+	LONGARROW  reduce 102
+	DOTDOT  reduce 102
+	ENDRECORD  reduce 102
+	ENDSTARTSTATE  reduce 102
+	STRING  reduce 102
+	ENDCHOOSE  reduce 102
+	'?'  reduce 102
+	':'  reduce 102
+	IMPLIES  reduce 102
+	'|'  reduce 102
+	'&'  reduce 102
+	';'  reduce 102
+	','  reduce 102
+	']'  reduce 102
+	')'  reduce 102
+
+
+state 164
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr '>' expr .  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 101
+	END  reduce 101
+	ENDPROCEDURE  reduce 101
+	ENDFUNCTION  reduce 101
+	ENDRULE  reduce 101
+	ENDRULESET  reduce 101
+	ENDALIAS  reduce 101
+	THEN  reduce 101
+	ELSIF  reduce 101
+	ELSE  reduce 101
+	ENDIF  reduce 101
+	CASE  reduce 101
+	ENDSWITCH  reduce 101
+	DO  reduce 101
+	ENDFOR  reduce 101
+	ENDFORALL  reduce 101
+	ENDEXISTS  reduce 101
+	ENDWHILE  reduce 101
+	TO  reduce 101
+	BY  reduce 101
+	LONGARROW  reduce 101
+	DOTDOT  reduce 101
+	ENDRECORD  reduce 101
+	ENDSTARTSTATE  reduce 101
+	STRING  reduce 101
+	ENDCHOOSE  reduce 101
+	'?'  reduce 101
+	':'  reduce 101
+	IMPLIES  reduce 101
+	'|'  reduce 101
+	'&'  reduce 101
+	';'  reduce 101
+	','  reduce 101
+	']'  reduce 101
+	')'  reduce 101
+
+
+state 165
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr '+' expr .  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 105
+	END  reduce 105
+	ENDPROCEDURE  reduce 105
+	ENDFUNCTION  reduce 105
+	ENDRULE  reduce 105
+	ENDRULESET  reduce 105
+	ENDALIAS  reduce 105
+	THEN  reduce 105
+	ELSIF  reduce 105
+	ELSE  reduce 105
+	ENDIF  reduce 105
+	CASE  reduce 105
+	ENDSWITCH  reduce 105
+	DO  reduce 105
+	ENDFOR  reduce 105
+	ENDFORALL  reduce 105
+	ENDEXISTS  reduce 105
+	ENDWHILE  reduce 105
+	TO  reduce 105
+	BY  reduce 105
+	LONGARROW  reduce 105
+	DOTDOT  reduce 105
+	ENDRECORD  reduce 105
+	ENDSTARTSTATE  reduce 105
+	STRING  reduce 105
+	ENDCHOOSE  reduce 105
+	'?'  reduce 105
+	':'  reduce 105
+	IMPLIES  reduce 105
+	'|'  reduce 105
+	'&'  reduce 105
+	'<'  reduce 105
+	LEQ  reduce 105
+	'='  reduce 105
+	NEQ  reduce 105
+	GEQ  reduce 105
+	'>'  reduce 105
+	'+'  reduce 105
+	'-'  reduce 105
+	';'  reduce 105
+	','  reduce 105
+	']'  reduce 105
+	')'  reduce 105
+
+
+state 166
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr '-' expr .  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 106
+	END  reduce 106
+	ENDPROCEDURE  reduce 106
+	ENDFUNCTION  reduce 106
+	ENDRULE  reduce 106
+	ENDRULESET  reduce 106
+	ENDALIAS  reduce 106
+	THEN  reduce 106
+	ELSIF  reduce 106
+	ELSE  reduce 106
+	ENDIF  reduce 106
+	CASE  reduce 106
+	ENDSWITCH  reduce 106
+	DO  reduce 106
+	ENDFOR  reduce 106
+	ENDFORALL  reduce 106
+	ENDEXISTS  reduce 106
+	ENDWHILE  reduce 106
+	TO  reduce 106
+	BY  reduce 106
+	LONGARROW  reduce 106
+	DOTDOT  reduce 106
+	ENDRECORD  reduce 106
+	ENDSTARTSTATE  reduce 106
+	STRING  reduce 106
+	ENDCHOOSE  reduce 106
+	'?'  reduce 106
+	':'  reduce 106
+	IMPLIES  reduce 106
+	'|'  reduce 106
+	'&'  reduce 106
+	'<'  reduce 106
+	LEQ  reduce 106
+	'='  reduce 106
+	NEQ  reduce 106
+	GEQ  reduce 106
+	'>'  reduce 106
+	'+'  reduce 106
+	'-'  reduce 106
+	';'  reduce 106
+	','  reduce 106
+	']'  reduce 106
+	')'  reduce 106
+
+
+state 167
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr '*' expr .  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	.  reduce 109
+
+
+state 168
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr '/' expr .  (110)
+	expr : expr . '%' expr  (111)
+
+	.  reduce 110
+
+
+state 169
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	expr : expr '%' expr .  (111)
+
+	.  reduce 111
+
+
+state 170
+	designator : designator '[' expr . ']'  (92)
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	']'  shift 212
+	.  error
+
+
+state 171
+	designator : designator '.' ID .  (93)
+
+	.  reduce 93
+
+
+state 172
+	enumtype : ENUM $$4 '{' . enums '}'  (27)
+
+	ID  shift 213
+	.  error
+
+	enums  goto 214
+
+
+state 173
+	recordtype : RECORD optInterleaved $$5 . $$6 fields endrecord  (34)
+	$$6 : .  (33)
+
+	.  reduce 33
+
+	$$6  goto 215
+
+
+state 174
+	arraytype : ARRAY optInterleaved '[' . typeExpr ']' OF typeExpr  (45)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ENUM  shift 62
+	RECORD  shift 63
+	ARRAY  shift 64
+	ID  shift 65
+	INTCONST  shift 52
+	SCALARSET  shift 66
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNION  shift 67
+	MULTISET  shift 68
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	typeid  goto 69
+	typeExpr  goto 216
+	enumtype  goto 71
+	recordtype  goto 72
+	subrangetype  goto 73
+	arraytype  goto 74
+	multisettype  goto 75
+	expr  goto 76
+	designator  goto 61
+	scalarsettype  goto 77
+	uniontype  goto 78
+
+
+state 175
+	scalarsettype : SCALARSET '(' expr . ')'  (47)
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	')'  shift 217
+	.  error
+
+
+state 176
+	unionlistelt : ID .  (51)
+
+	.  reduce 51
+
+
+state 177
+	unionlistelt : enumtype .  (53)
+
+	.  reduce 53
+
+
+state 178
+	unionlistelt : scalarsettype .  (52)
+
+	.  reduce 52
+
+
+state 179
+	uniontype : UNION '{' unionlist . '}'  (48)
+	unionlist : unionlist . ',' unionlistelt  (49)
+
+	'}'  shift 218
+	','  shift 219
+	.  error
+
+
+state 180
+	unionlist : unionlistelt . ',' unionlistelt  (50)
+
+	','  shift 220
+	.  error
+
+
+state 181
+	multisettype : MULTISET optInterleaved '[' . expr ']' OF typeExpr  (46)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 221
+	designator  goto 61
+
+
+state 182
+	subrangetype : expr DOTDOT expr .  (31)
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	END  reduce 31
+	DO  reduce 31
+	ENDRECORD  reduce 31
+	':'  reduce 31
+	';'  reduce 31
+	','  reduce 31
+	']'  reduce 31
+	')'  reduce 31
+
+
+state 183
+	vardecltail : ',' ID vardecltail .  (58)
+
+	.  reduce 58
+
+
+state 184
+	formal : VAR . $$16 formalrest  (83)
+	$$16 : .  (82)
+
+	.  reduce 82
+
+	$$16  goto 222
+
+
+state 185
+	optformals : formals .  (76)
+	formals : formals . semi formal  (78)
+	formals : formals . semi  (79)
+	formals : formals . ',' formal  (81)
+
+	';'  shift 25
+	','  shift 223
+	')'  reduce 76
+
+	semi  goto 224
+
+
+state 186
+	formals : formal .  (80)
+
+	.  reduce 80
+
+
+state 187
+	procDecl : PROCEDURE ID $$9 '(' optformals . ')' semi $$10 optdecls $$11 optstmts endprocedure semi  (66)
+
+	')'  shift 225
+	.  error
+
+
+state 188
+	formal : $$17 . formalrest  (85)
+
+	ID  shift 226
+	.  error
+
+	formalrest  goto 227
+
+
+state 189
+	funcDecl : FUNCTION ID $$12 '(' optformals . ')' $$13 ':' typeExpr semi $$14 optdecls $$15 optstmts endfunction semi  (73)
+
+	')'  shift 228
+	.  error
+
+
+190: shift/reduce conflict (shift 51, reduce 231) on ID
+state 190
+	simplerule : RULE optFair optPriority optString . optCondition $$29 optdecls optstmts endrule  (225)
+	optCondition : .  (231)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	END  reduce 231
+	ENDRULE  reduce 231
+	ALIAS  reduce 231
+	IF  reduce 231
+	SWITCH  reduce 231
+	FOR  reduce 231
+	WHILE  reduce 231
+	RETURN  reduce 231
+	bEGIN  reduce 231
+	CLEAR  reduce 231
+	ERROR  reduce 231
+	ASSERT  reduce 231
+	PUT  reduce 231
+	CONST  reduce 231
+	TYPE  reduce 231
+	VAR  reduce 231
+	UNDEFINE  reduce 231
+	MULTISETREMOVE  reduce 231
+	MULTISETREMOVEPRED  reduce 231
+	MULTISETADD  reduce 231
+
+	expr  goto 229
+	optCondition  goto 230
+	designator  goto 61
+
+
+state 191
+	quantifier : ID ASSIGN . expr TO expr optBy  (137)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 231
+	designator  goto 61
+
+
+state 192
+	quantifier : ID ':' . typeExpr  (136)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ENUM  shift 62
+	RECORD  shift 63
+	ARRAY  shift 64
+	ID  shift 65
+	INTCONST  shift 52
+	SCALARSET  shift 66
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNION  shift 67
+	MULTISET  shift 68
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	typeid  goto 69
+	typeExpr  goto 232
+	enumtype  goto 71
+	recordtype  goto 72
+	subrangetype  goto 73
+	arraytype  goto 74
+	multisettype  goto 75
+	expr  goto 76
+	designator  goto 61
+	scalarsettype  goto 77
+	uniontype  goto 78
+
+
+state 193
+	quantifiers : quantifier ';' . quantifiers  (138)
+
+	ID  shift 134
+	.  error
+
+	quantifier  goto 135
+	quantifiers  goto 233
+
+
+state 194
+	do : DO .  (140)
+
+	.  reduce 140
+
+
+state 195
+	do : ':' .  (141)
+
+	.  reduce 141
+
+
+state 196
+	ruleset : RULESET $$31 quantifiers do . rules endruleset  (239)
+
+	error  shift 33
+	RULE  shift 34
+	RULESET  shift 35
+	ALIAS  shift 36
+	STARTSTATE  shift 37
+	INVARIANT  shift 38
+	CHOOSE  shift 39
+	.  error
+
+	rules  goto 234
+	rule  goto 41
+	simplerule  goto 42
+	aliasrule  goto 43
+	ruleset  goto 44
+	startstate  goto 45
+	invariant  goto 46
+	choose  goto 47
+
+
+state 197
+	alias : ID ':' . expr  (210)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 235
+	designator  goto 61
+
+
+state 198
+	aliases : aliases ',' . alias  (208)
+
+	ID  shift 137
+	.  error
+
+	alias  goto 236
+
+
+state 199
+	aliases : aliases semi . alias  (206)
+	aliases : aliases semi .  (207)
+
+	ID  shift 137
+	DO  reduce 207
+	':'  reduce 207
+	';'  reduce 207
+	','  reduce 207
+
+	alias  goto 237
+
+
+state 200
+	aliasrule : ALIAS $$30 aliases do . rules endalias  (237)
+
+	error  shift 33
+	RULE  shift 34
+	RULESET  shift 35
+	ALIAS  shift 36
+	STARTSTATE  shift 37
+	INVARIANT  shift 38
+	CHOOSE  shift 39
+	.  error
+
+	rules  goto 238
+	rule  goto 41
+	simplerule  goto 42
+	aliasrule  goto 43
+	ruleset  goto 44
+	startstate  goto 45
+	invariant  goto 46
+	choose  goto 47
+
+
+state 201
+	decls : decls . decl  (5)
+	optdecls : decls . bEGIN  (89)
+
+	bEGIN  shift 239
+	CONST  shift 4
+	TYPE  shift 5
+	VAR  shift 6
+	.  error
+
+	decl  goto 8
+
+
+state 202
+	startstate : STARTSTATE $$34 optString optdecls . optstmts endstartstate  (250)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ALIAS  reduce 144
+	IF  reduce 144
+	SWITCH  reduce 144
+	FOR  reduce 144
+	WHILE  reduce 144
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ENDSTARTSTATE  reduce 146
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 240
+	$$22  goto 241
+
+
+state 203
+	choose : CHOOSE $$32 ID ':' . designator $$33 do rules endchoose  (244)
+
+	ID  shift 150
+	.  error
+
+	designator  goto 242
+
+
+state 204
+	expr : FORALL $$18 quantifiers do . expr endforall  (119)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 243
+	designator  goto 61
+
+
+state 205
+	expr : EXISTS $$19 quantifiers do . expr endexists  (121)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 244
+	designator  goto 61
+
+
+state 206
+	exprlist : exprlist ',' . expr  (132)
+	exprlist : exprlist ',' . UNDEFINED  (134)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNDEFINED  shift 245
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 246
+	designator  goto 61
+
+
+state 207
+	actuals : '(' exprlist ')' .  (130)
+
+	.  reduce 130
+
+
+state 208
+	expr : ISMEMBER '(' designator ',' . typeExpr ')'  (116)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ENUM  shift 62
+	RECORD  shift 63
+	ARRAY  shift 64
+	ID  shift 65
+	INTCONST  shift 52
+	SCALARSET  shift 66
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNION  shift 67
+	MULTISET  shift 68
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	typeid  goto 69
+	typeExpr  goto 247
+	enumtype  goto 71
+	recordtype  goto 72
+	subrangetype  goto 73
+	arraytype  goto 74
+	multisettype  goto 75
+	expr  goto 76
+	designator  goto 61
+	scalarsettype  goto 77
+	uniontype  goto 78
+
+
+state 209
+	expr : ISUNDEFINED '(' designator ')' .  (115)
+
+	.  reduce 115
+
+
+state 210
+	expr : MULTISETCOUNT '(' $$20 ID . ':' designator ',' $$21 expr ')'  (125)
+
+	':'  shift 248
+	.  error
+
+
+state 211
+	expr : expr '?' expr ':' . expr  (94)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 249
+	designator  goto 61
+
+
+state 212
+	designator : designator '[' expr ']' .  (92)
+
+	.  reduce 92
+
+
+state 213
+	enums : ID .  (30)
+
+	.  reduce 30
+
+
+state 214
+	enumtype : ENUM $$4 '{' enums . '}'  (27)
+	enums : enums . ',' ID  (28)
+	enums : enums . ID  (29)
+
+	ID  shift 250
+	'}'  shift 251
+	','  shift 252
+	.  error
+
+
+state 215
+	recordtype : RECORD optInterleaved $$5 $$6 . fields endrecord  (34)
+	$$7 : .  (41)
+
+	.  reduce 41
+
+	fields  goto 253
+	field  goto 254
+	$$7  goto 255
+
+
+state 216
+	arraytype : ARRAY optInterleaved '[' typeExpr . ']' OF typeExpr  (45)
+
+	']'  shift 256
+	.  error
+
+
+state 217
+	scalarsettype : SCALARSET '(' expr ')' .  (47)
+
+	.  reduce 47
+
+
+state 218
+	uniontype : UNION '{' unionlist '}' .  (48)
+
+	.  reduce 48
+
+
+state 219
+	unionlist : unionlist ',' . unionlistelt  (49)
+
+	ENUM  shift 62
+	ID  shift 176
+	SCALARSET  shift 66
+	.  error
+
+	enumtype  goto 177
+	scalarsettype  goto 178
+	unionlistelt  goto 257
+
+
+state 220
+	unionlist : unionlistelt ',' . unionlistelt  (50)
+
+	ENUM  shift 62
+	ID  shift 176
+	SCALARSET  shift 66
+	.  error
+
+	enumtype  goto 177
+	scalarsettype  goto 178
+	unionlistelt  goto 258
+
+
+state 221
+	multisettype : MULTISET optInterleaved '[' expr . ']' OF typeExpr  (46)
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	']'  shift 259
+	.  error
+
+
+state 222
+	formal : VAR $$16 . formalrest  (83)
+
+	ID  shift 226
+	.  error
+
+	formalrest  goto 260
+
+
+state 223
+	formals : formals ',' . formal  (81)
+	$$17 : .  (84)
+
+	VAR  shift 184
+	ID  reduce 84
+
+	formal  goto 261
+	$$17  goto 188
+
+
+state 224
+	formals : formals semi . formal  (78)
+	formals : formals semi .  (79)
+	$$17 : .  (84)
+
+	VAR  shift 184
+	ID  reduce 84
+	';'  reduce 79
+	','  reduce 79
+	')'  reduce 79
+
+	formal  goto 262
+	$$17  goto 188
+
+
+state 225
+	procDecl : PROCEDURE ID $$9 '(' optformals ')' . semi $$10 optdecls $$11 optstmts endprocedure semi  (66)
+
+	';'  shift 25
+	.  error
+
+	semi  goto 263
+
+
+state 226
+	formalrest : ID . formaltail  (86)
+
+	':'  shift 264
+	','  shift 265
+	.  error
+
+	formaltail  goto 266
+
+
+state 227
+	formal : $$17 formalrest .  (85)
+
+	.  reduce 85
+
+
+state 228
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' . $$13 ':' typeExpr semi $$14 optdecls $$15 optstmts endfunction semi  (73)
+	$$13 : .  (70)
+
+	.  reduce 70
+
+	$$13  goto 267
+
+
+state 229
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	optCondition : expr . LONGARROW  (230)
+
+	LONGARROW  shift 268
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	.  error
+
+
+state 230
+	simplerule : RULE optFair optPriority optString optCondition . $$29 optdecls optstmts endrule  (225)
+	$$29 : .  (224)
+
+	.  reduce 224
+
+	$$29  goto 269
+
+
+state 231
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	quantifier : ID ASSIGN expr . TO expr optBy  (137)
+
+	TO  shift 270
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	.  error
+
+
+state 232
+	quantifier : ID ':' typeExpr .  (136)
+
+	.  reduce 136
+
+
+state 233
+	quantifiers : quantifier ';' quantifiers .  (138)
+
+	.  reduce 138
+
+
+state 234
+	ruleset : RULESET $$31 quantifiers do rules . endruleset  (239)
+
+	END  shift 271
+	ENDRULESET  shift 272
+	.  error
+
+	endruleset  goto 273
+
+
+state 235
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	alias : ID ':' expr .  (210)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	DO  reduce 210
+	':'  reduce 210
+	';'  reduce 210
+	','  reduce 210
+
+
+state 236
+	aliases : aliases ',' alias .  (208)
+
+	.  reduce 208
+
+
+state 237
+	aliases : aliases semi alias .  (206)
+
+	.  reduce 206
+
+
+state 238
+	aliasrule : ALIAS $$30 aliases do rules . endalias  (237)
+
+	END  shift 274
+	ENDALIAS  shift 275
+	.  error
+
+	endalias  goto 276
+
+
+state 239
+	optdecls : decls bEGIN .  (89)
+
+	.  reduce 89
+
+
+state 240
+	startstate : STARTSTATE $$34 optString optdecls optstmts . endstartstate  (250)
+
+	END  shift 277
+	ENDSTARTSTATE  shift 278
+	.  error
+
+	endstartstate  goto 279
+
+
+state 241
+	optstmts : $$22 . stmts  (145)
+
+	ALIAS  shift 280
+	IF  shift 281
+	SWITCH  shift 282
+	FOR  shift 283
+	WHILE  shift 284
+	RETURN  shift 285
+	CLEAR  shift 286
+	ERROR  shift 287
+	ASSERT  shift 288
+	PUT  shift 289
+	ID  shift 290
+	UNDEFINE  shift 291
+	MULTISETREMOVE  shift 292
+	MULTISETREMOVEPRED  shift 293
+	MULTISETADD  shift 294
+	.  error
+
+	designator  goto 295
+	stmt  goto 296
+	stmts  goto 297
+	ifstmt  goto 298
+	assignment  goto 299
+	whilestmt  goto 300
+	forstmt  goto 301
+	proccall  goto 302
+	clearstmt  goto 303
+	errorstmt  goto 304
+	assertstmt  goto 305
+	putstmt  goto 306
+	aliasstmt  goto 307
+	switchstmt  goto 308
+	returnstmt  goto 309
+	multisetaddstmt  goto 310
+	multisetremovestmt  goto 311
+	undefinestmt  goto 312
+
+
+state 242
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	choose : CHOOSE $$32 ID ':' designator . $$33 do rules endchoose  (244)
+	$$33 : .  (243)
+
+	'['  shift 119
+	'.'  shift 120
+	DO  reduce 243
+	':'  reduce 243
+
+	$$33  goto 313
+
+
+state 243
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	expr : FORALL $$18 quantifiers do expr . endforall  (119)
+
+	END  shift 314
+	ENDFORALL  shift 315
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	.  error
+
+	endforall  goto 316
+
+
+state 244
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	expr : EXISTS $$19 quantifiers do expr . endexists  (121)
+
+	END  shift 317
+	ENDEXISTS  shift 318
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	.  error
+
+	endexists  goto 319
+
+
+state 245
+	exprlist : exprlist ',' UNDEFINED .  (134)
+
+	.  reduce 134
+
+
+state 246
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	exprlist : exprlist ',' expr .  (132)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	':'  reduce 132
+	','  reduce 132
+	')'  reduce 132
+
+
+state 247
+	expr : ISMEMBER '(' designator ',' typeExpr . ')'  (116)
+
+	')'  shift 320
+	.  error
+
+
+state 248
+	expr : MULTISETCOUNT '(' $$20 ID ':' . designator ',' $$21 expr ')'  (125)
+
+	ID  shift 150
+	.  error
+
+	designator  goto 321
+
+
+state 249
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr '?' expr ':' expr .  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	$end  reduce 94
+	END  reduce 94
+	ENDPROCEDURE  reduce 94
+	ENDFUNCTION  reduce 94
+	ENDRULE  reduce 94
+	ENDRULESET  reduce 94
+	ENDALIAS  reduce 94
+	THEN  reduce 94
+	ELSIF  reduce 94
+	ELSE  reduce 94
+	ENDIF  reduce 94
+	CASE  reduce 94
+	ENDSWITCH  reduce 94
+	DO  reduce 94
+	ENDFOR  reduce 94
+	ENDFORALL  reduce 94
+	ENDEXISTS  reduce 94
+	ENDWHILE  reduce 94
+	TO  reduce 94
+	BY  reduce 94
+	LONGARROW  reduce 94
+	DOTDOT  reduce 94
+	ENDRECORD  reduce 94
+	ENDSTARTSTATE  reduce 94
+	STRING  reduce 94
+	ENDCHOOSE  reduce 94
+	':'  reduce 94
+	';'  reduce 94
+	','  reduce 94
+	']'  reduce 94
+	')'  reduce 94
+
+
+state 250
+	enums : enums ID .  (29)
+
+	.  reduce 29
+
+
+state 251
+	enumtype : ENUM $$4 '{' enums '}' .  (27)
+
+	.  reduce 27
+
+
+state 252
+	enums : enums ',' . ID  (28)
+
+	ID  shift 322
+	.  error
+
+
+state 253
+	recordtype : RECORD optInterleaved $$5 $$6 fields . endrecord  (34)
+	fields : fields . semi field  (38)
+	fields : fields . semi  (39)
+
+	END  shift 323
+	ENDRECORD  shift 324
+	';'  shift 25
+	.  error
+
+	semi  goto 325
+	endrecord  goto 326
+
+
+state 254
+	fields : field .  (40)
+
+	.  reduce 40
+
+
+state 255
+	field : $$7 . ID fieldtail  (42)
+
+	ID  shift 327
+	.  error
+
+
+state 256
+	arraytype : ARRAY optInterleaved '[' typeExpr ']' . OF typeExpr  (45)
+
+	OF  shift 328
+	.  error
+
+
+state 257
+	unionlist : unionlist ',' unionlistelt .  (49)
+
+	.  reduce 49
+
+
+state 258
+	unionlist : unionlistelt ',' unionlistelt .  (50)
+
+	.  reduce 50
+
+
+state 259
+	multisettype : MULTISET optInterleaved '[' expr ']' . OF typeExpr  (46)
+
+	OF  shift 329
+	.  error
+
+
+state 260
+	formal : VAR $$16 formalrest .  (83)
+
+	.  reduce 83
+
+
+state 261
+	formals : formals ',' formal .  (81)
+
+	.  reduce 81
+
+
+state 262
+	formals : formals semi formal .  (78)
+
+	.  reduce 78
+
+
+state 263
+	procDecl : PROCEDURE ID $$9 '(' optformals ')' semi . $$10 optdecls $$11 optstmts endprocedure semi  (66)
+	$$10 : .  (64)
+
+	.  reduce 64
+
+	$$10  goto 330
+
+
+state 264
+	formaltail : ':' . typeExpr  (88)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ENUM  shift 62
+	RECORD  shift 63
+	ARRAY  shift 64
+	ID  shift 65
+	INTCONST  shift 52
+	SCALARSET  shift 66
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNION  shift 67
+	MULTISET  shift 68
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	typeid  goto 69
+	typeExpr  goto 331
+	enumtype  goto 71
+	recordtype  goto 72
+	subrangetype  goto 73
+	arraytype  goto 74
+	multisettype  goto 75
+	expr  goto 76
+	designator  goto 61
+	scalarsettype  goto 77
+	uniontype  goto 78
+
+
+state 265
+	formaltail : ',' . ID formaltail  (87)
+
+	ID  shift 332
+	.  error
+
+
+state 266
+	formalrest : ID formaltail .  (86)
+
+	.  reduce 86
+
+
+state 267
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 . ':' typeExpr semi $$14 optdecls $$15 optstmts endfunction semi  (73)
+
+	':'  shift 333
+	.  error
+
+
+state 268
+	optCondition : expr LONGARROW .  (230)
+
+	.  reduce 230
+
+
+state 269
+	simplerule : RULE optFair optPriority optString optCondition $$29 . optdecls optstmts endrule  (225)
+	decls : .  (6)
+	optdecls : .  (90)
+
+	END  reduce 90
+	ENDRULE  reduce 90
+	ALIAS  reduce 90
+	IF  reduce 90
+	SWITCH  reduce 90
+	FOR  reduce 90
+	WHILE  reduce 90
+	RETURN  reduce 90
+	bEGIN  reduce 6
+	CLEAR  reduce 90
+	ERROR  reduce 90
+	ASSERT  reduce 90
+	PUT  reduce 90
+	CONST  reduce 6
+	TYPE  reduce 6
+	VAR  reduce 6
+	ID  reduce 90
+	UNDEFINE  reduce 90
+	MULTISETREMOVE  reduce 90
+	MULTISETREMOVEPRED  reduce 90
+	MULTISETADD  reduce 90
+
+	decls  goto 201
+	optdecls  goto 334
+
+
+state 270
+	quantifier : ID ASSIGN expr TO . expr optBy  (137)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 335
+	designator  goto 61
+
+
+state 271
+	endruleset : END .  (241)
+
+	.  reduce 241
+
+
+state 272
+	endruleset : ENDRULESET .  (240)
+
+	.  reduce 240
+
+
+state 273
+	ruleset : RULESET $$31 quantifiers do rules endruleset .  (239)
+
+	.  reduce 239
+
+
+state 274
+	endalias : END .  (205)
+
+	.  reduce 205
+
+
+state 275
+	endalias : ENDALIAS .  (204)
+
+	.  reduce 204
+
+
+state 276
+	aliasrule : ALIAS $$30 aliases do rules endalias .  (237)
+
+	.  reduce 237
+
+
+state 277
+	endstartstate : END .  (252)
+
+	.  reduce 252
+
+
+state 278
+	endstartstate : ENDSTARTSTATE .  (251)
+
+	.  reduce 251
+
+
+state 279
+	startstate : STARTSTATE $$34 optString optdecls optstmts endstartstate .  (250)
+
+	.  reduce 250
+
+
+state 280
+	aliasstmt : ALIAS . $$28 aliases do optstmts endalias  (203)
+	$$28 : .  (202)
+
+	.  reduce 202
+
+	$$28  goto 336
+
+
+state 281
+	ifstmt : IF . expr THEN optstmts optElses endif  (167)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 337
+	designator  goto 61
+
+
+state 282
+	switchstmt : SWITCH . expr $$23 $$24 optCases optElse endswitch  (180)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 338
+	designator  goto 61
+
+
+state 283
+	forstmt : FOR . $$25 quantifiers do optstmts endfor  (187)
+	$$25 : .  (186)
+
+	.  reduce 186
+
+	$$25  goto 339
+
+
+state 284
+	whilestmt : WHILE . expr do optstmts endwhile  (175)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 340
+	designator  goto 61
+
+
+state 285
+	returnstmt : RETURN . optretexpr  (211)
+	optretexpr : .  (213)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	END  reduce 213
+	ENDPROCEDURE  reduce 213
+	ENDFUNCTION  reduce 213
+	ENDRULE  reduce 213
+	ENDALIAS  reduce 213
+	ELSIF  reduce 213
+	ELSE  reduce 213
+	ENDIF  reduce 213
+	CASE  reduce 213
+	ENDSWITCH  reduce 213
+	ENDFOR  reduce 213
+	ENDWHILE  reduce 213
+	ENDSTARTSTATE  reduce 213
+	';'  reduce 213
+
+	expr  goto 341
+	optretexpr  goto 342
+	designator  goto 61
+
+
+state 286
+	clearstmt : CLEAR . designator  (191)
+
+	ID  shift 150
+	.  error
+
+	designator  goto 343
+
+
+state 287
+	errorstmt : ERROR . STRING  (198)
+
+	STRING  shift 344
+	.  error
+
+
+state 288
+	assertstmt : ASSERT . expr optString  (199)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 345
+	designator  goto 61
+
+
+state 289
+	putstmt : PUT . expr  (200)
+	putstmt : PUT . STRING  (201)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	STRING  shift 346
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 347
+	designator  goto 61
+
+
+state 290
+	designator : ID .  (91)
+	proccall : ID . actuals  (190)
+
+	'('  shift 95
+	ASSIGN  reduce 91
+	'['  reduce 91
+	'.'  reduce 91
+
+	actuals  goto 348
+
+
+state 291
+	undefinestmt : UNDEFINE . designator  (192)
+
+	ID  shift 150
+	.  error
+
+	designator  goto 349
+
+
+state 292
+	multisetremovestmt : MULTISETREMOVE . '(' expr ',' designator ')'  (197)
+
+	'('  shift 350
+	.  error
+
+
+state 293
+	multisetremovestmt : MULTISETREMOVEPRED . '(' $$26 ID ':' designator $$27 ',' expr ')'  (196)
+
+	'('  shift 351
+	.  error
+
+
+state 294
+	multisetaddstmt : MULTISETADD . '(' designator ',' designator ')'  (193)
+
+	'('  shift 352
+	.  error
+
+
+state 295
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	assignment : designator . ASSIGN expr  (165)
+	assignment : designator . ASSIGN UNDEFINED  (166)
+
+	ASSIGN  shift 353
+	'['  shift 119
+	'.'  shift 120
+	.  error
+
+
+state 296
+	stmts : stmt .  (149)
+
+	.  reduce 149
+
+
+state 297
+	optstmts : $$22 stmts .  (145)
+	stmts : stmts . semi stmt  (147)
+	stmts : stmts . semi  (148)
+
+	';'  shift 25
+	END  reduce 145
+	ENDPROCEDURE  reduce 145
+	ENDFUNCTION  reduce 145
+	ENDRULE  reduce 145
+	ENDALIAS  reduce 145
+	ELSIF  reduce 145
+	ELSE  reduce 145
+	ENDIF  reduce 145
+	CASE  reduce 145
+	ENDSWITCH  reduce 145
+	ENDFOR  reduce 145
+	ENDWHILE  reduce 145
+	ENDSTARTSTATE  reduce 145
+
+	semi  goto 354
+
+
+state 298
+	stmt : ifstmt .  (151)
+
+	.  reduce 151
+
+
+state 299
+	stmt : assignment .  (150)
+
+	.  reduce 150
+
+
+state 300
+	stmt : whilestmt .  (152)
+
+	.  reduce 152
+
+
+state 301
+	stmt : forstmt .  (154)
+
+	.  reduce 154
+
+
+state 302
+	stmt : proccall .  (155)
+
+	.  reduce 155
+
+
+state 303
+	stmt : clearstmt .  (156)
+
+	.  reduce 156
+
+
+state 304
+	stmt : errorstmt .  (157)
+
+	.  reduce 157
+
+
+state 305
+	stmt : assertstmt .  (158)
+
+	.  reduce 158
+
+
+state 306
+	stmt : putstmt .  (159)
+
+	.  reduce 159
+
+
+state 307
+	stmt : aliasstmt .  (160)
+
+	.  reduce 160
+
+
+state 308
+	stmt : switchstmt .  (153)
+
+	.  reduce 153
+
+
+state 309
+	stmt : returnstmt .  (161)
+
+	.  reduce 161
+
+
+state 310
+	stmt : multisetaddstmt .  (163)
+
+	.  reduce 163
+
+
+state 311
+	stmt : multisetremovestmt .  (164)
+
+	.  reduce 164
+
+
+state 312
+	stmt : undefinestmt .  (162)
+
+	.  reduce 162
+
+
+state 313
+	choose : CHOOSE $$32 ID ':' designator $$33 . do rules endchoose  (244)
+
+	DO  shift 194
+	':'  shift 195
+	.  error
+
+	do  goto 355
+
+
+state 314
+	endforall : END .  (127)
+
+	.  reduce 127
+
+
+state 315
+	endforall : ENDFORALL .  (126)
+
+	.  reduce 126
+
+
+state 316
+	expr : FORALL $$18 quantifiers do expr endforall .  (119)
+
+	.  reduce 119
+
+
+state 317
+	endexists : END .  (129)
+
+	.  reduce 129
+
+
+state 318
+	endexists : ENDEXISTS .  (128)
+
+	.  reduce 128
+
+
+state 319
+	expr : EXISTS $$19 quantifiers do expr endexists .  (121)
+
+	.  reduce 121
+
+
+state 320
+	expr : ISMEMBER '(' designator ',' typeExpr ')' .  (116)
+
+	.  reduce 116
+
+
+state 321
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	expr : MULTISETCOUNT '(' $$20 ID ':' designator . ',' $$21 expr ')'  (125)
+
+	','  shift 356
+	'['  shift 119
+	'.'  shift 120
+	.  error
+
+
+state 322
+	enums : enums ',' ID .  (28)
+
+	.  reduce 28
+
+
+state 323
+	endrecord : END .  (36)
+
+	.  reduce 36
+
+
+state 324
+	endrecord : ENDRECORD .  (35)
+
+	.  reduce 35
+
+
+state 325
+	fields : fields semi . field  (38)
+	fields : fields semi .  (39)
+	$$7 : .  (41)
+
+	END  reduce 39
+	ENDRECORD  reduce 39
+	ID  reduce 41
+	';'  reduce 39
+
+	field  goto 357
+	$$7  goto 255
+
+
+state 326
+	recordtype : RECORD optInterleaved $$5 $$6 fields endrecord .  (34)
+
+	.  reduce 34
+
+
+state 327
+	field : $$7 ID . fieldtail  (42)
+
+	':'  shift 358
+	','  shift 359
+	.  error
+
+	fieldtail  goto 360
+
+
+state 328
+	arraytype : ARRAY optInterleaved '[' typeExpr ']' OF . typeExpr  (45)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ENUM  shift 62
+	RECORD  shift 63
+	ARRAY  shift 64
+	ID  shift 65
+	INTCONST  shift 52
+	SCALARSET  shift 66
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNION  shift 67
+	MULTISET  shift 68
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	typeid  goto 69
+	typeExpr  goto 361
+	enumtype  goto 71
+	recordtype  goto 72
+	subrangetype  goto 73
+	arraytype  goto 74
+	multisettype  goto 75
+	expr  goto 76
+	designator  goto 61
+	scalarsettype  goto 77
+	uniontype  goto 78
+
+
+state 329
+	multisettype : MULTISET optInterleaved '[' expr ']' OF . typeExpr  (46)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ENUM  shift 62
+	RECORD  shift 63
+	ARRAY  shift 64
+	ID  shift 65
+	INTCONST  shift 52
+	SCALARSET  shift 66
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNION  shift 67
+	MULTISET  shift 68
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	typeid  goto 69
+	typeExpr  goto 362
+	enumtype  goto 71
+	recordtype  goto 72
+	subrangetype  goto 73
+	arraytype  goto 74
+	multisettype  goto 75
+	expr  goto 76
+	designator  goto 61
+	scalarsettype  goto 77
+	uniontype  goto 78
+
+
+state 330
+	procDecl : PROCEDURE ID $$9 '(' optformals ')' semi $$10 . optdecls $$11 optstmts endprocedure semi  (66)
+	decls : .  (6)
+	optdecls : .  (90)
+
+	END  reduce 90
+	ENDPROCEDURE  reduce 90
+	ALIAS  reduce 90
+	IF  reduce 90
+	SWITCH  reduce 90
+	FOR  reduce 90
+	WHILE  reduce 90
+	RETURN  reduce 90
+	bEGIN  reduce 6
+	CLEAR  reduce 90
+	ERROR  reduce 90
+	ASSERT  reduce 90
+	PUT  reduce 90
+	CONST  reduce 6
+	TYPE  reduce 6
+	VAR  reduce 6
+	ID  reduce 90
+	UNDEFINE  reduce 90
+	MULTISETREMOVE  reduce 90
+	MULTISETREMOVEPRED  reduce 90
+	MULTISETADD  reduce 90
+
+	decls  goto 201
+	optdecls  goto 363
+
+
+state 331
+	formaltail : ':' typeExpr .  (88)
+
+	.  reduce 88
+
+
+state 332
+	formaltail : ',' ID . formaltail  (87)
+
+	':'  shift 264
+	','  shift 265
+	.  error
+
+	formaltail  goto 364
+
+
+state 333
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 ':' . typeExpr semi $$14 optdecls $$15 optstmts endfunction semi  (73)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ENUM  shift 62
+	RECORD  shift 63
+	ARRAY  shift 64
+	ID  shift 65
+	INTCONST  shift 52
+	SCALARSET  shift 66
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNION  shift 67
+	MULTISET  shift 68
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	typeid  goto 69
+	typeExpr  goto 365
+	enumtype  goto 71
+	recordtype  goto 72
+	subrangetype  goto 73
+	arraytype  goto 74
+	multisettype  goto 75
+	expr  goto 76
+	designator  goto 61
+	scalarsettype  goto 77
+	uniontype  goto 78
+
+
+state 334
+	simplerule : RULE optFair optPriority optString optCondition $$29 optdecls . optstmts endrule  (225)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ENDRULE  reduce 146
+	ALIAS  reduce 144
+	IF  reduce 144
+	SWITCH  reduce 144
+	FOR  reduce 144
+	WHILE  reduce 144
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 366
+	$$22  goto 241
+
+
+state 335
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	quantifier : ID ASSIGN expr TO expr . optBy  (137)
+	optBy : .  (143)
+
+	BY  shift 367
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	DO  reduce 143
+	':'  reduce 143
+	';'  reduce 143
+
+	optBy  goto 368
+
+
+state 336
+	aliasstmt : ALIAS $$28 . aliases do optstmts endalias  (203)
+
+	ID  shift 137
+	.  error
+
+	alias  goto 138
+	aliases  goto 369
+
+
+state 337
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	ifstmt : IF expr . THEN optstmts optElses endif  (167)
+
+	THEN  shift 370
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	.  error
+
+
+state 338
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	switchstmt : SWITCH expr . $$23 $$24 optCases optElse endswitch  (180)
+	$$23 : .  (178)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	END  reduce 178
+	ELSE  reduce 178
+	CASE  reduce 178
+	ENDSWITCH  reduce 178
+
+	$$23  goto 371
+
+
+state 339
+	forstmt : FOR $$25 . quantifiers do optstmts endfor  (187)
+
+	ID  shift 134
+	.  error
+
+	quantifier  goto 135
+	quantifiers  goto 372
+
+
+state 340
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	whilestmt : WHILE expr . do optstmts endwhile  (175)
+
+	DO  shift 194
+	'?'  shift 104
+	':'  shift 195
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	.  error
+
+	do  goto 373
+
+
+state 341
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	optretexpr : expr .  (212)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	END  reduce 212
+	ENDPROCEDURE  reduce 212
+	ENDFUNCTION  reduce 212
+	ENDRULE  reduce 212
+	ENDALIAS  reduce 212
+	ELSIF  reduce 212
+	ELSE  reduce 212
+	ENDIF  reduce 212
+	CASE  reduce 212
+	ENDSWITCH  reduce 212
+	ENDFOR  reduce 212
+	ENDWHILE  reduce 212
+	ENDSTARTSTATE  reduce 212
+	';'  reduce 212
+
+
+state 342
+	returnstmt : RETURN optretexpr .  (211)
+
+	.  reduce 211
+
+
+state 343
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	clearstmt : CLEAR designator .  (191)
+
+	'['  shift 119
+	'.'  shift 120
+	END  reduce 191
+	ENDPROCEDURE  reduce 191
+	ENDFUNCTION  reduce 191
+	ENDRULE  reduce 191
+	ENDALIAS  reduce 191
+	ELSIF  reduce 191
+	ELSE  reduce 191
+	ENDIF  reduce 191
+	CASE  reduce 191
+	ENDSWITCH  reduce 191
+	ENDFOR  reduce 191
+	ENDWHILE  reduce 191
+	ENDSTARTSTATE  reduce 191
+	';'  reduce 191
+
+
+state 344
+	errorstmt : ERROR STRING .  (198)
+
+	.  reduce 198
+
+
+state 345
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	assertstmt : ASSERT expr . optString  (199)
+	optString : .  (233)
+
+	STRING  shift 89
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	END  reduce 233
+	ENDPROCEDURE  reduce 233
+	ENDFUNCTION  reduce 233
+	ENDRULE  reduce 233
+	ENDALIAS  reduce 233
+	ELSIF  reduce 233
+	ELSE  reduce 233
+	ENDIF  reduce 233
+	CASE  reduce 233
+	ENDSWITCH  reduce 233
+	ENDFOR  reduce 233
+	ENDWHILE  reduce 233
+	ENDSTARTSTATE  reduce 233
+	';'  reduce 233
+
+	optString  goto 374
+
+
+state 346
+	putstmt : PUT STRING .  (201)
+
+	.  reduce 201
+
+
+state 347
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	putstmt : PUT expr .  (200)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	END  reduce 200
+	ENDPROCEDURE  reduce 200
+	ENDFUNCTION  reduce 200
+	ENDRULE  reduce 200
+	ENDALIAS  reduce 200
+	ELSIF  reduce 200
+	ELSE  reduce 200
+	ENDIF  reduce 200
+	CASE  reduce 200
+	ENDSWITCH  reduce 200
+	ENDFOR  reduce 200
+	ENDWHILE  reduce 200
+	ENDSTARTSTATE  reduce 200
+	';'  reduce 200
+
+
+state 348
+	proccall : ID actuals .  (190)
+
+	.  reduce 190
+
+
+state 349
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	undefinestmt : UNDEFINE designator .  (192)
+
+	'['  shift 119
+	'.'  shift 120
+	END  reduce 192
+	ENDPROCEDURE  reduce 192
+	ENDFUNCTION  reduce 192
+	ENDRULE  reduce 192
+	ENDALIAS  reduce 192
+	ELSIF  reduce 192
+	ELSE  reduce 192
+	ENDIF  reduce 192
+	CASE  reduce 192
+	ENDSWITCH  reduce 192
+	ENDFOR  reduce 192
+	ENDWHILE  reduce 192
+	ENDSTARTSTATE  reduce 192
+	';'  reduce 192
+
+
+state 350
+	multisetremovestmt : MULTISETREMOVE '(' . expr ',' designator ')'  (197)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 375
+	designator  goto 61
+
+
+state 351
+	multisetremovestmt : MULTISETREMOVEPRED '(' . $$26 ID ':' designator $$27 ',' expr ')'  (196)
+	$$26 : .  (194)
+
+	.  reduce 194
+
+	$$26  goto 376
+
+
+state 352
+	multisetaddstmt : MULTISETADD '(' . designator ',' designator ')'  (193)
+
+	ID  shift 150
+	.  error
+
+	designator  goto 377
+
+
+state 353
+	assignment : designator ASSIGN . expr  (165)
+	assignment : designator ASSIGN . UNDEFINED  (166)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNDEFINED  shift 378
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 379
+	designator  goto 61
+
+
+state 354
+	stmts : stmts semi . stmt  (147)
+	stmts : stmts semi .  (148)
+
+	ALIAS  shift 280
+	IF  shift 281
+	SWITCH  shift 282
+	FOR  shift 283
+	WHILE  shift 284
+	RETURN  shift 285
+	CLEAR  shift 286
+	ERROR  shift 287
+	ASSERT  shift 288
+	PUT  shift 289
+	ID  shift 290
+	UNDEFINE  shift 291
+	MULTISETREMOVE  shift 292
+	MULTISETREMOVEPRED  shift 293
+	MULTISETADD  shift 294
+	END  reduce 148
+	ENDPROCEDURE  reduce 148
+	ENDFUNCTION  reduce 148
+	ENDRULE  reduce 148
+	ENDALIAS  reduce 148
+	ELSIF  reduce 148
+	ELSE  reduce 148
+	ENDIF  reduce 148
+	CASE  reduce 148
+	ENDSWITCH  reduce 148
+	ENDFOR  reduce 148
+	ENDWHILE  reduce 148
+	ENDSTARTSTATE  reduce 148
+	';'  reduce 148
+
+	designator  goto 295
+	stmt  goto 380
+	ifstmt  goto 298
+	assignment  goto 299
+	whilestmt  goto 300
+	forstmt  goto 301
+	proccall  goto 302
+	clearstmt  goto 303
+	errorstmt  goto 304
+	assertstmt  goto 305
+	putstmt  goto 306
+	aliasstmt  goto 307
+	switchstmt  goto 308
+	returnstmt  goto 309
+	multisetaddstmt  goto 310
+	multisetremovestmt  goto 311
+	undefinestmt  goto 312
+
+
+state 355
+	choose : CHOOSE $$32 ID ':' designator $$33 do . rules endchoose  (244)
+
+	error  shift 33
+	RULE  shift 34
+	RULESET  shift 35
+	ALIAS  shift 36
+	STARTSTATE  shift 37
+	INVARIANT  shift 38
+	CHOOSE  shift 39
+	.  error
+
+	rules  goto 381
+	rule  goto 41
+	simplerule  goto 42
+	aliasrule  goto 43
+	ruleset  goto 44
+	startstate  goto 45
+	invariant  goto 46
+	choose  goto 47
+
+
+state 356
+	expr : MULTISETCOUNT '(' $$20 ID ':' designator ',' . $$21 expr ')'  (125)
+	$$21 : .  (124)
+
+	.  reduce 124
+
+	$$21  goto 382
+
+
+state 357
+	fields : fields semi field .  (38)
+
+	.  reduce 38
+
+
+state 358
+	fieldtail : ':' . typeExpr  (44)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ENUM  shift 62
+	RECORD  shift 63
+	ARRAY  shift 64
+	ID  shift 65
+	INTCONST  shift 52
+	SCALARSET  shift 66
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNION  shift 67
+	MULTISET  shift 68
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	typeid  goto 69
+	typeExpr  goto 383
+	enumtype  goto 71
+	recordtype  goto 72
+	subrangetype  goto 73
+	arraytype  goto 74
+	multisettype  goto 75
+	expr  goto 76
+	designator  goto 61
+	scalarsettype  goto 77
+	uniontype  goto 78
+
+
+state 359
+	fieldtail : ',' . ID fieldtail  (43)
+
+	ID  shift 384
+	.  error
+
+
+state 360
+	field : $$7 ID fieldtail .  (42)
+
+	.  reduce 42
+
+
+state 361
+	arraytype : ARRAY optInterleaved '[' typeExpr ']' OF typeExpr .  (45)
+
+	.  reduce 45
+
+
+state 362
+	multisettype : MULTISET optInterleaved '[' expr ']' OF typeExpr .  (46)
+
+	.  reduce 46
+
+
+state 363
+	procDecl : PROCEDURE ID $$9 '(' optformals ')' semi $$10 optdecls . $$11 optstmts endprocedure semi  (66)
+	$$11 : .  (65)
+
+	.  reduce 65
+
+	$$11  goto 385
+
+
+state 364
+	formaltail : ',' ID formaltail .  (87)
+
+	.  reduce 87
+
+
+state 365
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 ':' typeExpr . semi $$14 optdecls $$15 optstmts endfunction semi  (73)
+
+	';'  shift 25
+	.  error
+
+	semi  goto 386
+
+
+state 366
+	simplerule : RULE optFair optPriority optString optCondition $$29 optdecls optstmts . endrule  (225)
+
+	END  shift 387
+	ENDRULE  shift 388
+	.  error
+
+	endrule  goto 389
+
+
+state 367
+	optBy : BY . expr  (142)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 390
+	designator  goto 61
+
+
+state 368
+	quantifier : ID ASSIGN expr TO expr optBy .  (137)
+
+	.  reduce 137
+
+
+state 369
+	aliasstmt : ALIAS $$28 aliases . do optstmts endalias  (203)
+	aliases : aliases . semi alias  (206)
+	aliases : aliases . semi  (207)
+	aliases : aliases . ',' alias  (208)
+
+	DO  shift 194
+	':'  shift 195
+	';'  shift 25
+	','  shift 198
+	.  error
+
+	semi  goto 199
+	do  goto 391
+
+
+state 370
+	ifstmt : IF expr THEN . optstmts optElses endif  (167)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ALIAS  reduce 144
+	IF  reduce 144
+	ELSIF  reduce 146
+	ELSE  reduce 146
+	ENDIF  reduce 146
+	SWITCH  reduce 144
+	FOR  reduce 144
+	WHILE  reduce 144
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 392
+	$$22  goto 241
+
+
+state 371
+	switchstmt : SWITCH expr $$23 . $$24 optCases optElse endswitch  (180)
+	$$24 : .  (179)
+
+	.  reduce 179
+
+	$$24  goto 393
+
+
+state 372
+	forstmt : FOR $$25 quantifiers . do optstmts endfor  (187)
+
+	DO  shift 194
+	':'  shift 195
+	.  error
+
+	do  goto 394
+
+
+state 373
+	whilestmt : WHILE expr do . optstmts endwhile  (175)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ALIAS  reduce 144
+	IF  reduce 144
+	SWITCH  reduce 144
+	FOR  reduce 144
+	WHILE  reduce 144
+	ENDWHILE  reduce 146
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 395
+	$$22  goto 241
+
+
+state 374
+	assertstmt : ASSERT expr optString .  (199)
+
+	.  reduce 199
+
+
+state 375
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	multisetremovestmt : MULTISETREMOVE '(' expr . ',' designator ')'  (197)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	','  shift 396
+	.  error
+
+
+state 376
+	multisetremovestmt : MULTISETREMOVEPRED '(' $$26 . ID ':' designator $$27 ',' expr ')'  (196)
+
+	ID  shift 397
+	.  error
+
+
+state 377
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	multisetaddstmt : MULTISETADD '(' designator . ',' designator ')'  (193)
+
+	','  shift 398
+	'['  shift 119
+	'.'  shift 120
+	.  error
+
+
+state 378
+	assignment : designator ASSIGN UNDEFINED .  (166)
+
+	.  reduce 166
+
+
+state 379
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	assignment : designator ASSIGN expr .  (165)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	END  reduce 165
+	ENDPROCEDURE  reduce 165
+	ENDFUNCTION  reduce 165
+	ENDRULE  reduce 165
+	ENDALIAS  reduce 165
+	ELSIF  reduce 165
+	ELSE  reduce 165
+	ENDIF  reduce 165
+	CASE  reduce 165
+	ENDSWITCH  reduce 165
+	ENDFOR  reduce 165
+	ENDWHILE  reduce 165
+	ENDSTARTSTATE  reduce 165
+	';'  reduce 165
+
+
+state 380
+	stmts : stmts semi stmt .  (147)
+
+	.  reduce 147
+
+
+state 381
+	choose : CHOOSE $$32 ID ':' designator $$33 do rules . endchoose  (244)
+
+	END  shift 399
+	ENDCHOOSE  shift 400
+	.  error
+
+	endchoose  goto 401
+
+
+state 382
+	expr : MULTISETCOUNT '(' $$20 ID ':' designator ',' $$21 . expr ')'  (125)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 402
+	designator  goto 61
+
+
+state 383
+	fieldtail : ':' typeExpr .  (44)
+
+	.  reduce 44
+
+
+state 384
+	fieldtail : ',' ID . fieldtail  (43)
+
+	':'  shift 358
+	','  shift 359
+	.  error
+
+	fieldtail  goto 403
+
+
+state 385
+	procDecl : PROCEDURE ID $$9 '(' optformals ')' semi $$10 optdecls $$11 . optstmts endprocedure semi  (66)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ENDPROCEDURE  reduce 146
+	ALIAS  reduce 144
+	IF  reduce 144
+	SWITCH  reduce 144
+	FOR  reduce 144
+	WHILE  reduce 144
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 404
+	$$22  goto 241
+
+
+state 386
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 ':' typeExpr semi . $$14 optdecls $$15 optstmts endfunction semi  (73)
+	$$14 : .  (71)
+
+	.  reduce 71
+
+	$$14  goto 405
+
+
+state 387
+	endrule : END .  (229)
+
+	.  reduce 229
+
+
+state 388
+	endrule : ENDRULE .  (228)
+
+	.  reduce 228
+
+
+state 389
+	simplerule : RULE optFair optPriority optString optCondition $$29 optdecls optstmts endrule .  (225)
+
+	.  reduce 225
+
+
+state 390
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	optBy : BY expr .  (142)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	DO  reduce 142
+	':'  reduce 142
+	';'  reduce 142
+
+
+state 391
+	aliasstmt : ALIAS $$28 aliases do . optstmts endalias  (203)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ALIAS  reduce 144
+	ENDALIAS  reduce 146
+	IF  reduce 144
+	SWITCH  reduce 144
+	FOR  reduce 144
+	WHILE  reduce 144
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 406
+	$$22  goto 241
+
+
+state 392
+	ifstmt : IF expr THEN optstmts . optElses endif  (167)
+	optElse : .  (174)
+
+	ELSIF  shift 407
+	ELSE  shift 408
+	END  reduce 174
+	ENDIF  reduce 174
+
+	optElse  goto 409
+	optElses  goto 410
+	elsif  goto 411
+
+
+state 393
+	switchstmt : SWITCH expr $$23 $$24 . optCases optElse endswitch  (180)
+	optCases : .  (184)
+
+	.  reduce 184
+
+	optCases  goto 412
+
+
+state 394
+	forstmt : FOR $$25 quantifiers do . optstmts endfor  (187)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ALIAS  reduce 144
+	IF  reduce 144
+	SWITCH  reduce 144
+	FOR  reduce 144
+	ENDFOR  reduce 146
+	WHILE  reduce 144
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 413
+	$$22  goto 241
+
+
+state 395
+	whilestmt : WHILE expr do optstmts . endwhile  (175)
+
+	END  shift 414
+	ENDWHILE  shift 415
+	.  error
+
+	endwhile  goto 416
+
+
+state 396
+	multisetremovestmt : MULTISETREMOVE '(' expr ',' . designator ')'  (197)
+
+	ID  shift 150
+	.  error
+
+	designator  goto 417
+
+
+state 397
+	multisetremovestmt : MULTISETREMOVEPRED '(' $$26 ID . ':' designator $$27 ',' expr ')'  (196)
+
+	':'  shift 418
+	.  error
+
+
+state 398
+	multisetaddstmt : MULTISETADD '(' designator ',' . designator ')'  (193)
+
+	ID  shift 150
+	.  error
+
+	designator  goto 419
+
+
+state 399
+	endchoose : END .  (248)
+
+	.  reduce 248
+
+
+state 400
+	endchoose : ENDCHOOSE .  (247)
+
+	.  reduce 247
+
+
+state 401
+	choose : CHOOSE $$32 ID ':' designator $$33 do rules endchoose .  (244)
+
+	.  reduce 244
+
+
+state 402
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	expr : MULTISETCOUNT '(' $$20 ID ':' designator ',' $$21 expr . ')'  (125)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	')'  shift 420
+	.  error
+
+
+state 403
+	fieldtail : ',' ID fieldtail .  (43)
+
+	.  reduce 43
+
+
+state 404
+	procDecl : PROCEDURE ID $$9 '(' optformals ')' semi $$10 optdecls $$11 optstmts . endprocedure semi  (66)
+
+	END  shift 421
+	ENDPROCEDURE  shift 422
+	.  error
+
+	endprocedure  goto 423
+
+
+state 405
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 ':' typeExpr semi $$14 . optdecls $$15 optstmts endfunction semi  (73)
+	decls : .  (6)
+	optdecls : .  (90)
+
+	END  reduce 90
+	ENDFUNCTION  reduce 90
+	ALIAS  reduce 90
+	IF  reduce 90
+	SWITCH  reduce 90
+	FOR  reduce 90
+	WHILE  reduce 90
+	RETURN  reduce 90
+	bEGIN  reduce 6
+	CLEAR  reduce 90
+	ERROR  reduce 90
+	ASSERT  reduce 90
+	PUT  reduce 90
+	CONST  reduce 6
+	TYPE  reduce 6
+	VAR  reduce 6
+	ID  reduce 90
+	UNDEFINE  reduce 90
+	MULTISETREMOVE  reduce 90
+	MULTISETREMOVEPRED  reduce 90
+	MULTISETADD  reduce 90
+
+	decls  goto 201
+	optdecls  goto 424
+
+
+state 406
+	aliasstmt : ALIAS $$28 aliases do optstmts . endalias  (203)
+
+	END  shift 274
+	ENDALIAS  shift 275
+	.  error
+
+	endalias  goto 425
+
+
+state 407
+	elsif : ELSIF . expr THEN optstmts  (172)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 426
+	designator  goto 61
+
+
+state 408
+	optElse : ELSE . optstmts  (173)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ALIAS  reduce 144
+	IF  reduce 144
+	ENDIF  reduce 146
+	SWITCH  reduce 144
+	ENDSWITCH  reduce 146
+	FOR  reduce 144
+	WHILE  reduce 144
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 427
+	$$22  goto 241
+
+
+state 409
+	optElses : optElse .  (171)
+
+	.  reduce 171
+
+
+state 410
+	ifstmt : IF expr THEN optstmts optElses . endif  (167)
+
+	END  shift 428
+	ENDIF  shift 429
+	.  error
+
+	endif  goto 430
+
+
+state 411
+	optElses : elsif . optElses  (170)
+	optElse : .  (174)
+
+	ELSIF  shift 407
+	ELSE  shift 408
+	END  reduce 174
+	ENDIF  reduce 174
+
+	optElse  goto 409
+	optElses  goto 431
+	elsif  goto 411
+
+
+state 412
+	switchstmt : SWITCH expr $$23 $$24 optCases . optElse endswitch  (180)
+	optCases : optCases . case  (183)
+	optElse : .  (174)
+
+	ELSE  shift 408
+	CASE  shift 432
+	END  reduce 174
+	ENDSWITCH  reduce 174
+
+	optElse  goto 433
+	case  goto 434
+
+
+state 413
+	forstmt : FOR $$25 quantifiers do optstmts . endfor  (187)
+
+	END  shift 435
+	ENDFOR  shift 436
+	.  error
+
+	endfor  goto 437
+
+
+state 414
+	endwhile : END .  (177)
+
+	.  reduce 177
+
+
+state 415
+	endwhile : ENDWHILE .  (176)
+
+	.  reduce 176
+
+
+state 416
+	whilestmt : WHILE expr do optstmts endwhile .  (175)
+
+	.  reduce 175
+
+
+state 417
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	multisetremovestmt : MULTISETREMOVE '(' expr ',' designator . ')'  (197)
+
+	'['  shift 119
+	')'  shift 438
+	'.'  shift 120
+	.  error
+
+
+state 418
+	multisetremovestmt : MULTISETREMOVEPRED '(' $$26 ID ':' . designator $$27 ',' expr ')'  (196)
+
+	ID  shift 150
+	.  error
+
+	designator  goto 439
+
+
+state 419
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	multisetaddstmt : MULTISETADD '(' designator ',' designator . ')'  (193)
+
+	'['  shift 119
+	')'  shift 440
+	'.'  shift 120
+	.  error
+
+
+state 420
+	expr : MULTISETCOUNT '(' $$20 ID ':' designator ',' $$21 expr ')' .  (125)
+
+	.  reduce 125
+
+
+state 421
+	endprocedure : END .  (68)
+
+	.  reduce 68
+
+
+state 422
+	endprocedure : ENDPROCEDURE .  (67)
+
+	.  reduce 67
+
+
+state 423
+	procDecl : PROCEDURE ID $$9 '(' optformals ')' semi $$10 optdecls $$11 optstmts endprocedure . semi  (66)
+
+	';'  shift 25
+	.  error
+
+	semi  goto 441
+
+
+state 424
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 ':' typeExpr semi $$14 optdecls . $$15 optstmts endfunction semi  (73)
+	$$15 : .  (72)
+
+	.  reduce 72
+
+	$$15  goto 442
+
+
+state 425
+	aliasstmt : ALIAS $$28 aliases do optstmts endalias .  (203)
+
+	.  reduce 203
+
+
+state 426
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	elsif : ELSIF expr . THEN optstmts  (172)
+
+	THEN  shift 443
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	.  error
+
+
+state 427
+	optElse : ELSE optstmts .  (173)
+
+	.  reduce 173
+
+
+state 428
+	endif : END .  (169)
+
+	.  reduce 169
+
+
+state 429
+	endif : ENDIF .  (168)
+
+	.  reduce 168
+
+
+state 430
+	ifstmt : IF expr THEN optstmts optElses endif .  (167)
+
+	.  reduce 167
+
+
+state 431
+	optElses : elsif optElses .  (170)
+
+	.  reduce 170
+
+
+state 432
+	case : CASE . exprlist ':' optstmts  (185)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	UNDEFINED  shift 146
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 148
+	designator  goto 61
+	exprlist  goto 444
+
+
+state 433
+	switchstmt : SWITCH expr $$23 $$24 optCases optElse . endswitch  (180)
+
+	END  shift 445
+	ENDSWITCH  shift 446
+	.  error
+
+	endswitch  goto 447
+
+
+state 434
+	optCases : optCases case .  (183)
+
+	.  reduce 183
+
+
+state 435
+	endfor : END .  (189)
+
+	.  reduce 189
+
+
+state 436
+	endfor : ENDFOR .  (188)
+
+	.  reduce 188
+
+
+state 437
+	forstmt : FOR $$25 quantifiers do optstmts endfor .  (187)
+
+	.  reduce 187
+
+
+state 438
+	multisetremovestmt : MULTISETREMOVE '(' expr ',' designator ')' .  (197)
+
+	.  reduce 197
+
+
+state 439
+	designator : designator . '[' expr ']'  (92)
+	designator : designator . '.' ID  (93)
+	multisetremovestmt : MULTISETREMOVEPRED '(' $$26 ID ':' designator . $$27 ',' expr ')'  (196)
+	$$27 : .  (195)
+
+	'['  shift 119
+	'.'  shift 120
+	','  reduce 195
+
+	$$27  goto 448
+
+
+state 440
+	multisetaddstmt : MULTISETADD '(' designator ',' designator ')' .  (193)
+
+	.  reduce 193
+
+
+state 441
+	procDecl : PROCEDURE ID $$9 '(' optformals ')' semi $$10 optdecls $$11 optstmts endprocedure semi .  (66)
+
+	.  reduce 66
+
+
+state 442
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 ':' typeExpr semi $$14 optdecls $$15 . optstmts endfunction semi  (73)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ENDFUNCTION  reduce 146
+	ALIAS  reduce 144
+	IF  reduce 144
+	SWITCH  reduce 144
+	FOR  reduce 144
+	WHILE  reduce 144
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 449
+	$$22  goto 241
+
+
+state 443
+	elsif : ELSIF expr THEN . optstmts  (172)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ALIAS  reduce 144
+	IF  reduce 144
+	ELSIF  reduce 146
+	ELSE  reduce 146
+	ENDIF  reduce 146
+	SWITCH  reduce 144
+	FOR  reduce 144
+	WHILE  reduce 144
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 450
+	$$22  goto 241
+
+
+state 444
+	exprlist : exprlist . ',' expr  (132)
+	exprlist : exprlist . ',' UNDEFINED  (134)
+	case : CASE exprlist . ':' optstmts  (185)
+
+	':'  shift 451
+	','  shift 206
+	.  error
+
+
+state 445
+	endswitch : END .  (182)
+
+	.  reduce 182
+
+
+state 446
+	endswitch : ENDSWITCH .  (181)
+
+	.  reduce 181
+
+
+state 447
+	switchstmt : SWITCH expr $$23 $$24 optCases optElse endswitch .  (180)
+
+	.  reduce 180
+
+
+state 448
+	multisetremovestmt : MULTISETREMOVEPRED '(' $$26 ID ':' designator $$27 . ',' expr ')'  (196)
+
+	','  shift 452
+	.  error
+
+
+state 449
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 ':' typeExpr semi $$14 optdecls $$15 optstmts . endfunction semi  (73)
+
+	END  shift 453
+	ENDFUNCTION  shift 454
+	.  error
+
+	endfunction  goto 455
+
+
+state 450
+	elsif : ELSIF expr THEN optstmts .  (172)
+
+	.  reduce 172
+
+
+state 451
+	case : CASE exprlist ':' . optstmts  (185)
+	$$22 : .  (144)
+	optstmts : .  (146)
+
+	END  reduce 146
+	ALIAS  reduce 144
+	IF  reduce 144
+	ELSE  reduce 146
+	SWITCH  reduce 144
+	CASE  reduce 146
+	ENDSWITCH  reduce 146
+	FOR  reduce 144
+	WHILE  reduce 144
+	RETURN  reduce 144
+	CLEAR  reduce 144
+	ERROR  reduce 144
+	ASSERT  reduce 144
+	PUT  reduce 144
+	ID  reduce 144
+	UNDEFINE  reduce 144
+	MULTISETREMOVE  reduce 144
+	MULTISETREMOVEPRED  reduce 144
+	MULTISETADD  reduce 144
+
+	optstmts  goto 456
+	$$22  goto 241
+
+
+state 452
+	multisetremovestmt : MULTISETREMOVEPRED '(' $$26 ID ':' designator $$27 ',' . expr ')'  (196)
+
+	error  shift 48
+	FORALL  shift 49
+	EXISTS  shift 50
+	ID  shift 51
+	INTCONST  shift 52
+	ISMEMBER  shift 53
+	ISUNDEFINED  shift 54
+	MULTISETCOUNT  shift 55
+	NOT  shift 56
+	'+'  shift 57
+	'-'  shift 58
+	'('  shift 59
+	.  error
+
+	expr  goto 457
+	designator  goto 61
+
+
+state 453
+	endfunction : END .  (75)
+
+	.  reduce 75
+
+
+state 454
+	endfunction : ENDFUNCTION .  (74)
+
+	.  reduce 74
+
+
+state 455
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 ':' typeExpr semi $$14 optdecls $$15 optstmts endfunction . semi  (73)
+
+	';'  shift 25
+	.  error
+
+	semi  goto 458
+
+
+state 456
+	case : CASE exprlist ':' optstmts .  (185)
+
+	.  reduce 185
+
+
+state 457
+	expr : expr . '?' expr ':' expr  (94)
+	expr : expr . IMPLIES expr  (95)
+	expr : expr . '|' expr  (96)
+	expr : expr . '&' expr  (97)
+	expr : expr . '<' expr  (99)
+	expr : expr . LEQ expr  (100)
+	expr : expr . '>' expr  (101)
+	expr : expr . GEQ expr  (102)
+	expr : expr . '=' expr  (103)
+	expr : expr . NEQ expr  (104)
+	expr : expr . '+' expr  (105)
+	expr : expr . '-' expr  (106)
+	expr : expr . '*' expr  (109)
+	expr : expr . '/' expr  (110)
+	expr : expr . '%' expr  (111)
+	multisetremovestmt : MULTISETREMOVEPRED '(' $$26 ID ':' designator $$27 ',' expr . ')'  (196)
+
+	'?'  shift 104
+	IMPLIES  shift 105
+	'|'  shift 106
+	'&'  shift 107
+	'<'  shift 108
+	LEQ  shift 109
+	'='  shift 110
+	NEQ  shift 111
+	GEQ  shift 112
+	'>'  shift 113
+	'+'  shift 114
+	'-'  shift 115
+	'*'  shift 116
+	'/'  shift 117
+	'%'  shift 118
+	')'  shift 459
+	.  error
+
+
+state 458
+	funcDecl : FUNCTION ID $$12 '(' optformals ')' $$13 ':' typeExpr semi $$14 optdecls $$15 optstmts endfunction semi .  (73)
+
+	.  reduce 73
+
+
+state 459
+	multisetremovestmt : MULTISETREMOVEPRED '(' $$26 ID ':' designator $$27 ',' expr ')' .  (196)
+
+	.  reduce 196
+
+
+Rules never reduced:
+	onerule : rule semi  (245)
+	onerule : rule  (246)
+	fairness : FAIRNESS optString expr  (254)
+	liveness : liveU  (255)
+	liveness : liveE  (256)
+	liveness : liveAE  (257)
+	liveness : liveEA  (258)
+	liveness : liveAIU  (259)
+	liveness : liveAIE  (260)
+	liveU : LIVENESS optString expr UNTIL expr  (261)
+	liveE : LIVENESS optString EVENTUALLY expr  (262)
+	liveEA : LIVENESS optString EVENTUALLY ALWAYS expr  (263)
+	liveAE : LIVENESS optString ALWAYS EVENTUALLY expr  (264)
+	liveAIE : LIVENESS optString ALWAYS expr IMPLIES EVENTUALLY expr  (265)
+	liveAIU : LIVENESS optString ALWAYS expr IMPLIES expr UNTIL expr  (266)
+
+
+State 85 contains 1 shift/reduce conflict.
+State 190 contains 1 shift/reduce conflict.
+
+
+111 terminals, 140 nonterminals
+267 grammar rules, 460 states

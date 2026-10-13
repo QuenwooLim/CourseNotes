@@ -1,0 +1,269 @@
+		    Notes on Conversion of Murphi 1.x code 
+	      and the New Features of Murphi 2.x and Murphi 3.x
+
+	                     Release 3.1
+
+			     Ralph Melton
+		       (updated by C. Norris Ip)
+ 		            November  1993
+
+Contents: 
+1. Changes to Old Features
+  1.1 Elements of enumerations
+  1.2 Procedure Headings and Parameters
+  1.3 Code body for each Procedure, Function, rule, and startstate
+  1.4 Functions
+  1.5 The 'Abbrev' keyword
+  1.6 Run-time Range Checking
+  1.7 traceuntil
+2. New Features
+  2.1 Introduction of 'End' as Synonym
+  2.2 local declarations
+  2.3 Multiple declarations at the same line
+  2.4 While Statement
+  2.5 C-style Condition Expression
+  2.6 Optional ==> 
+  2.7 Put Statement
+  2.8 Functions with semantics as in C
+  2.9 Multiple Startstates
+3. Final Words
+	  
+
+1. Changes to Old Features
+
+There are some things that will prevent Murphi 1.x code from working
+under Murphi 2:
+
+  1) Elements of enumerations are now separated by commas.
+  2) the format for procedure headings and parameters has changed.
+     I discuss the specifics of the changes below.
+  3) The code body for each Procedure, Function, rule, and startstate
+     must now be enclosed in Begin and End.
+  4) Functions have changed.
+  5) The 'Abbrev' keyword has been replaced by 'Alias'.
+  6) Murphi 2 has run-time range checking for subrange integer 
+     assignment, whereas Murphi 1.x uses MOD <size-of-subrange>.
+  7) Murphi 2 has no traceuntil feature.
+
+At least some of these changes have been put into place to add power
+to the system.  But to make Murphi 1.x code compatible with Murphi 2
+as quickly as possible, do the following:
+
+1.1 Elements of enumerations
+
+Elements of enumerations are now separated by commas. There are
+recognized and flagged as errors by the compiler, but you'll still
+need to go through and change each one by hand.
+
+1.2 Procedure Headings and Parameters
+
+The format for procedure headings and parameters has changed.
+Changes are recognized and flagged as errors by the compiler, 
+but you'll still need to go through and change each one by hand.
+
+   Under Murphi 1, a procedure looked like this:
+   Procedure foo (bar : boolean, baz : boolean)
+     ... code ...
+   end;
+
+   Under Murphi 2, the same procedure heading might look like this:
+   Procedure foo ( Var bar : boolean; baz : boolean);
+   Begin
+     ... code ...
+   End;
+
+These are the differences in the procedure heading.  Note that
+many of these apply to functions as well.
+
+  a) The procedure heading now ends with a semicolon.
+  b) The formal parameters are now separated by semicolons
+     instead of commas.
+  c) Each parameter can declared as Var.
+     A Var parameter is just like a Var parameter in Pascal.
+     Any parameter not declared as Var is also passed by 
+     reference, but it is a compile-time error to modify
+     it within the procedure.
+     I.e.
+    1) Var parameters is pass-by-reference
+    2) Non-Var parameters is pass-by-reference,
+       but it cannot be modified.
+     We did it this way to enable future developments which
+     may take advantage of 
+    1) a parameter being pass-by-reference.
+    2) a parameter being constant through out
+       the procedure or function.
+     Note that although there is no keyword to Non-Var
+     parameter it is not actually call-by-value.
+
+In particular, you'll have to _decide_ whether each parameter
+should be a Non-Var parameter or a Var parameter, because each
+type of parameter allows you to do things that are not legal
+to do with the other type.  In general, parameters should be
+Const unless the procedure changes the parameter, in which case
+they should be Var.
+	
+1.3 Code body for each Procedure, Function, rule, and startstate
+	
+The code body for each Procedure, Function, rule, and startstate
+must now be enclosed in Begin and End.  Some problems are not
+recognized well by the compiler, unfortunately.  If you get
+mysterious syntax errors, check to make sure that you have
+enclosed each procedure, function, rule body, and startstate
+with Begin and End.
+
+1.4 Functions
+
+Functions have changed. When you're fixing up things in 1.3, add a
+Return before the expression for each function.
+
+1.5 The 'Abbrev' keyword
+
+The 'Abbrev' keyword has been replaced by 'Alias'.
+Using 
+	M-% "Abbrev" "Alias" 
+in emacs should do it.
+
+1.6 Run-time Range Checking
+
+The error-checking that Murphi 2 does is a bit more stringent; in
+particular, it is an error to assign a value to a variable that is
+out of range for that type.
+	
+This means that 
+	
+  a) the trick that the Murphi 1 manual mentions of
+     getting a modulo operator by letting variables wrap
+     around no longer works. 
+	
+  b) code that initializes an array of variables
+     of type 1..4 to all be 0 will fail badly.
+	
+Also, it is illegal to read the value of a variable until after
+you've assigned to it. One consequence of this is that if a
+startstate neglects to assign a value to every global variable,
+the code that packs the world into a state will generate a
+runtime error and trace.
+
+1.7 Traceuntil
+
+In Murphi 1.5, user can use "traceuntil <expr> ;" to shorten the
+error trace that is printed out.  Since this feature is not
+necessary, it has been removed in Murphi 2.
+	
+
+2. New Features
+
+Again, since I haven't used many of these features myself, I might be
+forgetting some of them.  In this case, they may stay buried until
+someone stumbles upon one of them and gets delighted thereby.
+
+2.1 Introduction of 'End' as Synonym
+
+The keyword 'End' has been added as Synonym for every type
+of "end*".
+
+2.1 local declarations
+
+Procedures, Functions, rules, and startstates can have local
+declarations.  For each of these, the syntax is to add
+declarations that are just like global declarations
+immediately before the Begin of the thing.
+Two examples:
+
+   Procedure foo(bar, baz:boolean);
+   Var glorp: 1..3;
+   Begin
+     ... Code ...
+   End;
+
+   Rule "Do what I mean"
+     !Hell.FrozenOver
+   ==>
+   Var mumble, frotz: my_favorite_type;
+   Begin
+     ... code ...
+   End;
+	
+2.3 Multiple declarations at the same line
+
+You can declare multiple variables of the same type on one line
+by separating them with commas.  You can do the same with formal
+parameters if they have the same type and the same Var-ness
+(Var or Non-Var).  See the above code snippet for examples.
+
+2.4 While Statement
+
+Murphi now has a While statement:
+   While foo <> bar Do
+     ... code ...
+   End;
+
+As implemented, if you don't break out of the while loop within
+a certain number of cycles (default as 1000, but it is
+user-settable) it's a run-time error.  The number of cycles
+can be set by the -loop flag at run time.
+	
+2.5 C-style Condition Expression
+
+Murphi now has a conditional expression just like C's.  The first
+argument must be a boolean expression.
+   A := b = c ? d : f;
+
+2.6 Optional ==> 
+
+If you leave out the expression and the ==> on a rule, the rule is
+always enabled.
+
+   Rule "Example that's always enabled."
+   Var my_var: boolean;
+   Begin
+     ... code ...
+   End;
+
+2.7 Put Statement
+
+Murphi 2 now has Put <string> and Put <expr> statements for output;
+these get executed every time that code gets run.  These are just
+handed to printf, so you need to provide your own '\n', or it may
+not show up on screen.
+
+2.8 Functions with semantics as in C
+
+Murphi 2's functions are actual statement blocks; they return a
+value with 'Return <expr>'.  This gets translated directly
+into a C return statement, so understand it in terms of those
+semantics.  You can also use 'Return' without a type to exit
+from Procedures, Rules, or startstates.
+
+This change allows functions to have side effects.  (Note: a
+Put statement does not count as a side effect. ) However, it is a
+compile-time error to use a function with side effects in the condition
+for a rule, in an invariant, or in the Traceuntil.
+
+2.9 Multiple Startstates
+
+You can now have multiple startstates, and you can include
+startstates and invariants within Rulesets.  The semantics are that
+every possible execution path executes exactly one startstate at the
+beginning, and only rules thereafter.
+
+
+3. Final Words
+
+And at no extra cost: Here's a pattern-matching rule for make that
+turns murphi files into executable programs.  If you've moved the
+include files, the variable INCLUDEPATH should be set to the name of
+the directory where they are to be found.
+
+	%:  %.C 
+		$(CPLUSPLUS) -o $@ -g $< -I$(INCLUDEPATH)
+
+	%.C:	%.m
+		$(MURPHI) $<
+
+Also, if you add the following to your .emacs file, emacs will automatically
+open programs in indented-text-mode:
+
+	(setq auto-mode-alist (cons '("\\.m$" . indented-text-mode)
+        	                    auto-mode-alist))
+

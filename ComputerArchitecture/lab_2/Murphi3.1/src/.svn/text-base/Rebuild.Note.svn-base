@@ -1,0 +1,80 @@
+	   	        Rebuilding Murphi
+		
+		           Release 3.1
+
+		          C. Norris Ip
+   		            Feb  1995
+
+
+1) Introduction:
+
+    The source codes for the Murphi Compiler are included in the release.
+    This file describes how you can rebuild Murphi from the source code.
+
+    We have tried to use freely-available software to make it easy
+    to distribute and modify this system.  However, we have avoided
+    using gnu bison because of our confusion about whether programs
+    based on it inherit the "copyleft" by including the parser driver
+    file.  We don't want this, since our license is LESS restrictive
+    than gnu's in most cases.
+
+2) Lexer and Parser:
+
+    The Murphi source is supplied with the necessary lex.yy.c and y.tab.c
+    files.  If you want to change the lexer or parser, you will have to
+    recreate these. 
+
+    Since standard lex and yacc don't generate legal C++ code, we have
+    been using flex, available from the same places as gnu sources, and
+    Berkeley yacc, available by anonymous FTP as ~ftp/pub/byacc.tar.Z on
+    okeeffe.berkeley.edu.
+
+    We have avoided using bison because the parser driver infects 
+    everything that uses it with GNU licensing.  Since our license
+    is more liberal than a copyleft, we would like to avoid this.
+
+3) Makefile:
+
+    There are two makefiles "Makefile" and "Makefile.full".  
+
+	a) "Makefile" ignores the changes in "mu.y" and "mu.l",
+	   and compiles the Murphi Compiler using the existing
+	   "y.tab.c/h" and "lex.yy.c" files from "flex" and "byacc".
+
+	b) "Makefile.full" checks "mu.y" and "mu.l" and recompiles them
+	   if necessary.
+
+    If you don't not need to change mu.y and mu.l, you can use the file 
+    "Makefile".  However, if you have changed mu.y and mu.l, you have
+    to install "flex" and "byacc" and use the file "Makefile.full".
+
+4) Writing your own backend:
+
+    There are two code generation files "cpp_code.C" and "no_code.C".
+    Other files are for compiling the Murphi program into a parse tree.
+
+	a) cpp_code.C
+
+	   This is the current backend to generate c++ code for
+	   the Murphi program, which is in turn compiled into
+	   a verifier for the Murphi Program.
+
+	b) no_code.C
+
+	   To add a new back end, do the following steps:
+
+	   1) Copy no_code.C to be the name of your back end;
+	      I'll call it foo_code.C.
+
+	   2) Change the Makefile to use foo_code.o instead of cpp_code.o.
+
+	   3) Fill in the blank generate_code() and generate_decl() 
+	      functions in foo_code.C.
+
+	   For details see "Hacker.Manual1".
+
+5) Other Files and Directories:
+
+	a) Please see "Hacker.Manual1" at this directory
+	   for the structure of data and codes for the Murphi Compiler.
+

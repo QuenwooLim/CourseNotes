@@ -1,0 +1,21 @@
+===========================================================================
+This directory contains examples in Murphi 3.0 for 
+
+	Random Practical Examples
+
+Please mail bug reports, questions, suggestions, etc. to:
+
+	"murphi@verify.stanford.edu".
+
+===========================================================================
+There are 8 files in this directory:
+
+Makefile	: make file to generate the C++ verifier
+Readme		: this file
+abp.m		: alternating bit protocol
+arbiter.m	: hardware arbiter
+cache3.m        : cache coherence protocol
+newcache3.m	: cache coherence protocol
+dp4.m		: dining philosophers I
+dpnew.m		: dining philosophers II
+===========================================================================

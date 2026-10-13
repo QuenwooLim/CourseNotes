@@ -1,0 +1,20 @@
+===========================================================================
+This directory contains examples in Murphi 3.0 for
+
+	Mutual Exclusion Algorithms
+
+Please mail bug reports, questions, suggestions, etc. to:
+
+	"murphi@verify.stanford.edu".
+
+===========================================================================
+There are 6 files in this directory:
+
+Makefile	: make file to generate the C++ verifier
+Readme		: this file
+mcslock1.m	: MCS distributed list-based queuing lock I
+mcslock2.m	: MCS distributed list-based queuing lock II
+2_peterson.m	: Peterson's algorithm (2 processes)
+n_peterson.m	: Peterson's algorithm (n processes)
+dek.m		: Dekker's algorithm (2 processes)
+===========================================================================

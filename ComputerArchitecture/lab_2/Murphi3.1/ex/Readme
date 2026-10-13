@@ -1,0 +1,13 @@
+===========================================================================
+This directory contains lots of example protocols in Murphi:
+
+dash		: the DASH multiprocessor protocols
+multiset+sym    : examples using both scalarsets and multisets
+mux             : mutual exclusion algorithms
+others          : other practical systems
+sci             : typical set cache coherence protocol of the Scalable 
+                  Coherent Interface (SCI), IEEE Std 1596-1992
+secur           : security protocols
+sym             : examples using scalarsets
+toy		: toy examples
+===========================================================================
