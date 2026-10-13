@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}编辑司机信息 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-edit me-2 text-primary"></i>编辑司机信息
+                </h5>
+                <a href="/driver/list/" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-arrow-left me-1"></i> 返回列表
+                </a>
+            </div>
+            
+            <div class="card-body p-4">
+                <!-- 司机基本信息展示 -->
+                <div class="alert alert-light border mb-4">
+                    <h6 class="alert-heading fw-bold text-primary mb-3">
+                        <i class="fa fa-user me-2"></i>司机基本信息
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <strong>工号：</strong><span class="text-muted">{{ driver.driver_id }}</span>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>姓名：</strong><span class="text-dark">{{ driver.name }}</span>
+                        </div>
+                        <div class="col-12">
+                            <strong>入职日期：</strong><span class="text-muted">{{ driver.hire_date }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 编辑表单 -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">驾照等级 <span class="text-danger">*</span></label>
+                        <select name="license_level" class="form-control form-control-lg" required>
+                            <option value="">-- 请选择驾照等级 --</option>
+                            <option value="A1" {% if driver.license_level == 'A1' %}selected{% endif %}>A1 - 大型客车</option>
+                            <option value="A2" {% if driver.license_level == 'A2' %}selected{% endif %}>A2 - 牵引车</option>
+                            <option value="A3" {% if driver.license_level == 'A3' %}selected{% endif %}>A3 - 城市公交车</option>
+                            <option value="B1" {% if driver.license_level == 'B1' %}selected{% endif %}>B1 - 中型客车</option>
+                            <option value="B2" {% if driver.license_level == 'B2' %}selected{% endif %}>B2 - 大型货车</option>
+                            <option value="C1" {% if driver.license_level == 'C1' %}selected{% endif %}>C1 - 小型汽车</option>
+                            <option value="C2" {% if driver.license_level == 'C2' %}selected{% endif %}>C2 - 小型自动挡汽车</option>
+                        </select>
+                        <div class="form-text">
+                            <i class="fa fa-info-circle text-info me-1"></i>修改驾照等级会记录到审计日志
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">联系电话 <span class="text-danger">*</span></label>
+                        <input type="text" name="phone" class="form-control form-control-lg" 
+                               value="{{ driver.phone }}" required 
+                               placeholder="请输入11位手机号码"
+                               pattern="^1[3-9]\d{9}$"
+                               title="请输入正确的手机号码">
+                        <div class="form-text">格式：1开头的11位数字</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">归属车队 <span class="text-danger">*</span></label>
+                        <select name="fleet_id" class="form-control form-control-lg" required>
+                            <option value="">-- 请选择车队 --</option>
+                            {% for fleet in fleets %}
+                            <option value="{{ fleet.fleet_id }}" 
+                                    {% if driver.fleet_id == fleet.fleet_id %}selected{% endif %}>
+                                {{ fleet.fleet_name }} (车队ID: {{ fleet.fleet_id }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">可以将司机调配到不同车队</div>
+                    </div>
+
+                    <div class="alert alert-warning border-warning mt-4" role="alert">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        <strong>注意：</strong>修改驾照等级将触发审计日志记录，可在审计日志中查看变更历史。
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                            <i class="fa fa-save me-1"></i> 保存修改
+                        </button>
+                        <a href="/driver/list/" class="btn btn-outline-secondary">
+                            <i class="fa fa-times me-1"></i> 取消
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

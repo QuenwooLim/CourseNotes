@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}全系统实时监控{% endblock %}
+
+{% block extra_css %}
+<style>
+    .monitor-card {
+        transition: transform 0.3s;
+        border: none;
+        border-radius: 1px; /* Modern sharp look or rounded */
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .monitor-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .monitor-val {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .monitor-label {
+        font-size: 1rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .monitor-icon {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        font-size: 4rem;
+        opacity: 0.1;
+    }
+    .refresh-badge {
+        font-size: 0.8rem;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 0.5; }
+        50% { opacity: 1; }
+        100% { opacity: 0.5; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fa fa-television"></i> 全系统实时运行状态监控大屏</h2>
+    <span class="badge bg-success refresh-badge"><i class="fa fa-circle"></i> 实时运行中</span>
+</div>
+
+<!-- 1. 基础业务监控 -->
+<h5 class="mb-3 text-secondary border-bottom pb-2">基础业务监控</h5>
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card monitor-card h-100 shadow-sm border-start border-5 border-primary">
+            <div class="card-body">
+                <div class="monitor-val text-primary">{{ monitor.pending_orders }}</div>
+                <div class="monitor-label">待分配积压单量</div>
+                <i class="fa fa-inbox monitor-icon text-primary"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card monitor-card h-100 shadow-sm border-start border-5 border-success">
+            <div class="card-body">
+                <div class="monitor-val text-success">{{ monitor.today_weight }} <span class="fs-6">吨</span></div>
+                <div class="monitor-label">今日新增运单总重</div>
+                <i class="fa fa-balance-scale monitor-icon text-success"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card monitor-card h-100 shadow-sm border-start border-5 border-info">
+            <div class="card-body">
+                <div class="monitor-val text-info">{{ monitor.active_drivers }}</div>
+                <div class="monitor-label">活跃司机人数</div>
+                <i class="fa fa-users monitor-icon text-info"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. 资源状态监控 -->
+<h5 class="mb-3 text-secondary border-bottom pb-2">资源状态监控</h5>
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card monitor-card h-100 shadow-sm border-start border-5 border-warning">
+            <div class="card-body">
+                <div class="monitor-val text-warning">{{ monitor.truck_usage_rate }}</div>
+                <div class="monitor-label">车辆利用率</div>
+                <i class="fa fa-truck monitor-icon text-warning"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card monitor-card h-100 shadow-sm border-start border-5 border-danger">
+            <div class="card-body">
+                <div class="monitor-val text-danger">{{ monitor.truck_fault_rate }}</div>
+                <div class="monitor-label">车辆故障率</div>
+                <i class="fa fa-wrench monitor-icon text-danger"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card monitor-card h-100 shadow-sm border-start border-5 border-secondary">
+            <div class="card-body">
+                <div class="monitor-val text-secondary">{{ monitor.idle_heavy_trucks }}</div>
+                <div class="monitor-label">空闲重卡数量 (>10吨)</div>
+                <i class="fa fa-cube monitor-icon text-secondary"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. 风险与创新联动 -->
+<h5 class="mb-3 text-secondary border-bottom pb-2">风险预警 & 智能联动</h5>
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card monitor-card h-100 shadow-sm bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-3">未处理异常</h6>
+                <div class="display-4 fw-bold text-danger">{{ monitor.unhandled_exceptions }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card monitor-card h-100 shadow-sm bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-3">今日罚款 (元)</h6>
+                <div class="display-4 fw-bold text-secondary">¥{{ monitor.today_fines }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card monitor-card h-100 shadow-sm bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-3">智能派单成功率</h6>
+                <div class="display-4 fw-bold text-primary">{{ monitor.algo_adoption_rate }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card monitor-card h-100 shadow-sm bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-3">未来24h运力压力</h6>
+                <div class="display-4 fw-bold {% if monitor.future_pressure|slice:':-1'|add:'0' > 80 %}text-danger{% else %}text-success{% endif %}">
+                    {{ monitor.future_pressure }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-5">
+    <a href="{% url 'innovation_monitor' %}" class="btn btn-outline-primary"><i class="fa fa-refresh"></i> 立即刷新数据</a>
+</div>
+
+{% endblock %}

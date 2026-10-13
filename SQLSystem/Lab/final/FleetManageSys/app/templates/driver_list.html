@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}司机档案 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-id-card me-2 text-primary"></i>司机档案
+                </h5>
+                <a href="/driver/add/" class="btn btn-info btn-sm shadow-sm text-white">
+                    <i class="fa fa-user-plus me-1"></i> 录入司机
+                </a>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">工号</th>
+                                <th>姓名</th>
+                                <th>驾照等级</th>
+                                <th>联系电话</th>
+                                <th>入职日期</th>
+                                <th>所属车队</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for driver in drivers %}
+                            <tr>
+                                <td class="ps-4 text-muted">#{{ driver.driver_id }}</td>
+                                <td class="fw-bold text-dark">{{ driver.name }}</td>
+                                <td><span class="badge bg-secondary">{{ driver.license_level }}</span></td>
+                                <td>{{ driver.phone }}</td>
+                                <td>{{ driver.hire_date }}</td>
+                                <td>
+                                    {% if driver.fleet_id %}
+                                    <span class="badge bg-light text-dark border"><i class="fa fa-ship me-1"></i>{{ driver.fleet_id }}</span>
+                                    {% else %}
+                                    <span class="text-muted small">未分配</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/driver/edit/{{ driver.driver_id }}/" class="btn btn-outline-secondary btn-sm me-1" title="编辑司机">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <a href="/driver/performance/?driver_id={{ driver.driver_id }}" class="btn btn-outline-primary btn-sm" title="查看绩效">
+                                        <i class="fa fa-bar-chart"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <div class="mb-2"><i class="fa fa-users fa-3x opacity-25"></i></div>
+                                    暂无司机数据
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

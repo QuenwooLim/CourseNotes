@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>读者管理 - 图书借阅管理系统</title>
+    {% load static %}
+    <link href="{% static 'plugins/bootstrap-5.3.0-alpha1/scss/bootstrap.scss' %}" rel="stylesheet">
+    <link href="{% static 'plugins/font-awesome-4.7.0/font-awesome-4.7.0/css/font-awesome.min.css' %}" rel="stylesheet">
+    <style>
+        :root {
+            --gradient-primary-start: #7ecbff;
+            --gradient-primary-end: #5aa9f4;
+            --gradient-add-start: #7fe3ff;
+            --gradient-add-end: #57c6ff;
+            --gradient-edit-start: #a3d8ff;
+            --gradient-edit-end: #6cb5ff;
+            --gradient-delete-start: #ff9fa5;
+            --gradient-delete-end: #ff7684;
+            --card-radius: 16px;
+            --shadow-soft: 0 18px 35px rgba(122, 187, 255, 0.16);
+            --shadow-hover: 0 22px 45px rgba(90, 169, 244, 0.2);
+            --border-light: #e4f3ff;
+        }
+
+        body {
+            background: linear-gradient(180deg, #eef6ff 0%, #ffffff 65%);
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            color: #2a3a4d;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #8fd1ff 0%, #5aa9f4 100%);
+            padding: 1rem 0;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .navbar a {
+            color: rgba(255, 255, 255, 0.85) !important;
+            margin: 0 1rem;
+            font-weight: 500;
+        }
+
+        .navbar a:hover {
+            color: white !important;
+        }
+
+        .container {
+            max-width: 1100px;
+        }
+
+        .page-header {
+            background: white;
+            padding: 2.25rem;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .page-header h2 {
+            margin: 0;
+            color: #21496d;
+            font-size: 1.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .action-bar {
+            background: white;
+            padding: 1.25rem 2rem;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .action-bar span {
+            font-weight: 500;
+            color: #5f7a96;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+        }
+
+        .table {
+            margin: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, #8fd1ff 0%, #5aa9f4 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 1rem;
+        }
+
+        .table tbody tr {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background: #f4f9ff;
+        }
+
+        .table tbody tr:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+            background: #e6f3ff;
+        }
+
+        .table td {
+            vertical-align: middle;
+            padding: 1rem;
+            border-color: var(--border-light);
+            font-weight: 500;
+        }
+
+        .table td strong {
+            color: #21496d;
+        }
+
+        .table td code {
+            background: rgba(90, 169, 244, 0.12);
+            border-radius: 6px;
+            padding: 0.25rem 0.55rem;
+            font-weight: 600;
+        }
+
+        .sex-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 60px;
+            border-radius: 999px;
+            padding: 0.35rem 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+            gap: 0.4rem;
+        }
+
+        .sex-badge i {
+            font-size: 0.9rem;
+        }
+
+        .sex-badge--male {
+            background: linear-gradient(135deg, #9cd6ff 0%, #63b0ff 100%);
+            color: white;
+        }
+
+        .sex-badge--female {
+            background: linear-gradient(135deg, #ffd0d6 0%, #ffa1af 100%);
+            color: white;
+        }
+
+        .table-actions {
+            white-space: nowrap;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.45rem 1.15rem;
+            border-radius: 999px;
+            font-weight: 600;
+            color: white !important;
+            text-decoration: none;
+            border: none;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            letter-spacing: 0.01em;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.18);
+            filter: brightness(1.02);
+            color: white !important;
+        }
+
+        .btn-action--add {
+            background: linear-gradient(135deg, var(--gradient-add-start) 0%, var(--gradient-add-end) 100%);
+        }
+
+        .btn-action--edit {
+            background: linear-gradient(135deg, var(--gradient-edit-start) 0%, var(--gradient-edit-end) 100%);
+        }
+
+        .btn-action--delete {
+            background: linear-gradient(135deg, var(--gradient-delete-start) 0%, var(--gradient-delete-end) 100%);
+        }
+
+        @media (max-width: 768px) {
+            .page-header, .action-bar {
+                padding: 1.5rem;
+            }
+
+            .table thead {
+                display: none;
+            }
+
+            .table tbody tr {
+                display: block;
+                margin-bottom: 1.25rem;
+                border-radius: 12px;
+                border: 1px solid var(--border-light);
+            }
+
+            .table td {
+                display: flex;
+                justify-content: space-between;
+                padding: 0.85rem 1rem;
+            }
+
+            .table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #6f7d95;
+            }
+
+            .table-actions {
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fa fa-home"></i> 图书借阅管理系统</a>
+            <div>
+                <a href="/reader/list/"><i class="fa fa-users"></i> 读者管理</a>
+                <a href="/book/list/"><i class="fa fa-book"></i> 图书管理</a>
+                <a href="/record/list/"><i class="fa fa-exchange"></i> 借阅记录</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h2><i class="fa fa-users"></i> 读者管理</h2>
+        </div>
+
+        <!-- 消息提示 -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- 错误信息 -->
+        {% if error_message %}
+        <div class="alert alert-danger" role="alert">
+            <i class="fa fa-exclamation-triangle"></i> {{ error_message }}
+        </div>
+        {% endif %}
+
+        <!-- 操作栏 -->
+        <div class="action-bar">
+            <div>
+                <span class="text-muted">共 <strong>{{ total_count }}</strong> 条记录</span>
+            </div>
+            <div>
+                <a href="/reader/add/" class="btn-action btn-action--add">
+                    <i class="fa fa-plus"></i>
+                    <span>添加读者</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 读者表格 -->
+        {% if readers %}
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th><i class="fa fa-id-card"></i> 读者编号</th>
+                            <th><i class="fa fa-user"></i> 姓名</th>
+                            <th><i class="fa fa-venus-mars"></i> 性别</th>
+                            <th><i class="fa fa-building"></i> 部门</th>
+                            <th><i class="fa fa-cog"></i> 操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reader in readers %}
+                        <tr>
+                            <td data-label="读者编号"><code class="text-primary">{{ reader.reader_id }}</code></td>
+                            <td data-label="姓名"><strong>{{ reader.reader_name }}</strong></td>
+                            <td data-label="性别">
+                                {% if reader.reader_sex == '男' %}
+                                <span class="sex-badge sex-badge--male"><i class="fa fa-mars"></i>{{ reader.reader_sex }}</span>
+                                {% else %}
+                                <span class="sex-badge sex-badge--female"><i class="fa fa-venus"></i>{{ reader.reader_sex }}</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="部门">{{ reader.reader_department }}</td>
+                            <td class="table-actions" data-label="操作">
+                                <a href="/reader/edit/{{ reader.reader_id }}/" class="btn-action btn-action--edit">
+                                    <i class="fa fa-edit"></i>
+                                    <span>编辑</span>
+                                </a>
+                                <a href="/reader/delete/{{ reader.reader_id }}/" 
+                                   class="btn-action btn-action--delete"
+                                   onclick="return confirm('确定要删除该读者吗？')">
+                                    <i class="fa fa-trash"></i>
+                                    <span>删除</span>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fa fa-info-circle"></i> 暂无读者数据
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="{% static 'plugins/jquery-3.7.1.js' %}"></script>
+</body>
+</html>

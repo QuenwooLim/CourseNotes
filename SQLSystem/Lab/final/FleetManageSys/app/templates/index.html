@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧物流车队管理系统</title>
+    {% load static %}
+    <link href="{% static 'plugins/bootstrap-5.3.0-alpha1/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'plugins/font-awesome-4.7.0/font-awesome-4.7.0/css/font-awesome.min.css' %}" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --secondary-bg: #f8f9fa;
+        }
+        
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        /* Hero Header */
+        .hero-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .hero-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .stat-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Module Panels */
+        .module-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            height: 100%;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            border-left: 4px solid #1e3c72;
+            padding-left: 12px;
+            margin-bottom: 1.25rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 1. Quick Action Buttons */
+        .action-btn {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            color: #555;
+            text-decoration: none;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .action-btn:hover {
+            transform: translateX(5px);
+            border-color: #3498db;
+            color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+        }
+        .action-btn i.fa-angle-right {
+            margin-left: auto;
+            opacity: 0.5;
+        }
+        .action-icon-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 1.1rem;
+        }
+        
+        /* 2. Data Grid Items */
+        .data-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1.2rem 0.5rem;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            text-decoration: none;
+            color: #444;
+            transition: all 0.2s;
+            height: 100%;
+            border: 1px solid transparent;
+        }
+        .data-item:hover {
+            background-color: white;
+            border-color: #dee2e6;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transform: translateY(-3px);
+            color: #1e3c72;
+        }
+        .data-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.8rem;
+            color: #6c757d;
+            transition: color 0.2s;
+        }
+        .data-item:hover .data-icon {
+            color: #1e3c72;
+        }
+        .data-label {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* 3. Analytics List */
+        .report-item {
+            display: block;
+            padding: 1.2rem;
+            margin-bottom: 0.8rem;
+            background: linear-gradient(to right, #ffffff, #fcfcfc);
+            border-radius: 10px;
+            border-left: 3px solid #ddd;
+            text-decoration: none;
+            color: #555;
+            transition: all 0.2s;
+        }
+        .report-item:hover {
+            border-left-color: #3498db;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transform: scale(1.02);
+        }
+        .report-title {
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+            color: #333;
+        }
+        .report-desc {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* Utility Colors for Icons */
+        .c-blue { background-color: rgba(52, 152, 219, 0.1); color: #3498db; }
+        .c-green { background-color: rgba(46, 204, 113, 0.1); color: #2ecc71; }
+        .c-red { background-color: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+        .c-purple { background-color: rgba(155, 89, 182, 0.1); color: #9b59b6; }
+        .c-orange { background-color: rgba(230, 126, 34, 0.1); color: #e67e22; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="hero-header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h1 class="hero-title">
+                <i class="fa fa-cubes me-3"></i> 智慧物流车队管理系统
+            </h1>
+            <div class="stat-badge">
+                <i class="fa fa-circle text-success me-2" style="font-size: 8px; vertical-align: middle;"></i>
+                在线车队: <strong>{{ stats.fleet_count|default:"-" }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="container pb-5">
+        <div class="row g-4 align-items-stretch">
+            
+            <!-- LEFT: Quick Operations (25%) -->
+            <div class="col-md-3">
+                <div class="module-panel">
+                    <div class="panel-header">快捷操作</div>
+                    
+                    <a href="/order/assign/" class="action-btn">
+                        <div class="action-icon-box c-blue"><i class="fa fa-pencil-square-o"></i></div>
+                        <span>运单分配</span>
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                    
+                    <a href="/truck/add/" class="action-btn">
+                        <div class="action-icon-box c-green"><i class="fa fa-truck"></i></div>
+                        <span>录入车辆</span>
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                    
+                    <a href="/driver/add/" class="action-btn">
+                        <div class="action-icon-box c-purple"><i class="fa fa-id-badge"></i></div>
+                        <span>录入司机</span>
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                    
+                    <a href="/exception/add/" class="action-btn">
+                        <div class="action-icon-box c-red"><i class="fa fa-warning"></i></div>
+                        <span>录入异常</span>
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- CENTER: Data Management (50%) -->
+            <div class="col-md-6">
+                <div class="module-panel">
+                    <div class="panel-header">数据管理</div>
+                    <div class="row g-3 h-100 align-content-start">
+                        <!-- 8 Items Grid -->
+                        <div class="col-md-3 col-6">
+                            <a href="/center/list/" class="data-item">
+                                <i class="fa fa-building data-icon"></i>
+                                <span class="data-label">配送中心</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/fleet/list/" class="data-item">
+                                <i class="fa fa-ship data-icon"></i>
+                                <span class="data-label">车队管理</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/truck/list/" class="data-item">
+                                <i class="fa fa-truck data-icon"></i>
+                                <span class="data-label">车辆档案</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/driver/list/" class="data-item">
+                                <i class="fa fa-id-card data-icon"></i>
+                                <span class="data-label">司机档案</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/supervisor/list/" class="data-item">
+                                <i class="fa fa-user-secret data-icon"></i>
+                                <span class="data-label">调度主管</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/order/list/" class="data-item">
+                                <i class="fa fa-file-text-o data-icon"></i>
+                                <span class="data-label">物流运单</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/exception/list/" class="data-item">
+                                <i class="fa fa-exclamation-triangle data-icon"></i>
+                                <span class="data-label">异常监控</span>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <a href="/log/list/" class="data-item">
+                                <i class="fa fa-history data-icon"></i>
+                                <span class="data-label">审计日志</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Statistical Reports (25%) -->
+            <div class="col-md-3">
+                <div class="module-panel">
+                    <div class="panel-header">统计报表</div>
+                    
+                    <a href="/center/query/" class="report-item">
+                        <span class="report-title"><i class="fa fa-search me-2 text-primary"></i>资源查询</span>
+                        <span class="report-desc">查看车队负载分布</span>
+                    </a>
+
+                    <a href="/driver/performance/" class="report-item">
+                        <span class="report-title"><i class="fa fa-line-chart me-2 text-success"></i>绩效追踪</span>
+                        <span class="report-desc">司机违规情况统计</span>
+                    </a>
+
+                    <a href="/fleet/report/" class="report-item">
+                        <span class="report-title"><i class="fa fa-pie-chart me-2 text-info"></i>月度报表</span>
+                        <span class="report-desc">安全与运输效率分析</span>
+                    </a>
+                    
+                    <hr class="my-3">
+                    
+                    <a href="/fleet/monthly-performance/" class="report-item" style="border-left-color: #17a2b8;">
+                        <span class="report-title">
+                            <i class="fa fa-database me-2 text-info"></i>车队月度绩效
+                            <span class="badge bg-info text-white" style="font-size: 0.65rem;">存储过程</span>
+                        </span>
+                        <span class="report-desc">封装统计逻辑，快速生成报表</span>
+                    </a>
+                    
+                    <a href="/exception/weekly-alerts/" class="report-item" style="border-left-color: #ffc107;">
+                        <span class="report-title">
+                            <i class="fa fa-bell me-2 text-warning"></i>本周异常警报
+                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">视图</span>
+                        </span>
+                        <span class="report-desc">自动筛选本周异常事件</span>
+                    </a>
+
+                    <hr class="my-3">
+
+                    <a href="{% url 'innovation_cost_rules' %}" class="report-item" style="border-left-color: #20c997; background: linear-gradient(to right, #e8f5e9, #ffffff);">
+                        <span class="report-title">
+                            <i class="fa fa-cogs me-2" style="color: #20c997;"></i>成本规则管理
+                            <span class="badge bg-success text-white" style="font-size: 0.65rem;">创新一</span>
+                        </span>
+                        <span class="report-desc">配置路径基础运价与路况</span>
+                    </a>
+
+                    <a href="{% url 'innovation_capacity' %}" class="report-item" style="border-left-color: #e83e8c; background: linear-gradient(to right, #fce4ec, #ffffff);">
+                        <span class="report-title">
+                            <i class="fa fa-tachometer me-2" style="color: #e83e8c;"></i>运力预警与熔断
+                            <span class="badge bg-danger text-white" style="font-size: 0.65rem;">创新二</span>
+                        </span>
+                        <span class="report-desc">未来30天运力风险预测</span>
+                    </a>
+
+                    <a href="{% url 'innovation_monitor' %}" class="report-item" style="border-left-color: #fd7e14; background: linear-gradient(to right, #fff4e6, #ffffff);">
+                        <span class="report-title">
+                            <i class="fa fa-television me-2" style="color: #fd7e14;"></i>实时监控大屏
+                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">创新三</span>
+                        </span>
+                        <span class="report-desc">全系统运行状态一览</span>
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-muted py-3 mt-auto small">
+        &copy; SQL System Project by LinHongYu
+    </div>
+
+</body>
+</html>

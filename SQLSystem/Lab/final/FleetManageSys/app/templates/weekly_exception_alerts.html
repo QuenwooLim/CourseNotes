@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}本周异常警报 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-bell me-2 text-danger"></i>本周异常警报
+                    <span class="badge bg-warning text-dark ms-2">视图查询</span>
+                </h5>
+                <div>
+                    <a href="/exception/list/" class="btn btn-outline-primary btn-sm me-2">
+                        <i class="fa fa-list me-1"></i> 全部异常
+                    </a>
+                    <a href="/" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa fa-home me-1"></i> 返回首页
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- 功能说明 -->
+                <div class="alert alert-warning border-warning mb-4">
+                    <h6 class="alert-heading">
+                        <i class="fa fa-eye me-2"></i>视图功能说明
+                    </h6>
+                    <p class="mb-2">
+                        <strong>视图名：</strong><code>v_weekly_exception_alerts</code>
+                    </p>
+                    <p class="mb-2">
+                        <strong>功能描述：</strong>自动筛选本周发生的所有异常记录，展示车辆、司机和异常详情。
+                        使用 DATEPART(wk, ...) 函数自动判断是否为本周的异常。
+                    </p>
+                    <p class="mb-0">
+                        <strong>优势：</strong>用户只需查询视图，无需每次都编写复杂的 JOIN 和日期函数查询，
+                        视图会自动更新显示最新的本周异常数据。
+                    </p>
+                </div>
+
+                <!-- 异常警报统计 -->
+                {% if alerts %}
+                <div class="alert alert-danger border-danger mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-exclamation-circle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-1">本周共发现 <span class="badge bg-danger">{{ alerts|length }}</span> 起异常事件</h5>
+                            <p class="mb-0 small">请及时处理相关异常情况</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 异常列表 -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead class="table-danger">
+                            <tr>
+                                <th class="text-center" style="width: 50px;">#</th>
+                                <th>车牌号</th>
+                                <th>车辆状态</th>
+                                <th>司机姓名</th>
+                                <th>司机电话</th>
+                                <th>异常类型</th>
+                                <th>发生时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alert in alerts %}
+                            <tr>
+                                <td class="text-center text-muted">{{ forloop.counter }}</td>
+                                <td class="fw-bold">
+                                    <i class="fa fa-truck me-1 text-primary"></i>{{ alert.车牌号 }}
+                                </td>
+                                <td>
+                                    {% if alert.车辆状态 == '异常' %}
+                                        <span class="badge bg-danger">{{ alert.车辆状态 }}</span>
+                                    {% elif alert.车辆状态 == '运输中' %}
+                                        <span class="badge bg-primary">{{ alert.车辆状态 }}</span>
+                                    {% elif alert.车辆状态 == '维修中' %}
+                                        <span class="badge bg-warning text-dark">{{ alert.车辆状态 }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ alert.车辆状态 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <i class="fa fa-user me-1 text-secondary"></i>{{ alert.司机姓名 }}
+                                </td>
+                                <td>
+                                    <i class="fa fa-phone me-1 text-success"></i>{{ alert.司机电话 }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning text-dark px-3">{{ alert.异常类型 }}</span>
+                                </td>
+                                <td class="text-muted">
+                                    <i class="fa fa-clock-o me-1"></i>{{ alert.发生时间|date:"Y-m-d H:i" }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 操作建议 -->
+                <div class="card border-info mt-4">
+                    <div class="card-header bg-info bg-opacity-10 border-info">
+                        <h6 class="mb-0 text-info">
+                            <i class="fa fa-lightbulb-o me-2"></i>处理建议
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li>立即联系相关司机了解具体情况</li>
+                            <li>检查车辆状态，必要时安排维修或调配</li>
+                            <li>在异常记录管理中更新处理状态</li>
+                            <li>对重复发生异常的车辆和司机加强管理</li>
+                        </ul>
+                    </div>
+                </div>
+
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fa fa-check-circle fa-5x text-success opacity-25"></i>
+                    </div>
+                    <h4 class="text-success mb-2">太棒了！</h4>
+                    <p class="text-muted">本周暂无异常事件记录</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

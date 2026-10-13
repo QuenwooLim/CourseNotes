@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}异常监控 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-exclamation-triangle me-2 text-primary"></i>异常记录
+                </h5>
+                <a href="/exception/add/" class="btn btn-danger btn-sm shadow-sm text-white">
+                    <i class="fa fa-plus me-1"></i> 录入异常
+                </a>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">记录ID</th>
+                                <th>异常类型</th>
+                                <th>发生时间</th>
+                                <th>罚款金额 (¥)</th>
+                                <th>责任车辆</th>
+                                <th>责任司机</th>
+                                <th>处理状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exception in exceptions %}
+                            <tr>
+                                <td class="ps-4 text-muted">#{{ exception.record_id }}</td>
+                                <td>
+                                    {% if '严重' in exception.exception_type or 'Accident' in exception.exception_type %}
+                                        <span class="text-danger fw-bold">{{ exception.exception_type }}</span>
+                                    {% else %}
+                                        <span class="text-dark">{{ exception.exception_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ exception.occur_time|date:"Y-m-d H:i" }}</td>
+                                <td class="fw-bold text-danger">{{ exception.fine_amount }}</td>
+                                <td>
+                                    {% if exception.truck_plate %}
+                                    <span class="badge bg-light text-dark border">{{ exception.truck_plate }}</span>
+                                    {% else %} - {% endif %}
+                                </td>
+                                <td>
+                                    {% if exception.driver_id %}
+                                    <span class="text-secondary small">ID: {{ exception.driver_id }}</span>
+                                    {% else %} - {% endif %}
+                                </td>
+                                <td>
+                                    {% if 'Processed' in exception.handle_status or '已处理' in exception.handle_status %}
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3">已处理</span>
+                                    {% else %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3">待处理</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <div class="mb-2"><i class="fa fa-check-circle-o fa-3x opacity-25 text-success"></i></div>
+                                    暂无异常记录，系统运行良好
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

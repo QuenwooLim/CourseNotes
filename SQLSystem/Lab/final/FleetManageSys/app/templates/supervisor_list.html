@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}调度主管 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-user-secret me-2 text-primary"></i>调度主管
+                </h5>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">主管编号</th>
+                                <th>姓名</th>
+                                <th>联系电话</th>
+                                <th>管理车队</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for supervisor in supervisors %}
+                            <tr>
+                                <td class="ps-4 text-muted">#{{ supervisor.supervisor_id }}</td>
+                                <td class="fw-bold">{{ supervisor.name }}</td>
+                                <td>{{ supervisor.phone }}</td>
+                                <td>
+                                    {% if supervisor.fleet_id %}
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="fa fa-ship me-1"></i>车队 {{ supervisor.fleet_id }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning">未分配</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <div class="mb-2"><i class="fa fa-user-secret fa-3x opacity-25"></i></div>
+                                    暂无主管数据
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

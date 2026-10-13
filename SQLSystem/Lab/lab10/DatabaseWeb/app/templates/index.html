@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书借阅管理系统</title>
+    {% load static %}
+    <link href="{% static 'plugins/bootstrap-5.3.0-alpha1/scss/bootstrap.scss' %}" rel="stylesheet">
+    <link href="{% static 'plugins/font-awesome-4.7.0/font-awesome-4.7.0/css/font-awesome.min.css' %}" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #a2dcff 0%, #5aa9f4 100%);
+            min-height: 100vh;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+        .header {
+            color: white;
+            padding: 3rem 0 2rem;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .stats-container {
+            margin: 1.5rem 0;
+        }
+        .stats-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            transition: transform 0.2s;
+        }
+        .stat-item:hover {
+            transform: scale(1.05);
+        }
+        .stat-icon {
+            font-size: 2rem;
+        }
+        .stat-item.reader .stat-icon { color: #5aa9f4; }
+        .stat-item.book .stat-icon { color: #7ecbff; }
+        .stat-item.record .stat-icon { color: #39c6ff; }
+        .stat-item.unreturned .stat-icon { color: #ff9fa5; }
+        
+        .stat-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+        .menu-container {
+            margin: 2rem 0;
+        }
+        .menu-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+        .menu-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+        }
+        .menu-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .menu-card.reader-menu .menu-icon { color: #5aa9f4; }
+        .menu-card.book-menu .menu-icon { color: #7ecbff; }
+        .menu-card.record-menu .menu-icon { color: #39c6ff; }
+        
+        .menu-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        .menu-desc {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+        .footer {
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面头部 -->
+    <div class="header">
+        <div class="container">
+            <h1><i class="fa fa-book"></i> 图书借阅管理系统</h1>
+            <p>Library Management System</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 错误信息显示 -->
+        {% if error_message %}
+        <div class="alert alert-danger" role="alert">
+            <i class="fa fa-exclamation-triangle"></i> {{ error_message }}
+        </div>
+        {% endif %}
+
+        <!-- 统计数据栏 -->
+        <div class="stats-container">
+            <div class="stats-bar">
+                <div class="stat-item reader">
+                    <div class="stat-icon"><i class="fa fa-users"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ stats.reader_count }}</div>
+                        <div class="stat-label">读者总数</div>
+                    </div>
+                </div>
+                <div class="stat-item book">
+                    <div class="stat-icon"><i class="fa fa-book"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ stats.book_count }}</div>
+                        <div class="stat-label">图书总数</div>
+                    </div>
+                </div>
+                <div class="stat-item record">
+                    <div class="stat-icon"><i class="fa fa-exchange"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ stats.record_count }}</div>
+                        <div class="stat-label">借阅记录</div>
+                    </div>
+                </div>
+                <div class="stat-item unreturned">
+                    <div class="stat-icon"><i class="fa fa-exclamation-circle"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number">{{ stats.unreturned_count }}</div>
+                        <div class="stat-label">未归还</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能菜单 -->
+        <div class="menu-container">
+            <div class="row">
+                <div class="col-md-4">
+                    <a href="/reader/list/" class="menu-card reader-menu">
+                        <div class="menu-icon"><i class="fa fa-users"></i></div>
+                        <div class="menu-title">读者管理</div>
+                        <div class="menu-desc">查看、添加、编辑和删除读者信息</div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="/book/list/" class="menu-card book-menu">
+                        <div class="menu-icon"><i class="fa fa-book"></i></div>
+                        <div class="menu-title">图书管理</div>
+                        <div class="menu-desc">查看、添加、编辑和删除图书信息</div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="/record/list/" class="menu-card record-menu">
+                        <div class="menu-icon"><i class="fa fa-exchange"></i></div>
+                        <div class="menu-title">借阅记录</div>
+                        <div class="menu-desc">查看、添加、编辑和删除借阅记录</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <div class="footer">
+        <div class="container">
+            <p>&copy; 2025 图书借阅管理系统 | Powered by Django</p>
+        </div>
+    </div>
+
+    <script src="{% static 'plugins/jquery-3.7.1.js' %}"></script>
+</body>
+</html>

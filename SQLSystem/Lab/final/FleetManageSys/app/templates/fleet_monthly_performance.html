@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}车队月度绩效报表 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-line-chart me-2 text-primary"></i>车队月度绩效报表
+                    <span class="badge bg-info text-white ms-2">存储过程</span>
+                </h5>
+                <a href="/" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-home me-1"></i> 返回首页
+                </a>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- 查询表单 -->
+                <div class="card border mb-4">
+                    <div class="card-body bg-light">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">选择车队 <span class="text-danger">*</span></label>
+                                <select name="fleet_id" class="form-control" required>
+                                    <option value="">-- 请选择车队 --</option>
+                                    {% for fleet in fleets %}
+                                    <option value="{{ fleet.fleet_id }}" 
+                                            {% if selected_fleet == fleet.fleet_id|stringformat:"s" %}selected{% endif %}>
+                                        {{ fleet.fleet_name }} (ID: {{ fleet.fleet_id }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">年份 <span class="text-danger">*</span></label>
+                                <input type="number" name="year" class="form-control" 
+                                       value="{{ selected_year|default:'2025' }}" 
+                                       min="2020" max="2030" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">月份 <span class="text-danger">*</span></label>
+                                <select name="month" class="form-control" required>
+                                    <option value="">-- 选择月份 --</option>
+                                    {% for m in "123456789012"|make_list %}
+                                    {% with month_num=forloop.counter %}
+                                    <option value="{{ month_num }}" 
+                                            {% if selected_month == month_num|stringformat:"s" %}selected{% endif %}>
+                                        {{ month_num }}月
+                                    </option>
+                                    {% endwith %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fa fa-search me-1"></i> 查询
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 功能说明 -->
+                <div class="alert alert-info border-info mb-4">
+                    <h6 class="alert-heading">
+                        <i class="fa fa-database me-2"></i>存储过程功能说明
+                    </h6>
+                    <p class="mb-2">
+                        <strong>存储过程名：</strong><code>sp_get_fleet_monthly_performance</code>
+                    </p>
+                    <p class="mb-2">
+                        <strong>功能描述：</strong>封装复杂的月度绩效统计逻辑，通过传入车队ID、年份和月份，
+                        自动计算该车队在指定月份的总运单数、异常事件数和累计罚款金额。
+                    </p>
+                    <p class="mb-0">
+                        <strong>优势：</strong>前端或报表系统只需调用此过程，无需关心内部复杂的 JOIN 和 GROUP BY 计算。
+                    </p>
+                </div>
+
+                <!-- 绩效报表结果 -->
+                {% if report %}
+                <div class="card border-success">
+                    <div class="card-header bg-success bg-opacity-10 border-success">
+                        <h5 class="mb-0 text-success">
+                            <i class="fa fa-check-circle me-2"></i>绩效统计结果
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-primary h-100">
+                                    <div class="card-body">
+                                        <div class="text-primary mb-2">
+                                            <i class="fa fa-file-text fa-3x"></i>
+                                        </div>
+                                        <h6 class="text-muted">总运单数</h6>
+                                        <h2 class="text-primary fw-bold">{{ report.车队ID|default:"N/A" }}</h2>
+                                        <small class="text-muted">单</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-warning h-100">
+                                    <div class="card-body">
+                                        <div class="text-warning mb-2">
+                                            <i class="fa fa-exclamation-triangle fa-3x"></i>
+                                        </div>
+                                        <h6 class="text-muted">异常事件总数</h6>
+                                        <h2 class="text-warning fw-bold">{{ report.异常事件总数|default:"0" }}</h2>
+                                        <small class="text-muted">次</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-danger h-100">
+                                    <div class="card-body">
+                                        <div class="text-danger mb-2">
+                                            <i class="fa fa-money fa-3x"></i>
+                                        </div>
+                                        <h6 class="text-muted">累计罚款金额</h6>
+                                        <h2 class="text-danger fw-bold">¥{{ report.累计罚款金额|default:"0.00" }}</h2>
+                                        <small class="text-muted">元</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 详细信息表格 -->
+                        <div class="table-responsive mt-3">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>车队ID</th>
+                                        <th>总运单数</th>
+                                        <th>异常事件总数</th>
+                                        <th>累计罚款金额</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold">{{ report.车队ID }}</td>
+                                        <td>{{ report.总运单数 }}</td>
+                                        <td>{{ report.异常事件总数 }}</td>
+                                        <td class="text-danger fw-bold">¥{{ report.累计罚款金额 }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <div class="mb-3">
+                        <i class="fa fa-search fa-4x opacity-25"></i>
+                    </div>
+                    <p>请选择车队和时间后点击查询按钮</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}运单管理 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="page-card">
+            <!-- Header -->
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-file-text-o me-2 text-primary"></i>运单管理
+                </h5>
+                <a href="/order/assign/" class="btn btn-primary btn-sm shadow-sm">
+                    <i class="fa fa-plus me-1"></i> 创建新运单
+                </a>
+            </div>
+
+            <!-- Content -->
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">运单号</th>
+                                <th>承运车辆</th>
+                                <th>重量 (吨)</th>
+                                <th>体积 (m³)</th>
+                                <th>目的地</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th class="text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-secondary">#{{ order.order_id }}</td>
+                                <td>
+                                    {% if order.truck_plate %}
+                                        <a href="/truck/list/?search={{ order.truck_plate }}" class="badge bg-light text-dark border text-decoration-none">
+                                            <i class="fa fa-truck me-1"></i>{{ order.truck_plate }}
+                                        </a>
+                                    {% else %}
+                                        <span class="badge bg-secondary opacity-50">未分配</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ order.weight }}</td>
+                                <td>{{ order.volume }}</td>
+                                <td><span class="text-dark">{{ order.destination }}</span></td>
+                                <td>
+                                    {% if '完成' in order.status or 'Delivered' in order.status %}
+                                        <span class="badge bg-success bg-opacity-10 text-success px-3 border border-success border-opacity-25 rounded-pill">{{ order.status }}</span>
+                                    {% elif '运输' in order.status or 'Progress' in order.status %}
+                                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 border border-primary border-opacity-25 rounded-pill">{{ order.status }}</span>
+                                    {% elif '取消' in order.status %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 border border-danger border-opacity-25 rounded-pill">{{ order.status }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 border border-secondary border-opacity-25 rounded-pill">{{ order.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">{{ order.create_time|date:"Y-m-d H:i" }}</td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        {% if order.status == '待分配' %}
+                                            {% if order.truck_plate %}
+                                                <a href="/order/start/{{ order.order_id }}/" class="btn btn-outline-success btn-sm" title="开始运输">
+                                                    <i class="fa fa-play"></i> 开始运输
+                                                </a>
+                                            {% else %}
+                                                <a href="/order/assign-truck/{{ order.order_id }}/" class="btn btn-outline-info btn-sm" title="分配车辆">
+                                                    <i class="fa fa-truck"></i> 分配车辆
+                                                </a>
+                                            {% endif %}
+                                            <a href="/order/cancel/{{ order.order_id }}/" class="btn btn-outline-danger btn-sm" title="取消订单" onclick="return confirm('确认取消该订单？')">
+                                                <i class="fa fa-times"></i>
+                                            </a>
+                                        {% elif order.status == '运输中' %}
+                                            <a href="/order/complete/{{ order.order_id }}/" class="btn btn-outline-success btn-sm" title="完成订单">
+                                                <i class="fa fa-check"></i> 完成
+                                            </a>
+                                        {% elif order.status == '已完成' or order.status == '已取消' %}
+                                            <span class="badge bg-light text-muted">无操作</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <div class="mb-2"><i class="fa fa-inbox fa-3x opacity-25"></i></div>
+                                    暂无运单数据
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

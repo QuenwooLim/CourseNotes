@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}智慧物流系统{% endblock %}</title>
+    {% load static %}
+    <!-- Correct Bootstrap 5.3 Path from index.html fix -->
+    <link href="{% static 'plugins/bootstrap-5.3.0-alpha1/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'plugins/font-awesome-4.7.0/font-awesome-4.7.0/css/font-awesome.min.css' %}" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1e3c72;
+            --secondary-color: #2a5298;
+        }
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Common Header */
+        .main-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 0.8rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar-brand {
+            color: white !important;
+            font-weight: 700;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: color 0.2s;
+        }
+        .nav-link:hover {
+            color: white !important;
+        }
+        .nav-link.active {
+            color: white !important;
+            background: rgba(255,255,255,0.15);
+            border-radius: 6px;
+        }
+        
+        /* Content Wrapper */
+        .content-wrapper {
+            flex: 1;
+            padding: 2rem 0;
+        }
+
+        /* Card Standardization */
+        .page-card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            overflow: hidden;
+        }
+        .page-header {
+            background: white;
+            padding: 1.5rem 1.5rem 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+            border-left: 5px solid var(--primary-color);
+            padding-left: 15px;
+        }
+
+        /* Table Beautification */
+        .table-custom {
+            margin-bottom: 0;
+        }
+        .table-custom thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            color: #6c757d;
+            font-weight: 600;
+            padding: 1rem;
+        }
+        .table-custom tbody td {
+            vertical-align: middle;
+            padding: 1rem;
+            border-color: #f0f0f0;
+        }
+        .table-custom tbody tr:hover {
+            background-color: #f8fbff;
+        }
+
+        /* Footer */
+        .main-footer {
+            background: white;
+            border-top: 1px solid #eee;
+            padding: 1.5rem 0;
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg main-header">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fa fa-cubes me-2"></i> 智慧物流系统
+            </a>
+            <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                <i class="fa fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fa fa-home me-1"></i> 首页</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fa fa-database me-1"></i> 数据管理
+                        </a>
+                        <ul class="dropdown-menu shadow-sm border-0">
+                            <li><a class="dropdown-item" href="/order/list/">运单管理</a></li>
+                            <li><a class="dropdown-item" href="/truck/list/">车辆管理</a></li>
+                            <li><a class="dropdown-item" href="/driver/list/">司机管理</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/exception/list/">异常记录</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fa fa-lightbulb-o me-1"></i> 创新功能
+                        </a>
+                        <ul class="dropdown-menu shadow-sm border-0">
+                            <li><a class="dropdown-item" href="{% url 'innovation_recommendation' %}"><i class="fa fa-magic me-2"></i>智能派单推荐</a></li>
+                            <li><a class="dropdown-item" href="{% url 'innovation_cost_rules' %}"><i class="fa fa-cogs me-2"></i>成本规则管理</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'innovation_capacity' %}"><i class="fa fa-tachometer me-2"></i>运力预警与熔断</a></li>
+                            <li><a class="dropdown-item" href="{% url 'innovation_monitor' %}"><i class="fa fa-television me-2"></i>实时监控大屏</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/fleet/report/"><i class="fa fa-pie-chart me-1"></i> 报表</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <div class="container">
+            <!-- Messages/Alerts -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2026 智慧物流车队管理系统 | Database System Design</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'plugins/bootstrap-5.3.0-alpha1/dist/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'plugins/jquery-3.7.1.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

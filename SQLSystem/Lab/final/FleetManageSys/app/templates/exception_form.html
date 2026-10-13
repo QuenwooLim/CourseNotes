@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}录入异常记录 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-exclamation-triangle me-2 text-warning"></i>录入异常记录
+                </h5>
+                <a href="/exception/list/" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-arrow-left me-1"></i> 返回列表
+                </a>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">异常类型 <span class="text-danger">*</span></label>
+                        <select name="exception_type" class="form-select" required>
+                            <option value="">-- 请选择异常类型 --</option>
+                            <option value="车辆故障">车辆故障</option>
+                            <option value="货物破损">货物破损</option>
+                            <option value="严重延误">严重延误</option>
+                            <option value="超速报警">超速报警</option>
+                            <option value="违章驾驶">违章驾驶</option>
+                            <option value="其他异常">其他异常</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">发生时间 <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="occur_time" class="form-control" required>
+                        <div class="form-text">选择异常发生的具体时间</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">罚款金额 (元) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" name="fine_amount" class="form-control" required placeholder="0.00" min="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">处理状态 <span class="text-danger">*</span></label>
+                            <select name="handle_status" class="form-select" required>
+                                <option value="未处理" selected>未处理</option>
+                                <option value="处理中">处理中</option>
+                                <option value="已处理">已处理</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">关联车辆 <span class="text-danger">*</span></label>
+                            <select name="truck_plate" class="form-control" required>
+                                <option value="">-- 请选择车辆 --</option>
+                                {% for truck in trucks %}
+                                <option value="{{ truck.plate_number }}">
+                                    {{ truck.plate_number }} 
+                                    ({{ truck.current_status }})
+                                </option>
+                                {% empty %}
+                                <option value="" disabled>暂无车辆数据</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">选择发生异常的车辆</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">关联司机 <span class="text-danger">*</span></label>
+                            <select name="driver_id" class="form-control" required>
+                                <option value="">-- 请选择司机 --</option>
+                                {% for driver in drivers %}
+                                <option value="{{ driver.driver_id }}">
+                                    {{ driver.name }} ({{ driver.driver_id }})
+                                </option>
+                                {% empty %}
+                                <option value="" disabled>暂无司机数据</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">选择责任司机</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning border-warning mt-3" role="alert">
+                        <i class="fa fa-info-circle me-2"></i>
+                        <strong>提示：</strong>异常记录将影响车辆和司机的绩效统计，请确保信息准确。
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-warning btn-lg shadow-sm text-dark">
+                            <i class="fa fa-exclamation-circle me-1"></i> 提交异常记录
+                        </button>
+                        <a href="/exception/list/" class="btn btn-outline-secondary">
+                            <i class="fa fa-times me-1"></i> 取消
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

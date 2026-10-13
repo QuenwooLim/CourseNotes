@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}车队管理 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-ship me-2 text-primary"></i>车队管理
+                </h5>
+                <a href="/fleet/report/" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="fa fa-bar-chart me-1"></i> 查看月度报表
+                </a>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">车队编号</th>
+                                <th>车队名称</th>
+                                <th>所属配送中心</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fleet in fleets %}
+                            <tr>
+                                <td class="ps-4 fw-bold">#{{ fleet.fleet_id }}</td>
+                                <td>{{ fleet.fleet_name }}</td>
+                                <td>
+                                    {% if fleet.center_id %}
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="fa fa-building me-1"></i>中心 {{ fleet.center_id }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">未分配</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/truck/list/?fleet={{ fleet.fleet_id }}" class="btn btn-sm btn-link text-decoration-none">
+                                        查看车辆
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <div class="mb-2"><i class="fa fa-ship fa-3x opacity-25"></i></div>
+                                    暂无车队数据
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

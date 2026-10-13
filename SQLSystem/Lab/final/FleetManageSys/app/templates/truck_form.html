@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}录入车辆 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-truck me-2 text-primary"></i>录入新车辆
+                </h5>
+                <a href="/truck/list/" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-arrow-left me-1"></i> 返回列表
+                </a>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">车牌号 <span class="text-danger">*</span></label>
+                        <input type="text" name="plate_number" class="form-control" required placeholder="例如: 京A88888">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">最大载重 (吨)</label>
+                            <input type="number" step="0.1" name="max_load" class="form-control" required placeholder="10.0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">最大容积 (m³)</label>
+                            <input type="number" step="0.1" name="max_volume" class="form-control" required placeholder="50.0">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">所属车队ID</label>
+                            <input type="number" name="fleet_id" class="form-control" placeholder="输入存在的车队ID">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">当前状态</label>
+                            <select name="current_status" class="form-select">
+                                <option value="空闲" selected>空闲</option>
+                                <option value="运输中">运输中</option>
+                                <option value="维修中">维修中</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg shadow-sm">
+                            <i class="fa fa-plus-circle me-1"></i> 保存车辆信息
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

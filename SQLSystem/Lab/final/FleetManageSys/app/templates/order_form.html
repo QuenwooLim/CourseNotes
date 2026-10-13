@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}运单分配 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-pencil-square-o me-2 text-primary"></i>运单分配
+                </h5>
+                <a href="/order/list/" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-arrow-left me-1"></i> 返回列表
+                </a>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading"><i class="fa fa-info-circle me-2"></i>运单创建说明</h6>
+                        <ul class="mb-0 ps-3">
+                            <li><strong>运单号</strong>：系统自动生成（格式：ORD + 日期 + 序号）</li>
+                            <li><strong>初始状态</strong>：待分配</li>
+                            <li><strong>车辆分配</strong>：请在运单列表中为运单分配车辆</li>
+                        </ul>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">货物重量 (吨) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" name="weight" class="form-control" required placeholder="0.00" min="0.01">
+                            <div class="form-text">请根据承运车辆的载重限制输入</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">货物体积 (m³) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" name="volume" class="form-control" required placeholder="0.00" min="0.01">
+                            <div class="form-text">请根据承运车辆的容积限制输入</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">目的地 <span class="text-danger">*</span></label>
+                        <input type="text" name="destination" class="form-control" required placeholder="输入配送地址">
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                            <i class="fa fa-check-circle me-1"></i> 创建运单
+                        </button>
+                        <a href="/order/list/" class="btn btn-outline-secondary">
+                            <i class="fa fa-times me-1"></i> 取消
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}配送中心 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-building me-2 text-primary"></i>配送中心
+                </h5>
+                <a href="/center/query/" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="fa fa-search me-1"></i> 资源查询
+                </a>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">编号</th>
+                                <th>中心名称</th>
+                                <th>地址</th>
+                                <th>管理车队数</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for center in centers %}
+                            <tr>
+                                <td class="ps-4 text-muted">#{{ center.center_id }}</td>
+                                <td class="fw-bold">{{ center.center_name }}</td>
+                                <td><i class="fa fa-map-marker text-danger me-2 opacity-50"></i>{{ center.address }}</td>
+                                <td>
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill px-3">
+                                        查询中...
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <div class="mb-2"><i class="fa fa-building-o fa-3x opacity-25"></i></div>
+                                    暂无配送中心数据
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

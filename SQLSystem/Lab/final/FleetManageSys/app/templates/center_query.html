@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}车队资源查询 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-card mb-4">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-search me-2 text-primary"></i>车队资源查询 (按配送中心)
+                </h5>
+                <a href="/" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-home me-1"></i> 返回主页
+                </a>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label fw-bold">选择配送中心</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-building"></i></span>
+                            <select name="center_id" class="form-select">
+                                <option value="">-- 请选择 --</option>
+                                {% for center in centers %}
+                                <option value="{{ center.center_id }}" {% if center_id == center.center_id %}selected{% endif %}>{{ center.center_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa fa-search me-1"></i> 查询
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if resources %}
+        <div class="page-card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>车队名称</th>
+                                <th>车牌号</th>
+                                <th>状态</th>
+                                <th>最大载重 (吨)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in resources %}
+                            <tr>
+                                <td class="fw-bold text-primary">{{ item.fleet_name }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        {{ item.plate_number }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if item.current_status == '空闲' %}
+                                        <span class="badge bg-success-subtle text-success">
+                                            <i class="fa fa-check-circle me-1"></i>空闲
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning">
+                                            <i class="fa fa-truck me-1"></i>{{ item.current_status }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.max_load }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% elif center_id %}
+        <div class="alert alert-info shadow-sm d-flex align-items-center" role="alert">
+            <i class="fa fa-info-circle me-2 fs-5"></i>
+            <div>
+                在该配送中心下未找到相关车辆数据，或者该中心ID不存在。
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

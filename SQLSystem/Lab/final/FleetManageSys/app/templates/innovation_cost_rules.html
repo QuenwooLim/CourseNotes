@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}成本规则管理{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <h2 class="mb-3"><i class="fa fa-cogs"></i> 成本规则管理中心</h2>
+        
+        <div class="row">
+            <!-- Left: Statistics -->
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <i class="fa fa-bar-chart"></i> 线路统计报表
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>配送中心</th>
+                                    <th>配置线路数</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in stats %}
+                                <tr>
+                                    <td>{{ stat.配送中心名称 }}</td>
+                                    <td><span class="badge bg-primary rounded-pill">{{ stat.配置线路数量 }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">暂无统计数据</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right: Add New Rule -->
+            <div class="col-md-8">
+                <div class="card h-100 shadow-sm border-success">
+                    <div class="card-header bg-success text-white">
+                        <i class="fa fa-plus-circle"></i> 新增成本规则
+                    </div>
+                    <div class="card-body">
+                        <form action="{% url 'innovation_cost_rule_add' %}" method="post" class="row g-3">
+                            {% csrf_token %}
+                            <div class="col-md-6">
+                                <label class="form-label">配送中心</label>
+                                <select class="form-select" name="center_id" required>
+                                    <option value="">请选择...</option>
+                                    {% for center in centers %}
+                                    <option value="{{ center.center_id }}">{{ center.center_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">目标省份</label>
+                                <input type="text" class="form-control" name="target_province" placeholder="如：北京市" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">基础运价 (元/吨·公里)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">¥</span>
+                                    <input type="number" step="0.01" class="form-control" name="base_price" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">路况系数</label>
+                                <input type="number" step="0.1" class="form-control" name="traffic_factor" value="1.0" placeholder="默认 1.0">
+                                <div class="form-text">大于1表示路况拥堵，小于1表示畅通</div>
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-outline-success">
+                                    <i class="fa fa-save"></i> 保存规则
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Search -->
+    <div class="col-md-12 mb-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="fa fa-search"></i> 高级检索</span>
+                <span class="badge bg-light text-dark">组合查询</span>
+            </div>
+            <div class="card-body bg-light">
+                <form action="{% url 'innovation_cost_rules' %}" method="get" class="row align-items-end">
+                    <input type="hidden" name="use_advanced" value="true">
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">出发地筛选</label>
+                        <select class="form-select" name="center_id">
+                            <option value="">全部中心</option>
+                            {% for center in centers %}
+                            <option value="{{ center.center_id }}" {% if search_params.center_id|add:"0" == center.center_id %}selected{% endif %}>
+                                {{ center.center_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">最高单价限制</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><</span>
+                            <input type="number" step="0.1" class="form-control" name="max_price" value="{{ search_params.max_price }}">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">省份关键字</label>
+                        <input type="text" class="form-control" name="province_keyword" value="{{ search_params.province_keyword }}" placeholder="输入省份名称...">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa fa-filter"></i> 执行筛选
+                        </button>
+                    </div>
+                </form>
+                {% if search_params.use_advanced %}
+                <div class="mt-2 text-end">
+                    <a href="{% url 'innovation_cost_rules' %}" class="text-muted text-decoration-none small">
+                        <i class="fa fa-times-circle"></i> 清除筛选条件
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Rule List -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fa fa-list"></i> 规则列表
+                <span class="badge bg-secondary ms-2">{{ rules|length }} 条记录</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>出发配送中心</th>
+                            <th>目标省份</th>
+                            <th>基础运价 (元/吨·km)</th>
+                            <th>路况系数</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rule in rules %}
+                        <tr>
+                            <td>#{{ rule.rule_id }}</td>
+                            <td>
+                                <i class="fa fa-building-o text-muted me-1"></i>
+                                {{ rule.center_name }}
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ rule.target_province }}</span>
+                            </td>
+                            <td class="fw-bold text-success">¥{{ rule.base_price_per_km_ton }}</td>
+                            <td>
+                                {% if rule.traffic_factor > 1.0 %}
+                                    <span class="text-danger"><i class="fa fa-arrow-up"></i> {{ rule.traffic_factor }}</span>
+                                {% elif rule.traffic_factor < 1.0 %}
+                                    <span class="text-success"><i class="fa fa-arrow-down"></i> {{ rule.traffic_factor }}</span>
+                                {% else %}
+                                    <span class="text-muted">{{ rule.traffic_factor }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="{% url 'innovation_cost_rule_delete' rule.rule_id %}" method="post" 
+                                      onsubmit="return confirm('确定要删除这条规则吗？');" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="删除">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="fa fa-folder-open-o fa-2x mb-2 d-block"></i>
+                                暂无匹配的成本规则
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

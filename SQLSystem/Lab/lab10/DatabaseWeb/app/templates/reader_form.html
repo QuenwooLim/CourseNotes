@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if action == 'add' %}添加读者{% else %}编辑读者{% endif %} - 图书借阅管理系统</title>
+    {% load static %}
+    <link href="{% static 'plugins/bootstrap-5.3.0-alpha1/scss/bootstrap.scss' %}" rel="stylesheet">
+    <link href="{% static 'plugins/font-awesome-4.7.0/font-awesome-4.7.0/css/font-awesome.min.css' %}" rel="stylesheet">
+    <style>
+        :root {
+            --gradient-primary-start: #7ecbff;
+            --gradient-primary-end: #5aa9f4;
+            --gradient-accent-start: #7fe3ff;
+            --gradient-accent-end: #57c6ff;
+            --gradient-warn-start: #ff9fa5;
+            --gradient-warn-end: #ff7684;
+            --card-radius: 18px;
+            --shadow-soft: 0 18px 35px rgba(122, 187, 255, 0.2);
+            --border-light: #e4f3ff;
+            --text-muted: #5f7a96;
+        }
+
+        body {
+            background: linear-gradient(180deg, #eef6ff 0%, #ffffff 60%);
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            color: #2a3a4d;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #8fd1ff 0%, #5aa9f4 100%);
+            padding: 1rem 0;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .form-container {
+            max-width: 640px;
+            margin: 0 auto 3rem;
+            background: white;
+            padding: 2.5rem 2.75rem;
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-light);
+        }
+
+        .form-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: linear-gradient(135deg, rgba(126, 203, 255, 0.2) 0%, rgba(90, 169, 244, 0.2) 100%);
+            color: var(--gradient-primary-end);
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+        }
+
+        .form-header h2 {
+            color: #21496d;
+            margin: 0.75rem 0 0.5rem;
+            font-size: 1.9rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.65rem;
+            align-items: center;
+        }
+
+        .form-subtitle {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #21496d;
+            margin-bottom: 0.45rem;
+        }
+
+        .form-control,
+        .form-select,
+        textarea {
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 0.65rem 0.85rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: #fdfdff;
+        }
+
+        .form-control:focus,
+        .form-select:focus,
+        textarea:focus {
+            border-color: var(--gradient-primary-start);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.18);
+            background: #ffffff;
+        }
+
+        .form-control[readonly] {
+            background: #eff6ff;
+            color: #6c88a9;
+        }
+
+        .form-text {
+            color: var(--text-muted);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.6rem 1.4rem;
+            border-radius: 999px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            background: linear-gradient(135deg, var(--gradient-primary-start) 0%, var(--gradient-primary-end) 100%);
+            color: white !important;
+            box-shadow: 0 10px 22px rgba(126, 203, 255, 0.28);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.04);
+            box-shadow: 0 16px 28px rgba(102, 126, 234, 0.28);
+            color: white !important;
+        }
+
+        .btn-action--ghost {
+            background: transparent;
+            color: var(--gradient-primary-start) !important;
+            border: 1px solid rgba(102, 126, 234, 0.35);
+            box-shadow: none;
+        }
+
+        .btn-action--ghost:hover {
+            background: rgba(102, 126, 234, 0.08);
+            color: var(--gradient-primary-end) !important;
+        }
+
+        @media (max-width: 576px) {
+            .form-container {
+                padding: 2rem 1.75rem;
+            }
+
+            .form-header h2 {
+                font-size: 1.6rem;
+            }
+
+            .form-actions {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fa fa-home"></i> 图书借阅管理系统</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 表单容器 -->
+        <div class="form-container">
+            <div class="form-header">
+                <span class="form-badge">
+                    <i class="fa fa-magic"></i>
+                    {% if action == 'add' %}新增读者{% else %}更新资料{% endif %}
+                </span>
+                <h2>
+                    <i class="fa fa-user"></i>
+                    {% if action == 'add' %}添加读者{% else %}编辑读者{% endif %}
+                </h2>
+                <p class="form-subtitle">完善基础信息，保持读者档案准确</p>
+            </div>
+
+            <!-- 消息提示 -->
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- 表单 -->
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="reader_id" class="form-label">
+                        <i class="fa fa-id-card"></i> 读者编号 <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="reader_id" name="reader_id" 
+                           value="{% if reader %}{{ reader.reader_id }}{% endif %}"
+                           {% if action == 'edit' %}readonly{% endif %}
+                           required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="reader_name" class="form-label">
+                        <i class="fa fa-user"></i> 姓名 <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="reader_name" name="reader_name"
+                           value="{% if reader %}{{ reader.reader_name }}{% endif %}"
+                           required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="reader_sex" class="form-label">
+                        <i class="fa fa-venus-mars"></i> 性别 <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" id="reader_sex" name="reader_sex" required>
+                        <option value="">请选择</option>
+                        <option value="男" {% if reader and reader.reader_sex == '男' %}selected{% endif %}>男</option>
+                        <option value="女" {% if reader and reader.reader_sex == '女' %}selected{% endif %}>女</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="reader_department" class="form-label">
+                        <i class="fa fa-building"></i> 部门 <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="reader_department" name="reader_department"
+                           value="{% if reader %}{{ reader.reader_department }}{% endif %}"
+                           required>
+                </div>
+
+                <div class="form-actions">
+                    <a href="/reader/list/" class="btn-action btn-action--ghost">
+                        <i class="fa fa-undo"></i>
+                        <span>返回列表</span>
+                    </a>
+                    <button type="submit" class="btn-action">
+                        <i class="fa fa-save"></i>
+                        <span>保存信息</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{% static 'plugins/jquery-3.7.1.js' %}"></script>
+</body>
+</html>

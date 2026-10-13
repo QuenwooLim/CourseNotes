@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}车队月度报表 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-card mb-4">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-chart-line me-2 text-primary"></i>车队安全与效率报表
+                </h5>
+                <a href="/" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-home me-1"></i> 返回主页
+                </a>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">车队名称</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-users"></i></span>
+                            <select name="fleet_id" class="form-select" required>
+                                <option value="">-- 请选择车队 --</option>
+                                {% for fleet in fleets %}
+                                <option value="{{ fleet.fleet_id }}" {% if fleet_id == fleet.fleet_id %}selected{% endif %}>{{ fleet.fleet_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">月份 (可选, 留空查询总表)</label>
+                        <input type="month" name="month" class="form-control" value="{{ month|default:'' }}">
+                    </div>
+                    <div class="col-md-4 align-self-end">
+                        <button type="submit" class="btn btn-success w-100 shadow-sm">
+                            <i class="fa fa-file-text me-1"></i> 生成报表
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if report %}
+        <div class="page-card">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">报表统计结果</h6>
+            </div>
+            <div class="card-body py-5">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-4 mb-md-0 border-end">
+                        <div class="display-4 fw-bold text-primary mb-2">{{ report.total_orders|default:0 }}</div>
+                        <div class="text-uppercase text-muted fw-bold letter-spacing-1">本月总运单数</div>
+                    </div>
+                    <div class="col-md-4 mb-4 mb-md-0 border-end">
+                        <div class="display-4 fw-bold text-warning mb-2">{{ report.total_exceptions|default:0 }}</div>
+                        <div class="text-uppercase text-muted fw-bold letter-spacing-1">异常事件总数</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="display-4 fw-bold text-danger mb-2">
+                            {% if report.total_fines %}¥{{ report.total_fines }}{% else %}¥0{% endif %}
+                        </div>
+                        <div class="text-uppercase text-muted fw-bold letter-spacing-1">累计罚款金额</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

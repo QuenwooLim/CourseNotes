@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书管理系统 - 读者信息</title>
+    {% load static %}
+    <link href="{% static 'plugins/bootstrap-5.3.0-alpha1/scss/bootstrap.scss' %}" rel="stylesheet">
+    <link href="{% static 'plugins/font-awesome-4.7.0/font-awesome-4.7.0/css/font-awesome.min.css' %}" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(180deg, #eef6ff 0%, #ffffff 70%);
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            color: #2a3a4d;
+        }
+        .header {
+            background: linear-gradient(135deg, #8fd1ff 0%, #5aa9f4 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .reader-table {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .table th {
+            background: linear-gradient(135deg, #8fd1ff 0%, #5aa9f4 100%);
+            color: white;
+            font-weight: 500;
+            border: none;
+        }
+        .table td {
+            vertical-align: middle;
+            border-color: #e4f3ff;
+        }
+        .sex-badge {
+            display: inline-block;
+            width: 60px;
+            text-align: center;
+        }
+        .badge.bg-primary {
+            background: linear-gradient(135deg, #9cd6ff 0%, #63b0ff 100%) !important;
+        }
+        .badge.bg-danger {
+            background: linear-gradient(135deg, #ffd0d6 0%, #ffa1af 100%) !important;
+        }
+        .error-alert {
+            margin-top: 2rem;
+        }
+        .no-data {
+            text-align: center;
+            color: #5f7a96;
+            padding: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面头部 -->
+    <div class="header">
+        <div class="container">
+            <h1><i class="fa fa-users"></i> 图书管理系统</h1>
+            <p class="lead">读者信息管理</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 错误信息显示 -->
+        {% if error_message %}
+        <div class="alert alert-danger error-alert" role="alert">
+            <i class="fa fa-exclamation-triangle"></i> {{ error_message }}
+        </div>
+        {% endif %}
+
+        <!-- 读者信息表格 -->
+        {% if readers %}
+        <div class="reader-table">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th><i class="fa fa-id-card"></i> 读者编号</th>
+                            <th><i class="fa fa-user"></i> 姓名</th>
+                            <th><i class="fa fa-venus-mars"></i> 性别</th>
+                            <th><i class="fa fa-building"></i> 部门</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reader in readers %}
+                        <tr>
+                            <td>
+                                <code class="text-primary">{{ reader.reader_id }}</code>
+                            </td>
+                            <td>
+                                <strong>{{ reader.reader_name }}</strong>
+                            </td>
+                            <td>
+                                {% if reader.reader_sex == '男' %}
+                                    <span class="badge bg-primary sex-badge">
+                                        <i class="fa fa-mars"></i> 男
+                                    </span>
+                                {% elif reader.reader_sex == '女' %}
+                                    <span class="badge bg-danger sex-badge">
+                                        <i class="fa fa-venus"></i> 女
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary sex-badge">
+                                        {{ reader.reader_sex|default:"未知" }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <i class="fa fa-building text-muted"></i> {{ reader.reader_department }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <!-- 无数据提示 -->
+        <div class="reader-table">
+            <div class="no-data">
+                <i class="fa fa-inbox fa-3x text-muted"></i>
+                <h4 class="mt-3">暂无读者数据</h4>
+                <p>数据库中没有找到读者信息，请检查数据库连接或添加数据。</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 页面底部信息 -->
+        <div class="text-center mt-4 mb-4">
+            <small class="text-muted">
+                <i class="fa fa-clock-o"></i> 
+                数据更新时间: <span id="current-time"></span>
+            </small>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{% static 'plugins/jquery-3.7.1.js' %}"></script>
+    <script src="{% static 'plugins/bootstrap-5.3.0-alpha1/js/src/bootstrap.js' %}"></script>
+    <script>
+        // 显示当前时间
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-CN');
+            document.getElementById('current-time').textContent = timeStr;
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            // 每30秒更新一次时间
+            setInterval(updateTime, 30000);
+        });
+
+        // 添加表格行点击效果
+        document.querySelectorAll('.table tbody tr').forEach(row => {
+            row.addEventListener('click', function() {
+                // 移除其他行的选中状态
+                document.querySelectorAll('.table tbody tr').forEach(r => {
+                    r.classList.remove('table-active');
+                });
+                // 添加当前行的选中状态
+                this.classList.add('table-active');
+            });
+        });
+    </script>
+</body>
+</html>

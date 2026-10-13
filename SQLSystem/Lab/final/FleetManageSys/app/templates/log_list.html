@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}审计日志 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-history me-2 text-primary"></i>审计日志
+                </h5>
+                <span class="badge bg-secondary">近30天记录</span>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">日志ID</th>
+                                <th>对象ID</th>
+                                <th>修改前值</th>
+                                <th>修改后值</th>
+                                <th>修改时间</th>
+                                <th>操作类型</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td class="ps-4 text-muted small">#{{ log.log_id }}</td>
+                                <td><code class="text-primary">{{ log.target_id }}</code></td>
+                                <td class="text-muted small">{{ log.old_value|default:"-" }}</td>
+                                <td class="text-muted small">{{ log.new_value|default:"-" }}</td>
+                                <td class="text-muted small">{{ log.change_time }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ log.operation_type }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <div class="mb-2"><i class="fa fa-history fa-3x opacity-25"></i></div>
+                                    暂无日志记录
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

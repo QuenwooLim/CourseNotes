@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}司机绩效追踪 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-card mb-4">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-tachometer me-2 text-primary"></i>司机绩效与异常追踪
+                </h5>
+                <a href="/" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-home me-1"></i> 返回主页
+                </a>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">选择司机</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-id-badge"></i></span>
+                            <select name="driver_id" class="form-select" required>
+                                <option value="">-- 请选择 --</option>
+                                {% for driver in drivers %}
+                                <option value="{{ driver.driver_id }}" {% if driver_id == driver.driver_id %}selected{% endif %}>{{ driver.name }} ({{ driver.driver_id }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">开始日期 (可选)</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ start_date|default:'' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">结束日期 (可选)</label>
+                        <input type="date" name="end_date" class="form-control" value="{{ end_date|default:'' }}">
+                    </div>
+                    <div class="col-md-3 align-self-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa fa-search me-1"></i> 查询
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if stats %}
+        <div class="page-card">
+            <div class="card-header bg-light">
+                <h6 class="mb-0">查询结果概览</h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info d-flex align-items-center mb-4 border-0 shadow-sm" style="background-color: #e3f2fd;">
+                    <i class="fa fa-info-circle me-3 fs-4 text-primary"></i>
+                    <div>
+                        <strong>异常记录总数:</strong> <span class="fs-5 fw-bold ms-2">{{ stats.exception_count }}</span>
+                    </div>
+                </div>
+                
+                <h6 class="fw-bold mb-3"><i class="fa fa-list me-2"></i>异常详情列表</h6>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>异常类型</th>
+                                <th>发生时间</th>
+                                <th>罚款金额 (元)</th>
+                                <th>关联车牌</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ex in stats.exceptions %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-warning text-dark">
+                                        {{ ex.exception_type }}
+                                    </span>
+                                </td>
+                                <td>{{ ex.occur_time }}</td>
+                                <td class="text-danger fw-bold">¥{{ ex.fine_amount }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        {{ ex.truck_plate }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="fa fa-check-circle me-2 text-success"></i>该时间段内无异常记录。
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

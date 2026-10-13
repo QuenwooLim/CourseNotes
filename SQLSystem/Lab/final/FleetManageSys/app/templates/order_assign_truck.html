@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}分配车辆 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-truck me-2 text-primary"></i>为运单分配车辆
+                </h5>
+                <a href="/order/list/" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-arrow-left me-1"></i> 返回列表
+                </a>
+            </div>
+            
+            <div class="card-body p-4">
+                <!-- 运单信息展示 -->
+                <div class="alert alert-light border">
+                    <h6 class="alert-heading fw-bold text-primary mb-3">
+                        <i class="fa fa-info-circle me-2"></i>运单信息
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <strong>运单号：</strong><span class="text-muted">{{ order.order_id }}</span>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>状态：</strong>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
+                                {{ order.status }}
+                            </span>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>货物重量：</strong><span class="text-danger fw-bold">{{ order.weight }} 吨</span>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <strong>货物体积：</strong><span class="text-info fw-bold">{{ order.volume }} m³</span>
+                        </div>
+                        <div class="col-12 mb-0">
+                            <strong>目的地：</strong><span class="text-dark">{{ order.destination }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分配车辆表单 -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">选择承运车辆 <span class="text-danger">*</span></label>
+                        <select name="truck_plate" class="form-control form-control-lg" required id="truckSelect">
+                            <option value="">-- 请选择车辆 --</option>
+                            {% for truck in idle_trucks %}
+                            <option value="{{ truck.plate_number }}" 
+                                    data-maxload="{{ truck.max_load }}"
+                                    {% if truck.max_load < order.weight %}disabled{% endif %}>
+                                {{ truck.plate_number }} 
+                                - 最大载重: {{ truck.max_load }} 吨
+                                {% if truck.max_load < order.weight %}
+                                    <span class="text-danger">(载重不足)</span>
+                                {% endif %}
+                            </option>
+                            {% empty %}
+                            <option value="" disabled>暂无空闲车辆</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            <i class="fa fa-exclamation-triangle text-warning me-1"></i>
+                            系统会自动检查车辆载重，超载将无法分配
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning border-warning" role="alert">
+                        <i class="fa fa-lightbulb-o me-2"></i>
+                        <strong>提示：</strong>一个车辆可以承运多个订单，但总重量不能超过车辆的最大载重。
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                            <i class="fa fa-check-circle me-1"></i> 确认分配
+                        </button>
+                        <a href="/order/list/" class="btn btn-outline-secondary">
+                            <i class="fa fa-times me-1"></i> 取消
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 高亮不可选择的车辆
+document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('truckSelect');
+    const orderWeight = {{ order.weight }};
+    
+    select.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const maxLoad = parseFloat(selectedOption.getAttribute('data-maxload'));
+        
+        if (maxLoad && orderWeight > maxLoad) {
+            alert('警告：该车辆最大载重(' + maxLoad + '吨)小于货物重量(' + orderWeight + '吨)！');
+        }
+    });
+});
+</script>
+{% endblock %}

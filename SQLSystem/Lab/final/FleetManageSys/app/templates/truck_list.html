@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}车辆档案 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-truck me-2 text-primary"></i>车辆档案
+                </h5>
+                <a href="/truck/add/" class="btn btn-success btn-sm shadow-sm">
+                    <i class="fa fa-plus me-1"></i> 录入新车
+                </a>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">车牌号</th>
+                                <th>承载上限 (吨)</th>
+                                <th>容积上限 (m³)</th>
+                                <th>当前状态</th>
+                                <th>所属车队</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for truck in trucks %}
+                            <tr>
+                                <td class="ps-4 fw-bold">
+                                    <span class="badge bg-dark rounded-1">{{ truck.plate_number }}</span>
+                                </td>
+                                <td>{{ truck.max_load }}</td>
+                                <td>{{ truck.max_volume }}</td>
+                                <td>
+                                    {% if 'Idle' in truck.current_status or '空闲' in truck.current_status %}
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3">空闲</span>
+                                    {% elif 'Busy' in truck.current_status or '忙碌' in truck.current_status %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3">运输中</span>
+                                    {% elif 'Maintenance' in truck.current_status %}
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3">维护中</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary rounded-pill px-3">{{ truck.current_status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if truck.fleet_id %}
+                                    <span class="text-secondary"><i class="fa fa-ship me-1"></i> 车队 #{{ truck.fleet_id }}</span>
+                                    {% else %}
+                                    <span class="text-muted small">未分配</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <div class="mb-2"><i class="fa fa-truck fa-3x opacity-25"></i></div>
+                                    暂无车辆数据
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

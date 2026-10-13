@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}录入司机 - 智慧物流{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="page-card">
+            <div class="page-header">
+                <h5 class="page-title">
+                    <i class="fa fa-id-card me-2 text-primary"></i>录入新司机
+                </h5>
+                <a href="/driver/list/" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-arrow-left me-1"></i> 返回列表
+                </a>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">司机工号 <span class="text-danger">*</span></label>
+                            <input type="text" name="driver_id" class="form-control" required placeholder="例如: D001">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">姓名 <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" required placeholder="请输入司机姓名">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">驾照等级 <span class="text-danger">*</span></label>
+                            <select name="license_level" class="form-select" required>
+                                <option value="" selected disabled>选择驾照等级...</option>
+                                <option value="A1">A1</option>
+                                <option value="A2">A2</option>
+                                <option value="B1">B1</option>
+                                <option value="B2">B2</option>
+                                <option value="C1">C1</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">联系电话 <span class="text-danger">*</span></label>
+                            <input type="text" name="phone" class="form-control" required placeholder="输入11位手机号">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">入职时间 <span class="text-danger">*</span></label>
+                        <input type="date" name="hire_date" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">所属车队ID <span class="text-danger">*</span></label>
+                        <input type="number" name="fleet_id" class="form-control" required placeholder="输入车队ID">
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg shadow-sm">
+                            <i class="fa fa-check-circle me-1"></i> 保存司机信息
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
