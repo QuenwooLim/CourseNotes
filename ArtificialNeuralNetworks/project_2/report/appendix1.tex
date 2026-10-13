@@ -1,0 +1,199 @@
+% !TEX root = main.tex
+\chapter{附录}
+
+\section{项目代码结构}
+
+\begin{lstlisting}[style=cleanbash]
+project_2/
+├── data/
+│   ├── raw/                     # 原始 TNEWS 数据
+│   │   ├── train.json           # 训练数据 (53,360 条)
+│   │   ├── dev.json             # 验证数据 (10,000 条)
+│   │   └── labels.json          # 15 类标签映射
+│   ├── processed/               # 清洗后数据
+│   │   ├── train_clean.json     # (49,726 条)
+│   │   ├── dev_clean.json       # (9,765 条)
+│   │   └── label_map.json       # 标签映射
+│   └── eda_report.md            # EDA 报告
+├── src/
+│   ├── data_cleaner.py          # 数据清洗流水线
+│   ├── tokenizers.py            # 多粒度分词器 (Char/Word/Subword)
+│   ├── dataset.py               # PyTorch Dataset & DataLoader
+│   ├── train.py                 # 训练脚本 (支持 BERT/类权重/标签平滑)
+│   ├── evaluate.py              # 测试集评估脚本
+│   ├── visualize.py             # 可视化 (曲线/混淆矩阵/Attention/坏例)
+│   └── models/
+│       ├── bilstm_attention.py  # BiLSTM + Bahdanau Attention
+│       ├── bigru_attention.py   # BiGRU + Attention
+│       ├── textcnn.py           # TextCNN 多尺度卷积
+│       ├── transformer.py       # Transformer Encoder 分类器
+│       └── bert_classifier.py   # BERT 预训练模型分类器
+├── scripts/
+│   ├── eda.py                   # 探索性数据分析
+│   ├── full_analysis.py         # 综合分析脚本
+│   ├── tsne_viz.py              # t-SNE 可视化
+│   └── ensemble_eval.py         # 模型集成评估
+├── checkpoints/                 # 已训练的 4 个模型
+├── logs/                        # 训练日志和可视化图表
+├── report/                      # LaTeX 实验报告
+└── README.md                    # 项目说明和运行指南
+\end{lstlisting}
+
+\section{模型参数统计}
+
+\begin{table}[htbp]
+\centering
+\caption{各模型的参数量统计}
+\begin{tabular}{lcc}
+\hline
+模型 & 分词方式 & 参数量 \\
+\hline
+BiLSTM + Attention & Char & 4,563,995 \\
+BiLSTM + Attention & Word & 23,460,995 \\
+Transformer Encoder & Char & 15,207,951 \\
+Transformer Encoder & Word & 47,458,831 \\
+BERT-base-chinese Classifier & Subword & $\sim$110,000,000 \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{核心代码}
+
+以下代码片段展示了本项目中自行实现的关键模块，与正文中的模型设计描述一一对应。
+
+\subsection{Bahdanau Attention 实现}
+
+该代码实现了正文描述的 Bahdanau 加性注意力机制：使用最后一个时间步的隐藏状态作为 query，通过加性打分函数计算每个时间步的注意力权重，最后加权求和得到上下文向量。
+
+\begin{lstlisting}[style=cleanpython]
+class BahdanauAttention(nn.Module):
+    """Bahdanau 加性注意力机制
+       公式: e_t = v^T * tanh(W * h_t + U * h_T)
+             alpha = softmax(e)
+             context = sum(alpha_t * h_t)
+    """
+    def __init__(self, hidden_dim, attention_dim):
+        super().__init__()
+        self.W = nn.Linear(hidden_dim, attention_dim, bias=False)
+        self.U = nn.Linear(hidden_dim, attention_dim, bias=False)
+        self.v = nn.Linear(attention_dim, 1, bias=False)
+
+    def forward(self, encoder_outputs, mask=None):
+        # 使用最后时刻输出作为 query
+        attn_hidden = torch.tanh(
+            self.W(encoder_outputs) +
+            self.U(encoder_outputs[:, -1:, :])
+        )
+        scores = self.v(attn_hidden).squeeze(-1)
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, -1e9)
+        weights = F.softmax(scores, dim=-1)
+        context = torch.bmm(weights.unsqueeze(1),
+                            encoder_outputs).squeeze(1)
+        return context, weights
+\end{lstlisting}
+
+\subsection{数据清洗流水线}
+
+以下代码展示了数据处理中的核心清洗函数，依次执行不可见字符去除、全角转半角、Unicode 规范化和空白规范化四个步骤。
+
+\begin{lstlisting}[style=cleanpython]
+def clean_text(text: str) -> str:
+    text = remove_invisible_chars(text)    # 去除零宽空格等
+    text = fullwidth_to_halfwidth(text)     # 全角转半角
+    text = unicodedata.normalize('NFKC', text)  # Unicode 规范化
+    text = normalize_whitespace(text)       # 合并连续空白
+    return text
+\end{lstlisting}
+
+\subsection{类别权重计算}
+
+该函数实现逆频率加权（Inverse Frequency Weighting）：样本数越少的类别获得越高的权重，归一化后使平均权重为 1，用于缓解类别不平衡（不平衡比 23:1）对训练的影响。
+
+\begin{lstlisting}[style=cleanpython]
+def compute_class_weights(labels, num_classes, device):
+    """逆频率类别加权，归一化使平均权重=1"""
+    counter = Counter(labels)
+    total = len(labels)
+    weights = []
+    for i in range(num_classes):
+        count = counter.get(i, 1)
+        weights.append(total / (num_classes * count))
+    w = torch.tensor(weights, dtype=torch.float32, device=device)
+    return w / w.mean()  # 归一化
+\end{lstlisting}
+
+\subsection{Warmup + Cosine Annealing 学习率调度}
+
+\begin{lstlisting}[style=cleanpython]
+def lr_lambda(step):
+    if step < warmup_steps:
+        return float(step + 1) / float(max(1, warmup_steps))
+    progress = float(step - warmup_steps) / \
+               float(max(1, total_steps - warmup_steps))
+    return max(0.0, 0.5 * (1.0 + math.cos(math.pi * progress)))
+
+scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
+\end{lstlisting}
+
+\section{训练日志记录}
+
+每个实验的训练日志（JSON 格式）记录以下信息：
+\begin{itemize}
+\item train\_loss、val\_loss：每个 epoch 的平均损失
+\item val\_acc、val\_macro\_f1：验证集准确率和 Macro-F1
+\item lr：每步的学习率
+\item best\_epoch、best\_macro\_f1：最佳模型信息
+\end{itemize}
+
+总共 14 个实验的完整日志保存在 \texttt{logs/} 目录下。
+
+\section{核心模型代码}
+
+\subsection{Bahdanau Attention 实现}
+
+\begin{lstlisting}[style=cleanpython]
+class BahdanauAttention(nn.Module):
+    """Bahdanau 加性注意力机制"""
+    def __init__(self, hidden_dim: int, attention_dim: int):
+        super().__init__()
+        self.W = nn.Linear(hidden_dim, attention_dim, bias=False)
+        self.U = nn.Linear(hidden_dim, attention_dim, bias=False)
+        self.v = nn.Linear(attention_dim, 1, bias=False)
+
+    def forward(self, encoder_outputs, query, mask=None):
+        # encoder_outputs: (B, T, H), query: (B, H)
+        attn_hidden = torch.tanh(
+            self.W(encoder_outputs) + self.U(query.unsqueeze(1))
+        )
+        scores = self.v(attn_hidden).squeeze(-1)  # (B, T)
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, -1e9)
+        weights = F.softmax(scores, dim=-1)  # (B, T)
+        context = torch.bmm(weights.unsqueeze(1), encoder_outputs).squeeze(1)
+        return context, weights
+\end{lstlisting}
+
+\subsection{TextCNN 多尺度卷积}
+
+\begin{lstlisting}[style=cleanpython]
+class TextCNN(nn.Module):
+    def __init__(self, vocab_size, num_classes=15, embed_dim=300,
+                 filter_sizes=(2,3,4,5), num_filters=128, dropout=0.3):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.convs = nn.ModuleList([
+            nn.Conv1d(embed_dim, num_filters, fs) for fs in filter_sizes
+        ])
+        total = num_filters * len(filter_sizes)  # 512
+        self.classifier = nn.Sequential(
+            nn.Linear(total, total // 2), nn.ReLU(),
+            nn.Dropout(dropout), nn.Linear(total // 2, num_classes),
+        )
+
+    def forward(self, input_ids, attention_mask):
+        x = self.embedding(input_ids).permute(0, 2, 1)  # (B, C, T)
+        pooled = [F.max_pool1d(F.relu(conv(x)), conv(x).size(2)).squeeze(2)
+                  for conv in self.convs]
+        return self.classifier(torch.cat(pooled, dim=1)), None
+\end{lstlisting}

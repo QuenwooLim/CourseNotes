@@ -1,0 +1,51 @@
+\begin{thebibliography}{6}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Bahdanau et~al.(2015)Bahdanau, Cho, and Bengio]{bahdanau2014}
+Dzmitry Bahdanau, Kyunghyun Cho, and Yoshua Bengio.
+\newblock Neural machine translation by jointly learning to align and
+  translate.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2015.
+\newblock URL \url{https://arxiv.org/abs/1409.0473}.
+
+\bibitem[benchmark(2020)]{clue}
+CLUE benchmark.
+\newblock Clue: Chinese language understanding evaluation, 2020.
+\newblock URL \url{https://github.com/CLUEbenchmark/CLUE}.
+
+\bibitem[Devlin et~al.(2018)Devlin, Chang, Lee, and Toutanova]{devlin2018}
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova.
+\newblock Bert: Pre-training of deep bidirectional transformers for language
+  understanding.
+\newblock \emph{arXiv preprint arXiv:1810.04805}, 2018.
+\newblock URL \url{https://arxiv.org/abs/1810.04805}.
+
+\bibitem[Kim(2014)]{kim2014}
+Yoon Kim.
+\newblock Convolutional neural networks for sentence classification.
+\newblock In \emph{Proceedings of the 2014 Conference on Empirical Methods in
+  Natural Language Processing (EMNLP)}, 2014.
+\newblock URL \url{https://arxiv.org/abs/1408.5882}.
+
+\bibitem[Paszke et~al.(2019)Paszke, Gross, Massa, Lerer, Bradbury, Chanan,
+  Killeen, Lin, Gimelshein, Antiga, et~al.]{pytorch}
+Adam Paszke, Sam Gross, Francisco Massa, Adam Lerer, James Bradbury, Gregory
+  Chanan, Trevor Killeen, Zeming Lin, Natalia Gimelshein, Luca Antiga, et~al.
+\newblock Pytorch, 2019.
+\newblock URL \url{https://pytorch.org}.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez,
+  Kaiser, and Polosukhin]{vaswani2017}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N. Gomez, Lukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2017.
+\newblock URL \url{https://arxiv.org/abs/1706.03762}.
+
+\end{thebibliography}

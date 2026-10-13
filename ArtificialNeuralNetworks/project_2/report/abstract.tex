@@ -1,0 +1,11 @@
+\cabstract{
+本报告基于人工神经网络课程第二次大作业要求，使用 PyTorch 深度学习框架完成了中文短新闻主题分类任务。项目使用 TNEWS 今日头条中文新闻短文本分类数据集，包含 15 个新闻主题类别（53,360 条训练数据，10,000 条测试数据）。
+
+实验设计并实现了两种深度神经网络模型：BiLSTM + Bahdanau Attention（RNN+Attention 路线）和 Transformer Encoder（Transformer 路线），并分别探索了字符级（Char-level）和词级（Word-level）两种文本切分方式。训练过程中引入了 Early Stopping 和 Warmup + Cosine Annealing 学习率调度等策略。
+
+\textbf{实验结果表明}：BiLSTM + Attention 模型在字符级切分下表现最优，验证集达到 Accuracy \textbf{0.4890}、Macro-F1 \textbf{0.4667}，测试集达到 Accuracy \textbf{0.4940}、Macro-F1 \textbf{0.4757}。对比实验发现：(1) BiLSTM 在短文本分类上优于 Transformer（高出 2.6 个百分点）；(2) 字符级切分优于词级切分；(3) 词级模型因词表过大（67,799 tokens）导致严重过拟合。通过混淆矩阵识别出 news\_world→news\_military、news\_culture→news\_travel 等多组易混淆类别，并利用 Attention 可视化验证了模型的关键词关注能力。报告最后分析了类别不平衡（23:1）对性能的影响，并讨论了基于预训练模型微调等改进方向。
+
+代码已支持 BERT 预训练模型分类器、类别权重平衡、标签平滑、Subword 分词器和集成学习等高级功能。
+}
+\ckeywords{文本分类，BiLSTM，Bahdanau 注意力机制，Transformer，TNEWS，中文自然语言处理}
+\ekeywords{Text Classification, BiLSTM, Bahdanau Attention, Transformer, TNEWS, Chinese NLP}

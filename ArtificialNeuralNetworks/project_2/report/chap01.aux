@@ -1,0 +1,186 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\citation{clue}
+\citation{clue}
+\pp@pagectr{footnote}{1}{4}{1}
+\@writefile{toc}{\contentsline {chapter}{\numberline {1\hspace  {.3em}}任务描述}{1}{chapter.1}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{loa}{\addvspace {10\p@ }}
+\pp@pagectr{footnote}{2}{5}{2}
+\@writefile{toc}{\contentsline {chapter}{\numberline {2\hspace  {.3em}}数据分析与预处理}{2}{chapter.2}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{loa}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.1}数据规模与划分}{2}{subsection.2.0.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2.1}{\ignorespaces TNEWS 数据集文件说明}}{2}{table.caption.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.2}类别分布分析}{2}{subsection.2.0.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2.1}{\ignorespaces TNEWS 各类别样本分布（不平衡比例 23.17:1）}}{2}{figure.caption.3}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:class_dist}{{2.1}{2}{TNEWS 各类别样本分布（不平衡比例 23.17:1）}{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.3}文本长度分析}{3}{subsection.2.0.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2.2}{\ignorespaces 文本长度统计}}{3}{table.caption.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2.2}{\ignorespaces 文本长度分布（左：字符级，右：词级）}}{3}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:text_len}{{2.2}{3}{文本长度分布（左：字符级，右：词级）}{figure.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.4}文本清洗}{3}{subsection.2.0.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.5}文本切分与词表构建}{4}{subsection.2.0.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2.3}{\ignorespaces 三种分词方式对比}}{5}{table.caption.6}\protected@file@percent }
+\newlabel{tab:tokenizer_comp}{{2.3}{5}{三种分词方式对比}{table.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.0.6}关键词字段处理}{5}{subsection.2.0.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2.3}{\ignorespaces 关键词字段统计（左：覆盖率饼图，右：关键词数量分布直方图）}}{5}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:keyword_stats}{{2.3}{5}{关键词字段统计（左：覆盖率饼图，右：关键词数量分布直方图）}{figure.caption.7}{}}
+\citation{bahdanau2014}
+\pp@pagectr{footnote}{3}{9}{6}
+\@writefile{toc}{\contentsline {chapter}{\numberline {3\hspace  {.3em}}模型设计}{6}{chapter.3}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{loa}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.0.1}BiLSTM + Bahdanau Attention}{6}{subsection.3.0.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces BiLSTM + Bahdanau Attention 模型架构}}{7}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:bilstm_arch}{{3.1}{7}{BiLSTM + Bahdanau Attention 模型架构}{figure.caption.8}{}}
+\citation{vaswani2017}
+\citation{devlin2018}
+\citation{kim2014}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.0.2}Transformer Encoder}{8}{subsection.3.0.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.0.3}TextCNN（消融实验）}{8}{subsection.3.0.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces TextCNN 多尺度卷积分类器架构}}{9}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:textcnn_arch}{{3.2}{9}{TextCNN 多尺度卷积分类器架构}{figure.caption.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.0.4}BiGRU + Attention 及其他变体}{9}{subsection.3.0.4}\protected@file@percent }
+\citation{vaswani2017}
+\pp@pagectr{footnote}{4}{14}{11}
+\@writefile{toc}{\contentsline {chapter}{\numberline {4\hspace  {.3em}}训练设置}{11}{chapter.4}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{loa}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.0.1}超参数配置}{11}{subsection.4.0.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4.1}{\ignorespaces 训练超参数配置（各组实验共享参数）}}{11}{table.caption.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.0.2}训练策略与超参数选择依据}{11}{subsection.4.0.2}\protected@file@percent }
+\citation{pytorch}
+\pp@pagectr{footnote}{5}{16}{13}
+\@writefile{toc}{\contentsline {chapter}{\numberline {5\hspace  {.3em}}实验结果}{13}{chapter.5}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{loa}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.0.1}对比实验：全部 14 组模型}{13}{subsection.5.0.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5.1}{\ignorespaces 全部 14 组模型验证集结果（按 Macro-F1 降序排列）}}{13}{table.caption.11}\protected@file@percent }
+\newlabel{tab:comparison}{{5.1}{13}{全部 14 组模型验证集结果（按 Macro-F1 降序排列）}{table.caption.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.0.2}测试集最终结果}{13}{subsection.5.0.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5.2}{\ignorespaces 测试集最终评估结果}}{13}{table.caption.13}\protected@file@percent }
+\newlabel{tab:test}{{5.2}{13}{测试集最终评估结果}{table.caption.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.1}{\ignorespaces 全部 14 组模型训练过程对比曲线}}{14}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:multi_curves}{{5.1}{14}{全部 14 组模型训练过程对比曲线}{figure.caption.12}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.3}{\ignorespaces 测试集各类别 F1 分数（BiLSTM + Attention, Char）}}{14}{table.caption.14}\protected@file@percent }
+\newlabel{tab:perclass}{{5.3}{14}{测试集各类别 F1 分数（BiLSTM + Attention, Char）}{table.caption.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.0.3}混淆矩阵分析}{15}{subsection.5.0.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5.2}{\ignorespaces TextCNN (Word) 在测试集上的混淆矩阵（9,765 样本）}}{15}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:cm}{{5.2}{15}{TextCNN (Word) 在测试集上的混淆矩阵（9,765 样本）}{figure.caption.15}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.3}{\ignorespaces Attention 热力图示例 1：旅游类文本}}{16}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:attn1}{{5.3}{16}{Attention 热力图示例 1：旅游类文本}{figure.caption.16}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.4}{\ignorespaces Attention 热力图示例 2：科技类文本}}{16}{figure.caption.17}\protected@file@percent }
+\newlabel{fig:attn2}{{5.4}{16}{Attention 热力图示例 2：科技类文本}{figure.caption.17}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.0.4}注意力可视化}{16}{subsection.5.0.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.0.5}t-SNE 特征可视化}{16}{subsection.5.0.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5.5}{\ignorespaces t-SNE 特征可视化（TextCNN Word，2,000 样本）}}{17}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:tsne}{{5.5}{17}{t-SNE 特征可视化（TextCNN Word，2,000 样本）}{figure.caption.18}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.0.6}训练过程分析}{17}{subsection.5.0.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5.6}{\ignorespaces TextCNN (Word) 训练曲线（Best F1=0.4917）}}{18}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:train_curves}{{5.6}{18}{TextCNN (Word) 训练曲线（Best F1=0.4917）}{figure.caption.19}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5.7}{\ignorespaces TextCNN (Char) 训练曲线（Best F1=0.4890）}}{18}{figure.caption.20}\protected@file@percent }
+\newlabel{fig:top5_curves}{{5.7}{18}{TextCNN (Char) 训练曲线（Best F1=0.4890）}{figure.caption.20}{}}
+\pp@pagectr{footnote}{6}{22}{19}
+\@writefile{toc}{\contentsline {chapter}{\numberline {6\hspace  {.3em}}结果分析与错误分析}{19}{chapter.6}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{loa}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.0.1}模型对比分析}{19}{subsection.6.0.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6.1}{\ignorespaces 按架构分组的 Macro-F1 对比曲线}}{20}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:grouped}{{6.1}{20}{按架构分组的 Macro-F1 对比曲线}{figure.caption.21}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.2}{\ignorespaces 14 个模型最终 Macro-F1 排名}}{20}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:ranking}{{6.2}{20}{14 个模型最终 Macro-F1 排名}{figure.caption.22}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.0.2}优化历程总结}{20}{subsection.6.0.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6.3}{\ignorespaces 各模型过拟合程度分析（最佳 Epoch 处 Train Loss vs Val Loss）}}{21}{figure.caption.23}\protected@file@percent }
+\newlabel{fig:overfit}{{6.3}{21}{各模型过拟合程度分析（最佳 Epoch 处 Train Loss vs Val Loss）}{figure.caption.23}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.4}{\ignorespaces 模型参数量与性能关系}}{21}{figure.caption.24}\protected@file@percent }
+\newlabel{fig:param_perf}{{6.4}{21}{模型参数量与性能关系}{figure.caption.24}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.0.3}模型集成}{22}{subsection.6.0.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.1}{\ignorespaces 模型集成结果（测试集 dev.json，9,765 条）}}{22}{table.caption.25}\protected@file@percent }
+\newlabel{tab:ensemble}{{6.1}{22}{模型集成结果（测试集 dev.json，9,765 条）}{table.caption.25}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.0.4}错误案例分析}{22}{subsection.6.0.4}\protected@file@percent }
+\citation{devlin2018}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.0.5}与 CLUE 基准的对比}{23}{subsection.6.0.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6.2}{\ignorespaces 与 CLUE TNEWS 排行榜对比}}{23}{table.caption.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.0.6}现存问题与改进方向}{23}{subsection.6.0.6}\protected@file@percent }
+\pp@pagectr{footnote}{7}{27}{24}
+\@writefile{toc}{\contentsline {chapter}{\numberline {7\hspace  {.3em}}心得体会}{24}{chapter.7}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{loa}{\addvspace {10\p@ }}
+\citation{clue}
+\citation{bahdanau2014}
+\citation{vaswani2017}
+\citation{kim2014}
+\pp@pagectr{footnote}{8}{28}{25}
+\@writefile{toc}{\contentsline {chapter}{\numberline {8\hspace  {.3em}}学术诚信说明}{25}{chapter.8}\protected@file@percent }
+\@writefile{lof}{\addvspace {10.0pt}}
+\@writefile{lot}{\addvspace {10.0pt}}
+\@writefile{loa}{\addvspace {10\p@ }}
+\@setckpt{chap01}{
+\setcounter{page}{26}
+\setcounter{equation}{0}
+\setcounter{enumi}{5}
+\setcounter{enumii}{0}
+\setcounter{enumiii}{0}
+\setcounter{enumiv}{0}
+\setcounter{footnote}{0}
+\setcounter{mpfootnote}{0}
+\setcounter{part}{0}
+\setcounter{chapter}{8}
+\setcounter{section}{0}
+\setcounter{subsection}{0}
+\setcounter{subsubsection}{0}
+\setcounter{paragraph}{0}
+\setcounter{subparagraph}{0}
+\setcounter{figure}{0}
+\setcounter{table}{0}
+\setcounter{caption@flags}{2}
+\setcounter{continuedfloat}{0}
+\setcounter{subfigure}{0}
+\setcounter{subtable}{0}
+\setcounter{parentequation}{0}
+\setcounter{lstnumber}{1}
+\setcounter{LT@tables}{0}
+\setcounter{LT@chunks}{0}
+\setcounter{AlgoLine}{0}
+\setcounter{algocfline}{0}
+\setcounter{algocfproc}{0}
+\setcounter{algocf}{0}
+\setcounter{lofdepth}{1}
+\setcounter{lotdepth}{1}
+\setcounter{nlinenum}{0}
+\setcounter{pp@a@footnote}{8}
+\setcounter{cp@cntr}{0}
+\setcounter{theorem}{0}
+\setcounter{proposition}{0}
+\setcounter{lemma}{0}
+\setcounter{corollary}{0}
+\setcounter{definition}{0}
+\setcounter{remark}{0}
+\setcounter{eg}{0}
+\setcounter{assumption}{0}
+\setcounter{NAT@ctr}{0}
+\setcounter{section@level}{0}
+\setcounter{Item}{41}
+\setcounter{Hfootnote}{0}
+\setcounter{Hy@AnnotLevel}{0}
+\setcounter{bookmark@seq@number}{8}
+\setcounter{BackrefHyperFootnoteCounter}{0}
+\setcounter{tcbbreakpart}{0}
+\setcounter{tcblayer}{0}
+\setcounter{tcolorbox@number}{0}
+\setcounter{tcbrastercolumn}{1}
+\setcounter{tcbrasterrow}{1}
+\setcounter{tcbrasternum}{1}
+\setcounter{tcbraster}{0}
+\setcounter{tcblisting}{0}
+\setcounter{lstlisting}{0}
+}

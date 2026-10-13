@@ -1,0 +1,33 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}激活函数（8分）}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}实现tanh激活函数的前向传播和反向传播（4分）}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}实现 sigmoid 激活函数的前向传播和反向传播（4分）}{1}{section.1.2}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}全连接神经网络（15分）}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}实现 affine layer 的前向传播和反向传播（3分）}{3}{section.2.1}%
+\contentsline {section}{\numberline {2.2}实现 ReLU 激活函数的前向传播和反向传播，并在 Jupyter Notebook 上回答问题 1（3分）}{3}{section.2.2}%
+\contentsline {section}{\numberline {2.3}利用你实现的 affine layer 和 ReLU 激活函数构建一个两层的全连接神经网络（3分）}{4}{section.2.3}%
+\contentsline {section}{\numberline {2.4}训练你实现的两层全连接神经网络，使测试结果的准确率达到 50\% 以上（3分）}{5}{section.2.4}%
+\contentsline {section}{\numberline {2.5}构建多层的全连接网络，满足 \texttt {FullyConnectedNets.ipynb} 中的测试要求（3分）}{7}{section.2.5}%
+\contentsline {chapter}{\numberline {3\hspace {.3em}}归一化（10分）}{13}{chapter.3}%
+\contentsline {section}{\numberline {3.1}实现 batch normalization 的前向传播和反向传播（3分）}{13}{section.3.1}%
+\contentsline {section}{\numberline {3.2}修改你之前实现的全连接神经网络，添加 batch normalization，回答问题 1（3分）}{14}{section.3.2}%
+\contentsline {paragraph}{描述实验结果：}{15}{paragraph*.7}%
+\contentsline {paragraph}{不同影响：}{16}{paragraph*.8}%
+\contentsline {paragraph}{原因：}{16}{paragraph*.9}%
+\contentsline {section}{\numberline {3.3}探究 batch normalization 和 batch size 的关系，回答问题 2（2分）}{16}{section.3.3}%
+\contentsline {section}{\numberline {3.4}实现 layer normalization 的前向传播和反向传播，并将 layer normalization 添加到你之前实现的全连接神经网络中（1分）}{17}{section.3.4}%
+\contentsline {section}{\numberline {3.5}探究 layer normalization 和 batch size 的关系，回答问题 3（1分）}{19}{section.3.5}%
+\contentsline {chapter}{\numberline {4\hspace {.3em}}CNN（32分）}{20}{chapter.4}%
+\contentsline {section}{\numberline {4.1}实现 CNN 的前向传播和反向传播（5分）}{20}{section.4.1}%
+\contentsline {section}{\numberline {4.2}实现 max pooling 的前向传播和反向传播（5分）}{22}{section.4.2}%
+\contentsline {section}{\numberline {4.3}实现 avg pooling 的前向传播和反向传播（5分）}{23}{section.4.3}%
+\contentsline {section}{\numberline {4.4}实现一个三层卷积神经网络（5分）}{25}{section.4.4}%
+\contentsline {section}{\numberline {4.5}实现 spatial batch normalization（5分）}{27}{section.4.5}%
+\contentsline {section}{\numberline {4.6}实现 spatial layer normalization（4分）}{28}{section.4.6}%
+\contentsline {section}{\numberline {4.7}实现 instance normalization（3分）}{29}{section.4.7}%
+\contentsline {chapter}{\numberline {5\hspace {.3em}}实现 ConvNet（35分）}{31}{chapter.5}%
+\contentsline {section}{\numberline {5.1}网络结构代码}{31}{section.5.1}%
+\contentsline {section}{\numberline {5.2}训练代码}{38}{section.5.2}%
+\contentsline {section}{\numberline {5.3}调参过程与参数影响分析}{40}{section.5.3}%
+\contentsline {section}{\numberline {5.4}结果展示}{41}{section.5.4}%
+\contentsline {chapter}{参考文献}{43}{chapter*.17}%
