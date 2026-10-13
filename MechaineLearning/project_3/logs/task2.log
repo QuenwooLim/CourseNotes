@@ -1,0 +1,234 @@
+INFO:__main__:加载数据集...
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): hf-mirror.com:443
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/derek-thomas/ScienceQA/resolve/main/README.md HTTP/1.1" 307 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /api/resolve-cache/datasets/derek-thomas/ScienceQA/f18b0a70359ebfb41f658fd564208d0355b013f4/README.md HTTP/1.1" 200 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/derek-thomas/ScienceQA/resolve/f18b0a70359ebfb41f658fd564208d0355b013f4/ScienceQA.py HTTP/1.1" 404 0
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): s3.amazonaws.com:443
+DEBUG:urllib3.connectionpool:https://s3.amazonaws.com:443 "HEAD /datasets.huggingface.co/datasets/datasets/derek-thomas/ScienceQA/derek-thomas/ScienceQA.py HTTP/1.1" 404 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/datasets/derek-thomas/ScienceQA/revision/f18b0a70359ebfb41f658fd564208d0355b013f4 HTTP/1.1" 200 1490
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/derek-thomas/ScienceQA/resolve/f18b0a70359ebfb41f658fd564208d0355b013f4/.huggingface.yaml HTTP/1.1" 404 0
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): datasets-server.hf-mirror.com:443
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/datasets/derek-thomas/ScienceQA/tree/f18b0a70359ebfb41f658fd564208d0355b013f4/data?recursive=True&expand=False HTTP/1.1" 200 529
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/datasets/derek-thomas/ScienceQA/tree/f18b0a70359ebfb41f658fd564208d0355b013f4?recursive=False&expand=False HTTP/1.1" 200 484
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/derek-thomas/ScienceQA/resolve/f18b0a70359ebfb41f658fd564208d0355b013f4/dataset_infos.json HTTP/1.1" 404 0
+DEBUG:filelock:Attempting to acquire lock 139075672168048 on /root/.cache/huggingface/datasets/_root_.cache_huggingface_datasets_derek-thomas___science_qa_default_0.0.0_f18b0a70359ebfb41f658fd564208d0355b013f4.lock
+DEBUG:filelock:Lock 139075672168048 acquired on /root/.cache/huggingface/datasets/_root_.cache_huggingface_datasets_derek-thomas___science_qa_default_0.0.0_f18b0a70359ebfb41f658fd564208d0355b013f4.lock
+DEBUG:fsspec.local:open file: /root/.cache/huggingface/datasets/derek-thomas___science_qa/default/0.0.0/f18b0a70359ebfb41f658fd564208d0355b013f4/dataset_info.json
+DEBUG:filelock:Attempting to release lock 139075672168048 on /root/.cache/huggingface/datasets/_root_.cache_huggingface_datasets_derek-thomas___science_qa_default_0.0.0_f18b0a70359ebfb41f658fd564208d0355b013f4.lock
+DEBUG:filelock:Lock 139075672168048 released on /root/.cache/huggingface/datasets/_root_.cache_huggingface_datasets_derek-thomas___science_qa_default_0.0.0_f18b0a70359ebfb41f658fd564208d0355b013f4.lock
+DEBUG:filelock:Attempting to acquire lock 139075670417792 on /root/.cache/huggingface/datasets/derek-thomas___science_qa/default/0.0.0/f18b0a70359ebfb41f658fd564208d0355b013f4_builder.lock
+DEBUG:filelock:Lock 139075670417792 acquired on /root/.cache/huggingface/datasets/derek-thomas___science_qa/default/0.0.0/f18b0a70359ebfb41f658fd564208d0355b013f4_builder.lock
+DEBUG:fsspec.local:open file: /root/.cache/huggingface/datasets/derek-thomas___science_qa/default/0.0.0/f18b0a70359ebfb41f658fd564208d0355b013f4/dataset_info.json
+DEBUG:filelock:Attempting to release lock 139075670417792 on /root/.cache/huggingface/datasets/derek-thomas___science_qa/default/0.0.0/f18b0a70359ebfb41f658fd564208d0355b013f4_builder.lock
+DEBUG:filelock:Lock 139075670417792 released on /root/.cache/huggingface/datasets/derek-thomas___science_qa/default/0.0.0/f18b0a70359ebfb41f658fd564208d0355b013f4_builder.lock
+INFO:__main__:Qwen2VLForConditionalGeneration(
+  (model): Qwen2VLModel(
+    (visual): Qwen2VisionTransformerPretrainedModel(
+      (patch_embed): PatchEmbed(
+        (proj): Conv3d(3, 1280, kernel_size=(2, 14, 14), stride=(2, 14, 14), bias=False)
+      )
+      (rotary_pos_emb): VisionRotaryEmbedding()
+      (blocks): ModuleList(
+        (0-31): 32 x Qwen2VLVisionBlock(
+          (norm1): LayerNorm((1280,), eps=1e-06, elementwise_affine=True)
+          (norm2): LayerNorm((1280,), eps=1e-06, elementwise_affine=True)
+          (attn): VisionAttention(
+            (qkv): Linear(in_features=1280, out_features=3840, bias=True)
+            (proj): Linear(in_features=1280, out_features=1280, bias=True)
+          )
+          (mlp): VisionMlp(
+            (fc1): Linear(in_features=1280, out_features=5120, bias=True)
+            (act): QuickGELUActivation()
+            (fc2): Linear(in_features=5120, out_features=1280, bias=True)
+          )
+        )
+      )
+      (merger): PatchMerger(
+        (ln_q): LayerNorm((1280,), eps=1e-06, elementwise_affine=True)
+        (mlp): Sequential(
+          (0): Linear(in_features=5120, out_features=5120, bias=True)
+          (1): GELU(approximate='none')
+          (2): Linear(in_features=5120, out_features=3584, bias=True)
+        )
+      )
+    )
+    (language_model): Qwen2VLTextModel(
+      (embed_tokens): Embedding(152064, 3584)
+      (layers): ModuleList(
+        (0-27): 28 x Qwen2VLDecoderLayer(
+          (self_attn): Qwen2VLAttention(
+            (q_proj): Linear(in_features=3584, out_features=3584, bias=True)
+            (k_proj): Linear(in_features=3584, out_features=512, bias=True)
+            (v_proj): Linear(in_features=3584, out_features=512, bias=True)
+            (o_proj): Linear(in_features=3584, out_features=3584, bias=False)
+            (rotary_emb): Qwen2VLRotaryEmbedding()
+          )
+          (mlp): Qwen2MLP(
+            (gate_proj): Linear(in_features=3584, out_features=18944, bias=False)
+            (up_proj): Linear(in_features=3584, out_features=18944, bias=False)
+            (down_proj): Linear(in_features=18944, out_features=3584, bias=False)
+            (act_fn): SiLUActivation()
+          )
+          (input_layernorm): Qwen2RMSNorm((3584,), eps=1e-06)
+          (post_attention_layernorm): Qwen2RMSNorm((3584,), eps=1e-06)
+        )
+      )
+      (norm): Qwen2RMSNorm((3584,), eps=1e-06)
+      (rotary_emb): Qwen2VLRotaryEmbedding()
+    )
+  )
+  (lm_head): Linear(in_features=3584, out_features=152064, bias=False)
+)
+INFO:__main__:样本 1: 问题: Think about the magnetic force between the magnets in each pair. Which of the following statements is true?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 2: 问题: What is the capital of Oregon?, 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 3: 问题: Which continent is highlighted?, 正确答案: C, 模型输出: ```json
+{
+    "answer": "C, 预测: C
+INFO:__main__:样本 4: 问题: Which bird's beak is also adapted to catch insects?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 5: 问题: What is the capital of New Hampshire?, 正确答案: D, 模型输出: ```json
+{
+    "answer": "D, 预测: D
+INFO:__main__:样本 6: 问题: Which of these continents does the equator intersect?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 7: 问题: Select the organism in the same genus as the axolotl., 正确答案: C, 模型输出: ```json
+{
+    "answer": "C, 预测: C
+INFO:__main__:样本 8: 问题: Select the reptile below., 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 9: 问题: Which country is highlighted?, 正确答案: D, 模型输出: ```json
+{
+    "answer": "C, 预测: C
+INFO:__main__:样本 10: 问题: During this time, thermal energy was transferred from () to ()., 正确答案: A, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 11: 问题: What type of rock is shale?, 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 12: 问题: What can Shivani and Austin trade to each get what they want?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 13: 问题: Is an icicle a solid, a liquid, or a gas?, 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 14: 问题: Which property matches this object?, 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 15: 问题: What is the direction of this pull?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 16: 问题: Which of these cities is marked on the map?, 正确答案: C, 模型输出: ```json
+{
+    "answer": "C, 预测: C
+INFO:__main__:样本 17: 问题: Is the following statement about our solar system true or false?
+Jupiter's volume is more than 10,000 times as large as the volume of Mars., 正确答案: B, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 18: 问题: Which continent is highlighted?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 19: 问题: Identify the question that Jaden and Ron's experiment can best answer., 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 20: 问题: Which property do these three objects have in common?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 21: 问题: Which better describes the Serengeti National Park ecosystem?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 22: 问题: Which country is highlighted?, 正确答案: C, 模型输出: ```json
+{
+    "answer": "C, 预测: C
+INFO:__main__:样本 23: 问题: Which better describes the Cape Breton Highlands National Park ecosystem?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 24: 问题: What is the name of the colony shown?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 25: 问题: Which animal's legs are also adapted for wading?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 26: 问题: What is the capital of Tennessee?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 27: 问题: What can Austin and Colin trade to each get what they want?, 正确答案: D, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 28: 问题: What is the capital of Arizona?, 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 29: 问题: Complete the statement.
+Hydrogen peroxide is ()., 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 30: 问题: What is the capital of Vermont?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 31: 问题: Which statement describes the Yasuni National Park ecosystem?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 32: 问题: Which animal's limbs are also adapted for climbing trees?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 33: 问题: Select the organism in the same genus as the European nightjar., 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 34: 问题: What is the direction of this pull?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 35: 问题: Which of the following could Stanley's test show?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 36: 问题: What is the capital of North Carolina?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 37: 问题: What can Bella and Darnell trade to each get what they want?, 正确答案: D, 模型输出: ```json
+{
+    "answer": "D, 预测: D
+INFO:__main__:样本 38: 问题: What can Greta and Allie trade to each get what they want?, 正确答案: D, 模型输出: ```json
+{
+    "answer": "D, 预测: D
+INFO:__main__:样本 39: 问题: Which of these states is farthest east?, 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 40: 问题: Which of the following could Caden's test show?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 41: 问题: Which statement is true about the average monthly precipitation in Nairobi?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 42: 问题: Which of the following was a dependent variable in this experiment?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 43: 问题: Which of these states is farthest west?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 44: 问题: Select the organism in the same species as the American alligator., 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 45: 问题: Which property do these three objects have in common?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 46: 问题: What is the capital of Hawaii?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 47: 问题: Which better describes the Pantanal ecosystem?, 正确答案: B, 模型输出: ```json
+{
+    "answer": "B, 预测: B
+INFO:__main__:样本 48: 问题: What is the probability that a Labrador retriever produced by this cross will have brown fur?, 正确答案: C, 模型输出: ```json
+{
+    "answer": "E, 预测: E
+INFO:__main__:样本 49: 问题: Which animal's feet are also adapted for swimming?, 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:样本 50: 问题: Select the organism in the same species as the Eurasian beaver., 正确答案: A, 模型输出: ```json
+{
+    "answer": "A, 预测: A
+INFO:__main__:准确率：86.00%

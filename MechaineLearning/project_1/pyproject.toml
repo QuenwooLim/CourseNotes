@@ -1,0 +1,16 @@
+[project]
+name = "project1"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+	"datasets>=2.19.0",
+	"matplotlib>=3.8.0",
+	"numpy>=1.26.0",
+	"Pillow>=10.0.0",
+	"torch>=2.3.0",
+	"torchvision>=0.18.0",
+	"tqdm>=4.66.0",
+	"transformers>=4.40.0"
+]

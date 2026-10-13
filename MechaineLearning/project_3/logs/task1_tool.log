@@ -1,0 +1,230 @@
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): hf-mirror.com:443
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/gsm8k/resolve/main/README.md HTTP/1.1" 307 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/openai/gsm8k/resolve/main/README.md HTTP/1.1" 307 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /api/resolve-cache/datasets/openai/gsm8k/e53f048856ff4f594e959d75785d2c2d37b678ee/README.md HTTP/1.1" 200 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/gsm8k/resolve/e53f048856ff4f594e959d75785d2c2d37b678ee/gsm8k.py HTTP/1.1" 307 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/openai/gsm8k/resolve/e53f048856ff4f594e959d75785d2c2d37b678ee/gsm8k.py HTTP/1.1" 404 0
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): s3.amazonaws.com:443
+DEBUG:urllib3.connectionpool:https://s3.amazonaws.com:443 "HEAD /datasets.huggingface.co/datasets/datasets/gsm8k/gsm8k.py HTTP/1.1" 404 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/datasets/gsm8k/revision/e53f048856ff4f594e959d75785d2c2d37b678ee HTTP/1.1" 307 111
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/datasets/openai/gsm8k/revision/e53f048856ff4f594e959d75785d2c2d37b678ee HTTP/1.1" 200 1211
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/gsm8k/resolve/e53f048856ff4f594e959d75785d2c2d37b678ee/.huggingface.yaml HTTP/1.1" 307 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/openai/gsm8k/resolve/e53f048856ff4f594e959d75785d2c2d37b678ee/.huggingface.yaml HTTP/1.1" 404 0
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): datasets-server.hf-mirror.com:443
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/datasets/gsm8k/tree/e53f048856ff4f594e959d75785d2c2d37b678ee/main?recursive=True&expand=False HTTP/1.1" 307 140
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/datasets/openai/gsm8k/tree/e53f048856ff4f594e959d75785d2c2d37b678ee/main?recursive=True&expand=False HTTP/1.1" 200 362
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/datasets/gsm8k/tree/e53f048856ff4f594e959d75785d2c2d37b678ee?recursive=False&expand=False HTTP/1.1" 307 136
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/datasets/openai/gsm8k/tree/e53f048856ff4f594e959d75785d2c2d37b678ee?recursive=False&expand=False HTTP/1.1" 200 388
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/gsm8k/resolve/e53f048856ff4f594e959d75785d2c2d37b678ee/dataset_infos.json HTTP/1.1" 307 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /datasets/openai/gsm8k/resolve/e53f048856ff4f594e959d75785d2c2d37b678ee/dataset_infos.json HTTP/1.1" 404 0
+DEBUG:filelock:Attempting to acquire lock 138256109725184 on /root/.cache/huggingface/datasets/_root_.cache_huggingface_datasets_gsm8k_main_0.0.0_e53f048856ff4f594e959d75785d2c2d37b678ee.lock
+DEBUG:filelock:Lock 138256109725184 acquired on /root/.cache/huggingface/datasets/_root_.cache_huggingface_datasets_gsm8k_main_0.0.0_e53f048856ff4f594e959d75785d2c2d37b678ee.lock
+DEBUG:fsspec.local:open file: /root/.cache/huggingface/datasets/gsm8k/main/0.0.0/e53f048856ff4f594e959d75785d2c2d37b678ee/dataset_info.json
+DEBUG:filelock:Attempting to release lock 138256109725184 on /root/.cache/huggingface/datasets/_root_.cache_huggingface_datasets_gsm8k_main_0.0.0_e53f048856ff4f594e959d75785d2c2d37b678ee.lock
+DEBUG:filelock:Lock 138256109725184 released on /root/.cache/huggingface/datasets/_root_.cache_huggingface_datasets_gsm8k_main_0.0.0_e53f048856ff4f594e959d75785d2c2d37b678ee.lock
+DEBUG:filelock:Attempting to acquire lock 138256320405216 on /root/.cache/huggingface/datasets/gsm8k/main/0.0.0/e53f048856ff4f594e959d75785d2c2d37b678ee_builder.lock
+DEBUG:filelock:Lock 138256320405216 acquired on /root/.cache/huggingface/datasets/gsm8k/main/0.0.0/e53f048856ff4f594e959d75785d2c2d37b678ee_builder.lock
+DEBUG:fsspec.local:open file: /root/.cache/huggingface/datasets/gsm8k/main/0.0.0/e53f048856ff4f594e959d75785d2c2d37b678ee/dataset_info.json
+DEBUG:filelock:Attempting to release lock 138256320405216 on /root/.cache/huggingface/datasets/gsm8k/main/0.0.0/e53f048856ff4f594e959d75785d2c2d37b678ee_builder.lock
+DEBUG:filelock:Lock 138256320405216 released on /root/.cache/huggingface/datasets/gsm8k/main/0.0.0/e53f048856ff4f594e959d75785d2c2d37b678ee_builder.lock
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /Qwen/Qwen2.5-7B-Instruct/resolve/main/config.json HTTP/1.1" 307 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /api/resolve-cache/models/Qwen/Qwen2.5-7B-Instruct/a09a35458c702b33eeacc393d103063234e8bc28/config.json HTTP/1.1" 200 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /Qwen/Qwen2.5-7B-Instruct/resolve/main/generation_config.json HTTP/1.1" 307 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /api/resolve-cache/models/Qwen/Qwen2.5-7B-Instruct/a09a35458c702b33eeacc393d103063234e8bc28/generation_config.json HTTP/1.1" 200 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /Qwen/Qwen2.5-7B-Instruct/resolve/main/custom_generate/generate.py HTTP/1.1" 404 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /Qwen/Qwen2.5-7B-Instruct/resolve/main/tokenizer_config.json HTTP/1.1" 307 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "HEAD /api/resolve-cache/models/Qwen/Qwen2.5-7B-Instruct/a09a35458c702b33eeacc393d103063234e8bc28/tokenizer_config.json HTTP/1.1" 200 0
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/models/Qwen/Qwen2.5-7B-Instruct/tree/main/additional_chat_templates?recursive=False&expand=False HTTP/1.1" 404 64
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/models/Qwen/Qwen2.5-7B-Instruct/tree/main?recursive=True&expand=False HTTP/1.1" 200 2302
+DEBUG:urllib3.connectionpool:https://hf-mirror.com:443 "GET /api/models/Qwen/Qwen2.5-7B-Instruct HTTP/1.1" 200 3285
+INFO:root:开始推理...
+INFO:root:答案正确! pred: '109.00000000000001', gt: '109'
+ERROR:root:执行代码失败: # 初始条件
+small_stickers_initial = 30
+large_stickers_initial = 40
+
+# 转换规则
+large_sticker_value_large_button = 1
+large_sticker_value_small_button = 3
+large_button_value_small_sticker = 3
+
+# Lorraine 的交易
+small_stickers_traded = small_stickers_initial * 0.9
+large_stickers_traded_for_large_buttons = large_stickers_initial * 0.5
+large_stickers_traded_for_small_buttons = large_stickers_initial - large_stickers_traded_for_large_buttons
+
+# 计算获得的按钮数量
+large_buttons_from_small_stickers = small_stickers_traded
+large_buttons_from_large_stickers = large_stickers_traded_for_large_buttons
+small_buttons_from_large_stickers = large_stickers_traded_for_small_buttons * large_sticker_value_small_button
+
+# 总按钮数量
+total_buttons = large_buttons_from_small_stickers + large_buttons_from_large_buttons + small_buttons_from_large_stickers
+total_buttons
+ERROR:root:错误信息: name 'large_buttons_from_large_buttons' is not defined
+INFO:root:答案错误。pred: '107.0', gt: '89', 原始输出: ```python
+# 初始条件
+small_stickers_initial = 30
+large_stickers_initial = 40
+
+# 转换规则
+large_sticker_value_large_button = 1
+large_sticker_value_small_button = 3
+large_button_value_small_sticker = 3
+
+# Lorraine 的交易
+small_stickers_traded = small_stickers_initial * 0.9
+large_stickers_traded_for_large_buttons = large_stickers_initial * 0.5
+large_stickers_traded_for_small_buttons = large_stickers_initial - large_stickers_traded_for_large_buttons
+
+# 计算获得的按钮数量
+large_buttons_from_small_stickers = small_stickers_traded
+large_buttons_from_large_stickers = large_stickers_traded_for_large_buttons
+small_buttons_from_large_stickers = large_stickers_traded_for_small_buttons * large_sticker_value_small_button
+
+# 总按钮数量
+total_buttons = large_buttons_from_small_stickers + large_buttons_from_large_stickers + small_buttons_from_large_stickers
+total_buttons
+```
+INFO:root:答案正确! pred: '13.0', gt: '13'
+INFO:root:答案正确! pred: '5.0', gt: '5'
+INFO:root:答案正确! pred: '25', gt: '25'
+INFO:root:答案错误。pred: '1458', gt: '452', 原始输出: ```python
+# 定义时间转换为分钟的函数
+def time_to_minutes(hour, minute):
+    return hour * 60 + minute
+
+# Kim 通常的睡眠时间
+sleep_start_normal = time_to_minutes(22, 0)  # 10 p.m.
+sleep_end_normal = time_to_minutes(6, 0)     # 6 a.m.
+
+# 实际睡眠开始和结束时间
+sleep_start_actual = time_to_minutes(2, 15)
+sleep_end_actual = time_to_minutes(2, 38)
+
+# 实际起床时间
+wake_up_actual = time_to_minutes(5, 55)  # 5 minutes earlier than usual
+
+# 计算实际睡眠时间
+if sleep_start_actual < wake_up_actual:
+    actual_sleep_time = (24 * 60 - sleep_start_actual + sleep_end_actual) + (wake_up_actual - sleep_end_normal)
+else:
+    actual_sleep_time = sleep_end_actual - sleep_start_actual
+
+actual_sleep_time
+```
+INFO:root:答案正确! pred: '43.0', gt: '43'
+INFO:root:答案正确! pred: '34.0', gt: '34'
+INFO:root:答案正确! pred: '120.0', gt: '120'
+INFO:root:答案正确! pred: '11.0', gt: '11'
+INFO:root:已处理 10/50 个样本
+INFO:root:答案正确! pred: '34.0', gt: '34'
+INFO:root:答案正确! pred: '12', gt: '12'
+INFO:root:答案正确! pred: '15.0', gt: '15'
+INFO:root:答案正确! pred: '24.0', gt: '24'
+INFO:root:答案正确! pred: '105', gt: '105'
+INFO:root:答案正确! pred: '120', gt: '120'
+INFO:root:答案正确! pred: '17.0', gt: '17'
+INFO:root:答案正确! pred: '36', gt: '36'
+INFO:root:答案正确! pred: '12', gt: '12'
+INFO:root:答案正确! pred: '45', gt: '45'
+INFO:root:已处理 20/50 个样本
+INFO:root:答案正确! pred: '45.0', gt: '45'
+INFO:root:答案正确! pred: '8', gt: '8'
+INFO:root:答案正确! pred: '36.0', gt: '36'
+INFO:root:答案正确! pred: '1.0', gt: '1'
+INFO:root:答案错误。pred: '10', gt: '18', 原始输出: ```python
+sara_points = 8
+erin_points_now = sara_points * 3
+points_erin_before = erin_points_now - 14
+points_erin_before
+```
+INFO:root:答案正确! pred: '33.0', gt: '33'
+INFO:root:答案正确! pred: '1248.0', gt: '1248'
+INFO:root:答案正确! pred: '25.0', gt: '25'
+INFO:root:答案正确! pred: '1.0', gt: '1'
+INFO:root:答案正确! pred: '32.0', gt: '32'
+INFO:root:已处理 30/50 个样本
+INFO:root:答案正确! pred: '2.0', gt: '2'
+INFO:root:答案正确! pred: '30', gt: '30'
+INFO:root:答案正确! pred: '4.0', gt: '4'
+INFO:root:答案错误。pred: '-54', gt: '54', 原始输出: ```python
+distance_west = 5 * 18
+distance_east = 8 * 18
+final_distance_from_home = distance_west - distance_east
+final_distance_from_home
+```
+INFO:root:答案错误。pred: '-310', gt: '250', 原始输出: ```python
+stay_hours = 25  # Cameron stays from 5 pm to 10 am the next morning, which is 25 hours
+base_stay_12_hours = 1000  # Cost for the first 12 hours
+additional_hour_cost = 70  # Additional cost per hour after 12 hours
+
+# Calculate the cost for the first 12 hours
+cost_first_12_hours = base_stay_12_hours
+
+# Calculate the number of additional hours and the cost for them
+additional_hours = stay_hours - 12
+additional_cost = additional_hours * additional_hour_cost
+
+# Total cost for Cameron's stay
+total_cost = cost_first_12_hours + additional_cost
+
+# Calculate the cost if Cameron pays for 24 hours
+cost_24_hours = 1600
+
+# Calculate the savings
+savings = cost_24_hours - total_cost
+savings
+```
+INFO:root:答案正确! pred: '324.0', gt: '324'
+INFO:root:答案正确! pred: '129200.0', gt: '129200'
+INFO:root:答案错误。pred: '3040.0', gt: '4400', 原始输出: ```python
+normal_movie_cost = 10
+series_discount = 6
+remaining_movies = 600 - (600 / 3)
+older_movies_cost = 5
+normal_movies = remaining_movies * 0.4
+series_movies = remaining_movies - normal_movies
+
+total_cost = (series_movies * series_discount + normal_movies * normal_movie_cost + (remaining_movies - series_movies - normal_movies) * older_movies_cost)
+total_cost
+```
+INFO:root:答案正确! pred: '70', gt: '70'
+INFO:root:答案错误。pred: '276000.0', gt: '276,000', 原始输出: ```python
+car_price = 20000
+number_of_cars = 12
+tax_rate = 0.10
+registration_fee_per_car = 1000
+
+# 计算总价格
+total_price = car_price * number_of_cars
+
+# 计算税款
+tax = total_price * tax_rate
+
+# 计算注册费用
+registration_fees = registration_fee_per_car * number_of_cars
+
+# 计算总支付金额
+total_payment = total_price + tax + registration_fees
+total_payment
+```
+INFO:root:已处理 40/50 个样本
+INFO:root:答案错误。pred: '12.0', gt: '108', 原始输出: ```python
+groups = 90 // 9
+people_bringing_shells = groups * (3 / 5)
+shells_per_person = 2
+total_shells = people_bringing_shells * shells_per_person
+total_shells
+```
+INFO:root:答案正确! pred: '160', gt: '160'
+INFO:root:答案正确! pred: '90', gt: '90'
+INFO:root:答案正确! pred: '20.0', gt: '20'
+INFO:root:答案正确! pred: '296.0', gt: '296'
+INFO:root:答案正确! pred: '4800.0', gt: '4800'
+INFO:root:答案正确! pred: '30.0', gt: '30'
+INFO:root:答案正确! pred: '8', gt: '8'
+INFO:root:答案正确! pred: '1920.0', gt: '1920'
+INFO:root:答案正确! pred: '6', gt: '6'
+INFO:root:已处理 50/50 个样本
+INFO:root:准确率：84.00%
