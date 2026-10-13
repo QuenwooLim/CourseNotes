@@ -1,0 +1,416 @@
+\chapter{第一题}
+
+\section{题目}
+
+考虑以下两个计算 1到 N之间所有整数平方和的 Pthreads程序片段。假设 N= $10^9$，线程数 thread\_count= 8
+
+代码段 A：
+\begin{lstlisting}[style=cleancpp]
+void* Square_Sum_A(void* rank){ 
+    long my_rank=(long) rank; 
+    long long local_n= N/ thread_count;
+    long long first= my_rank* local_n+ 1;
+    long long last= first+ local_n;
+    for(long long i= first; i< last; i++){ 
+        pthread_mutex_lock(&mutex); 
+        global_sum+= i* i;
+        pthread_mutex_unlock(&mutex);
+    }
+    return NULL;
+}
+\end{lstlisting}
+
+代码段 B：
+\begin{lstlisting}[style=cleancpp]
+void* Square_Sum_B(void* rank){ 
+    long my_rank=(long) rank; 
+    long long local_n= N/ thread_count;
+    long long my_sum= 0;
+    long long first= my_rank* local_n+ 1;
+    long long last= first+ local_n;
+    for(long long i= first; i< last; i++){ 
+        my_sum+= i* i;
+    }
+    pthread_mutex_lock(&mutex);
+    global_sum+= my_sum;
+    pthread_mutex_unlock(&mutex); 
+    return NULL;
+}
+\end{lstlisting}
+
+回答下列问题：
+\begin{enumerate}
+    \item 指出代码段 A中的临界区，并估算在 N=$10^9$时，代码段 A总共执行了多少次锁操作
+    \item 从操作系统调度的角度分析，为什么代码段 A会导致 CPU利用率虚高但实际计算进度缓慢
+    \item 在代码段 B中，主线程在创建线程后立即调用 pthread\_join（阻塞调用它的线程，直到指定的线程结束），请说明 pthread\_join在此处的作用
+\end{enumerate}
+
+\section{答案}
+\subsection{代码段A中的临界区及锁操作次数}
+
+代码段A中的临界区是包含全局变量global\_sum更新的代码块：
+\begin{lstlisting}
+pthread_mutex_lock(&mutex); 
+global_sum+= i* i;
+pthread_mutex_unlock(&mutex);
+\end{lstlisting}
+
+当N=$10^9$，thread\_count=8时，每个线程处理的元素数量为local\_n = $10^9$/8 = 125,000,000（整数除法）。因此每个线程执行125,000,000次循环，每次循环执行一次加锁和解锁操作，共250,000,000次锁操作（125,000,000次加锁+125,000,000次解锁）。8个线程总共执行8×250,000,000=2,000,000,000次锁操作。
+
+\subsection{CPU利用率虚高但计算进度缓慢的原因}
+
+代码段A在每次累加操作前都进行加锁和解锁，导致频繁的上下文切换和线程阻塞。从操作系统调度角度看：
+\begin{itemize}
+    \item 当一个线程持有锁时，其他试图获取锁的线程会被阻塞并进入等待队列
+    \item 操作系统需要频繁进行线程调度和上下文切换，消耗大量CPU时间
+    \item 实际用于计算的时间比例很小，大部分时间花在锁竞争和调度上
+    \item 虽然CPU显示高利用率（因为频繁调度），但有效计算工作很少
+\end{itemize}
+
+\subsection{pthread\_join的作用}
+
+在代码段B中，pthread\_join的作用是：
+\begin{itemize}
+    \item 阻塞主线程，直到指定的工作线程完成执行
+    \item 确保所有工作线程都完成计算并将局部结果累加到global\_sum后，主线程才能继续执行
+    \item 保证程序正确性，避免主线程在工作线程完成前就结束或访问未完成的结果
+    \item 提供线程同步机制，确保所有并行计算任务完成后再进行后续操作
+\end{itemize}
+
+\chapter{第二题}
+
+\section{题目}
+
+读写锁允许多个读者同时进入临界区，但写者必须互斥访问。考虑以下一个简单的、基于信号量实现的自定义读写锁逻辑：
+\begin{lstlisting}[style=cleancpp]
+int read_count= 0;
+sem_t count_mutex;//保护 read_count的更新，初始化为 1
+sem_t rw_mutex; //保护共享资源的写操作，初始化为 1
+
+void* reader(void* arg){ 
+    sem_wait(&count_mutex); 
+    read_count++;
+    if(read_count== 1) sem_wait(&rw_mutex);//第一个读者锁定资源 
+    sem_post(&count_mutex);
+    //执行读操作
+    sem_wait(&count_mutex);
+    read_count--;
+    if(read_count== 0) sem_post(&rw_mutex);//最后一个读者释放资源 
+    sem_post(&count_mutex); 
+    return NULL;
+}
+
+void* writer(void* arg){ 
+    sem_wait(&rw_mutex);
+    //执行写操作
+    sem_post(&rw_mutex); 
+    return NULL;
+}
+\end{lstlisting}
+
+回答下列问题：
+\begin{enumerate}
+    \item 描述在该实现下，什么情况下写者可能会遭遇"饥饿"现象？
+    \item 该实现倾向于"读者"还是"写者"？如何避免对写者的饥饿问题，简要描述你的方案
+\end{enumerate}
+
+\section{答案}
+\subsection{写者饥饿的情况}
+
+在该实现下，写者可能会遭遇饥饿现象的情况是：
+\begin{itemize}
+    \item 当系统中有持续不断的读者请求到达时
+    \item 只要有至少一个读者在临界区内，rw\_mutex就会被占用
+    \item 新的读者可以不断进入（因为read\_count>0时不需要获取rw\_mutex）
+    \item 写者需要等待所有读者都离开（read\_count=0）才能获取rw\_mutex
+    \item 如果读者流持续不断，写者可能永远无法获得执行机会
+\end{itemize}
+
+\subsection{倾向性及避免饥饿的方案}
+
+该实现明显倾向于"读者"，因为：
+\begin{itemize}
+    \item 多个读者可以并发执行
+    \item 读者不需要等待其他读者
+    \item 写者必须等待所有读者完成
+\end{itemize}
+
+避免写者饥饿的方案：
+
+\textbf{方案一：写者优先策略}
+\begin{itemize}
+    \item 引入写者等待计数器write\_waiting
+    \item 当有写者在等待时，阻止新读者进入
+    \item 修改读者代码，在获取count\_mutex后检查是否有写者等待
+    \item 如果有写者等待，则读者需要等待直到写者完成
+\end{itemize}
+
+\textbf{方案二：公平队列策略}
+\begin{itemize}
+    \item 使用FIFO队列管理所有请求（读者和写者）
+    \item 按照请求到达顺序依次处理
+    \item 允许连续的读者请求一起处理以提高效率
+    \item 但确保写者不会被无限期推迟
+\end{itemize}
+
+\chapter{第三题}
+
+\section{题目}
+
+某多线程程序中有两个共享数据结构 A和 B，分别由互斥锁 mutexA和 mutexB保护。程序启动后有两个线程 T0和 T1并发执行，它们的加锁顺序如下：
+\begin{itemize}
+    \item 线程 T0：先执行 pthread\_mutex\_lock(\&mutexA)，再执行 pthread\_mutex\_lock(\&mutexB)
+    \item 线程 T1：先执行 pthread\_mutex\_lock(\&mutexB)，再执行 pthread\_mutex\_lock(\&mutexA)
+\end{itemize}
+
+假设系统中出现如下执行时序：
+\begin{itemize}
+    \item 时刻 0：T0成功获得 mutexA，T1成功获得 mutexB
+    \item 时刻 1：T0试图获得 mutexB，T1试图获得 mutexA
+\end{itemize}
+
+请回答下列问题：
+\begin{enumerate}
+    \item 此时程序会发生什么现象？请说明原因。
+    \item 为什么这种问题在线程程序中比较危险？
+    \item 给出一种简单可行的修改方法，避免该问题再次发生。
+\end{enumerate}
+
+\section{答案}
+\subsection{程序现象及原因}
+
+此时程序会发生\textbf{死锁}（Deadlock）现象。
+
+原因分析：
+\begin{itemize}
+    \item T0持有mutexA，等待mutexB
+    \item T1持有mutexB，等待mutexA  
+    \item 两个线程都在等待对方释放已持有的锁
+    \item 形成循环等待条件，且没有线程能够继续执行
+    \item 根据死锁的四个必要条件（互斥、占有并等待、非抢占、循环等待），此处全部满足
+\end{itemize}
+
+\subsection{死锁的危险性}
+
+死锁在线程程序中比较危险的原因：
+\begin{itemize}
+    \item \textbf{程序完全停滞}：涉及死锁的线程永远无法继续执行
+    \item \textbf{资源浪费}：占用的系统资源（内存、CPU时间片等）无法释放
+    \item \textbf{难以检测}：死锁可能在特定条件下才出现，具有偶发性
+    \item \textbf{影响整个系统}：如果主线程或其他关键线程被卷入，可能导致整个程序崩溃
+    \item \textbf{调试困难}：死锁通常没有明显的错误信息，需要专门的工具分析
+\end{itemize}
+
+\subsection{避免死锁的修改方法}
+
+\textbf{方法一：统一加锁顺序}
+\begin{itemize}
+    \item 规定所有线程必须按照相同的顺序获取锁
+    \item 例如：总是先获取mutexA，再获取mutexB
+    \item 这样可以破坏循环等待条件
+\end{itemize}
+
+\textbf{方法二：一次性获取所有需要的锁}
+\begin{itemize}
+    \item 设计函数一次性申请所有需要的锁
+    \item 如果无法同时获取所有锁，则全部释放并重试
+    \item 减少分步加锁的机会
+\end{itemize}
+
+\chapter{第四题}
+
+\section{题目}
+
+阅读以下代码片段，回答问题
+\begin{lstlisting}[style=cleancpp]
+#include<pthread.h> 
+#include<stdio.h>
+int counter= 0;//全局计数器
+
+void* UnsafeIncrement(void* arg){ 
+    for(int i= 0; i< 100000; i++){ 
+        counter++; 
+    } 
+    return NULL; 
+}
+
+int main(){ 
+    pthread_t t1, t2;
+    pthread_create(&t1, NULL, UnsafeIncrement, NULL); 
+    pthread_create(&t2, NULL, UnsafeIncrement, NULL);
+    pthread_join(t1, NULL); 
+    pthread_join(t2, NULL);
+    printf("Final Counter Value:%d\n", counter); 
+    return 0; 
+}
+\end{lstlisting}
+
+\begin{enumerate}
+    \item 理论上，如果程序正确运行，counter的最终值应该是多少？为什么实际运行结果通常小于这个理论值？
+    \item 请指出 counter++操作在汇编层面通常包含哪三个步骤？并解释这如何导致数据竞争。
+    \item 如何修改 UnsafeIncrement函数，使其线程安全
+\end{enumerate}
+
+\section{答案}
+\subsection{理论值与实际值差异}
+
+理论上，如果程序正确运行，counter的最终值应该是200,000（100,000 × 2）。
+
+实际运行结果通常小于理论值的原因：
+\begin{itemize}
+    \item counter++操作不是原子操作
+    \item 两个线程同时读取、修改、写入counter变量
+    \item 发生数据竞争（Data Race），导致某些增量操作丢失
+    \item 例如：两个线程同时读取counter=100，各自加1后都写回101，实际只增加了1而不是2
+\end{itemize}
+
+\subsection{counter++的汇编步骤及数据竞争}
+
+counter++操作在汇编层面通常包含三个步骤：
+\begin{enumerate}
+    \item \textbf{Load}：从内存加载counter的当前值到寄存器
+    \item \textbf{Increment}：在寄存器中对值加1
+    \item \textbf{Store}：将寄存器中的新值存储回内存中的counter
+\end{enumerate}
+
+数据竞争的产生过程：
+\begin{itemize}
+    \item 线程1执行Load，读取counter=100
+    \item 线程2执行Load，也读取counter=100
+    \item 线程1执行Increment，寄存器值变为101
+    \item 线程2执行Increment，寄存器值也变为101
+    \item 线程1执行Store，counter=101
+    \item 线程2执行Store，counter=101（覆盖了线程1的结果）
+    \item 最终结果为101，而不是期望的102
+\end{itemize}
+
+\subsection{线程安全的修改方案}
+
+\textbf{修改方案：使用互斥锁}
+\begin{lstlisting}[style=cleancpp]
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void* SafeIncrement(void* arg){ 
+    for(int i= 0; i< 100000; i++){ 
+        pthread_mutex_lock(&mutex);
+        counter++; 
+        pthread_mutex_unlock(&mutex);
+    } 
+    return NULL; 
+}
+\end{lstlisting}
+
+
+\chapter{第五题}
+
+\section{题目}
+
+假设我们有一个多线程程序，用于统计两类事件发生的次数。两个线程分别只更新自己对应的计数器
+\begin{lstlisting}[style=cleancpp]
+#include<pthread.h> 
+#include<stdio.h>
+
+//定义一个结构体，包含两个计数器 
+typedef struct{ 
+    long counter_a;//线程 0专门累加这个 
+    long counter_b;//线程 1专门累加这个 
+} CounterPair;
+
+CounterPair counters;
+
+void* ThreadFunc(void* arg){ 
+    long tid=(long)arg; 
+    //模拟大量工作 
+    for(int i= 0; i< 100000000; i++){ 
+        if(tid== 0){ 
+            counters.counter_a++;//线程 0操作 
+        } else{ 
+            counters.counter_b++;//线程 1操作 
+        } 
+    } 
+    return NULL; 
+}
+
+int main(){ 
+    pthread_t t0, t1; 
+    //创建两个线程 
+    pthread_create(&t0, NULL, ThreadFunc,(void*)0); 
+    pthread_create(&t1, NULL, ThreadFunc,(void*)1);
+    pthread_join(t0, NULL); 
+    pthread_join(t1, NULL);
+    printf("A:%ld, B:%ld\n", counters.counter_a, counters.counter_b); 
+    return 0; 
+}
+\end{lstlisting}
+
+\begin{enumerate}
+    \item 为什么上述代码可能存在严重的伪共享问题，并解释一下为何在两个线程上操作不同的变量，却会导致性能急剧下降？
+    \item 为了消除伪共享，请修改 CounterPair结构体的定义，利用填充技术确保 counter\_a和 counter\_b位于不同的缓存行中。假设系统的缓存行大小为 64字节。
+    \item 除了填充结构体外，还有另一种利用局部性原理的高性能方案，如何修改 ThreadFunc函数的逻辑，让每个线程先在"私有"的内存空间进行累加，最后再合并结果，从而彻底避开伪共享？
+\end{enumerate}
+
+\section{答案}
+\subsection{伪共享问题及性能下降原因}
+
+伪共享（False Sharing）问题的存在原因：
+\begin{itemize}
+    \item 现代CPU的缓存以缓存行（Cache Line）为单位进行管理，通常为64字节
+    \item counter\_a和counter\_b在内存中相邻存储，很可能位于同一个缓存行中
+    \item 虽然两个线程操作不同的变量，但这些变量共享同一个缓存行
+    \item 当线程0修改counter\_a时，会使得整个缓存行在其他CPU核心上失效
+    \item 线程1需要重新从内存或其他核心获取包含counter\_b的缓存行
+    \item 频繁的缓存行无效化和重新获取导致大量内存总线流量
+    \item 性能急剧下降，因为实际的内存访问延迟远高于缓存访问
+\end{itemize}
+
+\subsection{使用填充技术消除伪共享}
+
+修改CounterPair结构体定义，确保两个计数器位于不同缓存行：
+
+\begin{lstlisting}[style=cleancpp]
+#define CACHE_LINE_SIZE 64
+
+typedef struct __attribute__((aligned(CACHE_LINE_SIZE))) {
+    long value;
+    char padding[CACHE_LINE_SIZE - sizeof(long)];
+} Counter;
+
+typedef struct {
+    Counter a;
+    Counter b;
+} CounterPair;
+\end{lstlisting}
+
+这样，counter\_a占据第一个缓存行，counter\_b占据第二个缓存行，完全避免了伪共享。
+
+\subsection{局部累加方案}
+
+修改ThreadFunc函数，使用线程局部变量进行累加：
+\begin{lstlisting}[style=cleancpp]
+void* ThreadFunc(void* arg){ 
+    long tid=(long)arg; 
+    long local_counter = 0; // 线程局部计数器
+    
+    //模拟大量工作 
+    for(int i= 0; i< 100000000; i++){ 
+        local_counter++; // 在私有内存中累加
+    } 
+    
+    // 最后一次性更新全局计数器
+    if(tid == 0){
+        counters.counter_a = local_counter;
+    } else{
+        counters.counter_b = local_counter;
+    }
+    
+    return NULL; 
+}
+\end{lstlisting}
+
+这种方案的优势：
+\begin{itemize}
+    \item 完全避免了伪共享，因为累加操作在栈上的局部变量进行
+    \item 只有一次全局内存写入，大大减少缓存行争用
+    \item 性能显著提升，特别是在线程数较多的情况下
+    \item 代码简洁，易于理解和维护
+\end{itemize}

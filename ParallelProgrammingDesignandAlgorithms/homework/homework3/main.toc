@@ -1,0 +1,31 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}第一题}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}题目}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}答案}{2}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}代码段A中的临界区及锁操作次数}{2}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}CPU利用率虚高但计算进度缓慢的原因}{2}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}pthread\_join的作用}{2}{subsection.1.2.3}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}第二题}{4}{chapter.2}%
+\contentsline {section}{\numberline {2.1}题目}{4}{section.2.1}%
+\contentsline {section}{\numberline {2.2}答案}{5}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}写者饥饿的情况}{5}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}倾向性及避免饥饿的方案}{5}{subsection.2.2.2}%
+\contentsline {chapter}{\numberline {3\hspace {.3em}}第三题}{6}{chapter.3}%
+\contentsline {section}{\numberline {3.1}题目}{6}{section.3.1}%
+\contentsline {section}{\numberline {3.2}答案}{6}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}程序现象及原因}{6}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}死锁的危险性}{6}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}避免死锁的修改方法}{7}{subsection.3.2.3}%
+\contentsline {chapter}{\numberline {4\hspace {.3em}}第四题}{8}{chapter.4}%
+\contentsline {section}{\numberline {4.1}题目}{8}{section.4.1}%
+\contentsline {section}{\numberline {4.2}答案}{9}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}理论值与实际值差异}{9}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}counter++的汇编步骤及数据竞争}{9}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}线程安全的修改方案}{9}{subsection.4.2.3}%
+\contentsline {chapter}{\numberline {5\hspace {.3em}}第五题}{11}{chapter.5}%
+\contentsline {section}{\numberline {5.1}题目}{11}{section.5.1}%
+\contentsline {section}{\numberline {5.2}答案}{12}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}伪共享问题及性能下降原因}{12}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}使用填充技术消除伪共享}{12}{subsection.5.2.2}%
+\contentsline {subsection}{\numberline {5.2.3}局部累加方案}{13}{subsection.5.2.3}%
+\contentsline {chapter}{参考文献}{14}{chapter*.2}%

@@ -1,0 +1,296 @@
+\chapter{第一题}
+
+\section{题目}
+
+CUDA程序中常见的内存类型包括全局内存、共享内存、寄存器、本地内存、常量内存等。请结合下面代码，回答以下问题：
+
+\begin{lstlisting}[style=cleancpp]
+__constant__ float c_alpha;
+__device__ float d_total;
+
+__global__ void memoryDemo(float* g_in, float* g_out, int n){
+    __shared__ float s_tile[256];
+    int tid = threadIdx.x;
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    float temp = 0.0f;
+    float localArray[4];
+    
+    if(idx < n){
+        s_tile[tid] = g_in[idx];
+        __syncthreads();
+        temp = s_tile[tid] * c_alpha;
+        localArray[0] = temp;
+        g_out[idx] = localArray[0];
+        atomicAdd(&d_total, temp);
+    }
+}
+\end{lstlisting}
+
+回答下列问题：
+\begin{enumerate}
+    \item s\_tile属于哪类内存类型，简要描述该类内存的访问范围与生命周期
+    \item c\_alpha属于哪类内存？适合存放什么数据？
+\end{enumerate}
+
+\section{答案}
+\subsection{s\_tile的内存类型及特性}
+
+s\_tile属于\textbf{共享内存}（Shared Memory）。
+
+访问范围与生命周期：
+\begin{itemize}
+    \item \textbf{访问范围}：同一个线程块（block）内的所有线程都可以访问
+    \item \textbf{生命周期}：从线程块启动时分配，到线程块执行结束时释放
+    \item \textbf{访问速度}：比全局内存快得多，延迟低，带宽高
+    \item \textbf{容量限制}：每个SM的共享内存有限（通常几十KB）
+    \item \textbf{同步要求}：使用\_\_syncthreads()确保所有线程完成写入后再读取
+\end{itemize}
+
+\subsection{c\_alpha的内存类型及适用场景}
+
+c\_alpha属于\textbf{常量内存}（Constant Memory）。
+
+适合存放的数据：
+\begin{itemize}
+    \item \textbf{只读数据}：在核函数执行期间不会被修改
+    \item \textbf{广播数据}：需要被多个线程同时访问的相同数据
+    \item \textbf{小规模数据}：常量内存容量有限（通常64KB）
+    \item \textbf{频繁访问的数据}：常量内存有专门的缓存，访问速度快
+    \item \textbf{示例}：标量系数、配置参数、查找表等
+\end{itemize}
+
+\chapter{第二题}
+
+\section{题目}
+
+阅读下面CUDA程序片段，回答以下问题：
+
+\begin{lstlisting}[style=cleancpp]
+__global__ void vecAdd(float* a, float* b, float* c, int n){
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    c[i] = a[i] + b[i];
+}
+
+int main(){
+    int n = 1000;
+    size_t size = n * sizeof(float);
+    
+    float* d_a, *d_b, *d_c;
+    cudaMalloc((void**)&d_a, size);
+    cudaMalloc((void**)&d_b, size);
+    cudaMalloc((void**)&d_c, size);
+    
+    int threads = 256;
+    int blocks = (n + threads - 1) / threads;
+    
+    vecAdd<<<blocks, threads>>>(d_a, d_b, d_c, n);
+}
+\end{lstlisting}
+
+\begin{enumerate}
+    \item 这段核函数存在什么潜在的错误？
+    \item 当n=1000时，一共启动多少个线程？是否可能发生对数组的越界访问？
+\end{enumerate}
+
+\section{答案}
+\subsection{核函数的潜在错误}
+
+核函数存在的潜在错误是\textbf{缺少边界检查}：
+
+\begin{itemize}
+    \item 当线程总数不是n的整数倍时，部分线程的索引i会超过数组边界
+    \item 例如：n=1000，threads=256，blocks=4，总线程数=1024
+    \item 索引范围为0-1023，但有效数据只有0-999
+    \item 索引1000-1023的线程会访问越界内存，导致未定义行为
+\end{itemize}
+
+正确的核函数应该包含边界检查：
+\begin{lstlisting}[style=cleancpp]
+__global__ void vecAdd(float* a, float* b, float* c, int n){
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if(i < n){  // 添加边界检查
+        c[i] = a[i] + b[i];
+    }
+}
+\end{lstlisting}
+
+\subsection{线程数量及越界访问分析}
+
+当n=1000时：
+\begin{itemize}
+    \item \textbf{线程总数}：blocks = (1000 + 256 - 1) / 256 = 4，总线程数 = 4 × 256 = 1024
+    \item \textbf{越界访问}：是，会发生越界访问
+    \item 索引范围：0-1023
+    \item 有效数据范围：0-999
+    \item 越界线程数：1024 - 1000 = 24个线程（索引1000-1023）
+    \item 这些线程会访问a[1000]-a[1023]、b[1000]-b[1023]、c[1000]-c[1023]，超出分配的内存范围
+\end{itemize}
+
+\chapter{第三题}
+
+\section{题目}
+
+假设有一个N × N的矩阵M存储在一维数组float* mat中（按行优先存储），要在GPU上做矩阵转置，kernel如下：
+
+\begin{lstlisting}[style=cleancpp]
+__global__ void Transpose(float* mat, float* matT, int N){
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if(row < N && col < N){
+        matT[col * N + row] = mat[row * N + col];
+    }
+}
+\end{lstlisting}
+
+主机端启动方式：
+\begin{lstlisting}[style=cleancpp]
+dim3 blockSize(16, 16);
+dim3 gridSize((N + blockSize.x - 1) / blockSize.x, 
+              (N + blockSize.y - 1) / blockSize.y);
+Transpose<<<gridSize, blockSize>>>(mat, matT, N);
+\end{lstlisting}
+
+请回答：
+\begin{enumerate}
+    \item 如果N=1000，计算gridSize.x和gridSize.y各是多少？
+    \item 假设GPU有1024个线程每个SM最多可以同时执行，blockSize设为(16,16)后，每个block占用多少个线程？最后一个block中可能有多少线程不执行计算？
+    \item 如果去掉kernel中的边界判断if(row<N \&\& col<N)，会发生什么问题？为什么这个判断很重要？
+\end{enumerate}
+
+\section{答案}
+\subsection{gridSize的计算}
+
+当N=1000，blockSize=(16,16)时：
+
+\begin{itemize}
+    \item gridSize.x = (1000 + 16 - 1) / 16 = 1015 / 16 = \textbf{63}
+    \item gridSize.y = (1000 + 16 - 1) / 16 = 1015 / 16 = \textbf{63}
+    \item 总block数 = 63 × 63 = 3969个block
+\end{itemize}
+
+\subsection{线程占用及无效线程数}
+
+\begin{itemize}
+    \item \textbf{每个block的线程数}：16 × 16 = \textbf{256个线程}
+    \item \textbf{每个SM可同时执行的block数}：1024 / 256 = 4个block
+    \item \textbf{最后一个block的无效线程数}：
+    \begin{itemize}
+        \item 最后一个block对应的坐标范围为：
+        \[
+        row = 992 \sim 1007,\quad col = 992 \sim 1007
+        \]
+        \item 由于矩阵大小为1000×1000，因此有效范围为：
+        \[
+        row = 992 \sim 999,\quad col = 992 \sim 999
+        \]
+        \item 有效线程数：
+        \[
+        8 \times 8 = 64
+        \]
+        \item block总线程数：
+        \[
+        16 \times 16 = 256
+        \]
+        \item 因此无效线程数：
+        \[
+        256 - 64 = 192
+        \]
+        \item 最后一个block中有\textbf{192个线程}不会执行计算。
+    \end{itemize}
+\end{itemize}
+
+\subsection{边界判断的重要性}
+
+去掉边界判断会导致的问题：
+
+\begin{itemize}
+    \item \textbf{越界访问}：当row≥N或col≥N时，会访问mat和matT数组的非法内存
+    \item \textbf{数据损坏}：可能覆盖其他内存区域的数据
+    \item \textbf{程序崩溃}：访问未分配的内存会导致段错误
+    \item \textbf{结果错误}：转置结果包含无效数据
+\end{itemize}
+
+边界判断的重要性：
+\begin{itemize}
+    \item 确保只处理有效数据范围内的元素
+    \item 防止内存越界访问
+    \item 保证程序的正确性和稳定性
+    \item 允许使用非整除的grid尺寸，提高灵活性
+\end{itemize}
+
+\chapter{第四题}
+
+\section{题目}
+
+假设有一个N×N的矩阵M存储在一维数组float* mat中，按行优先方式存储。现在希望在GPU上实现"把矩阵中每个元素都乘以2"的操作，kernel框架如下：
+
+\begin{lstlisting}[style=cleancpp]
+__global__ void MatScale2(float* mat, int N){
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if(______________________){
+        mat[______________________] = 2.0f * mat[______________________];
+    }
+}
+\end{lstlisting}
+
+主机端启动方式如下：
+\begin{lstlisting}[style=cleancpp]
+dim3 blockSize(16, 16);
+dim3 gridSize((N + blockSize.x - 1) / blockSize.x, 
+              (N + blockSize.y - 1) / blockSize.y);
+MatScale2<<<gridSize, blockSize>>>(mat, N);
+\end{lstlisting}
+
+请完成下列问题：
+\begin{enumerate}
+    \item 如果某线程满足row=3，col=5，那么它处理的是矩阵中的哪一个元素？
+    \item 补全上面的kernel，使每个线程对自己负责的矩阵元素乘以2
+    \item 若N=1000，计算gridSize.x和gridSize.y的值，并说明为什么kernel中必须写边界判断
+\end{enumerate}
+
+\section{答案}
+\subsection{线程处理的元素位置}
+
+当row=3，col=5时：
+
+\begin{itemize}
+    \item 这是矩阵中第4行（row从0开始）、第6列（col从0开始）的元素
+    \item 在一维数组中的索引位置：row × N + col = 3 × N + 5
+    \item 例如，如果N=1000，则索引位置为：3 × 1000 + 5 = \textbf{3005}
+\end{itemize}
+
+\subsection{补全kernel代码}
+
+\begin{lstlisting}[style=cleancpp]
+__global__ void MatScale2(float* mat, int N){
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if(row < N && col < N){  // 边界检查
+        int idx = row * N + col;  // 计算一维索引
+        mat[idx] = 2.0f * mat[idx];  // 原地乘以2
+    }
+}
+\end{lstlisting}
+
+\subsection{gridSize计算及边界判断必要性}
+
+当N=1000，blockSize=(16,16)时：
+
+\begin{itemize}
+    \item gridSize.x = (1000 + 16 - 1) / 16 = 1015 / 16 = \textbf{63}
+    \item gridSize.y = (1000 + 16 - 1) / 16 = 1015 / 16 = \textbf{63}
+\end{itemize}
+
+kernel中必须写边界判断的原因：
+
+\begin{itemize}
+    \item \textbf{防止越界访问}：总线程数 = 63 × 63 × 256 = 1,016,064，但有效元素只有1,000,000个
+    \item \textbf{避免无效计算}：超出边界的线程不应该修改内存
+    \item \textbf{保证正确性}：确保只处理矩阵内的有效数据
+    \item \textbf{防止非法内存访问}：访问超出数组范围的内存会导致结果错误，严重时可能引发程序运行失败
+    \item \textbf{提高效率}：让无效线程快速退出，减少资源浪费
+\end{itemize}

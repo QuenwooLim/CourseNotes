@@ -1,0 +1,389 @@
+%!TeX program = xelatex
+\documentclass{SYSUReport}
+\usepackage{tabularx} % 在导言区添加此行
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{patterns}
+% 根据个人情况修改
+\headl{}
+\headc{}
+\headr{并行程序设计与算法实验}
+\lessonTitle{并行程序设计与算法实验}
+\reportTitle{Lab9-CUDA矩阵转置}
+\stuname{林宏宇}
+\stuid{23320093}
+\inst{计算机学院}
+\major{计算机科学与技术}
+\date{2026年6月10日}
+
+\begin{document}
+
+% =============================================
+% Part 1: 封面
+% =============================================
+\cover
+\thispagestyle{empty} % 首页不显示页码
+\clearpage
+
+% % =============================================
+% % Part 4： 正文内容
+% % =============================================
+% % 重置页码，并使用阿拉伯数字
+% \pagenumbering{arabic}
+% \setcounter{page}{1}
+
+%%可选择这里也放一个标题
+%\begin{center}
+%    \title{ \Huge \textbf{{标题}}}
+%\end{center}
+
+\section{实验目的}
+\begin{itemize}
+   \item 熟悉 CUDA 线程层次结构(grid、block、thread)和观察 warp 调度行为。
+    \item 掌握 CUDA 内存优化技术(共享内存、合并访问)。
+    \item 理解线程块配置对性能的影响。
+\end{itemize}
+\section{实验内容}
+\subsection{CUDA并行输出}
+\begin{enumerate}
+    \item 创建$n$个线程块，每个线程块的维度为$m\times k$。
+    \item 每个线程均输出线程块编号、二维块内线程编号。例如：
+    \begin{itemize}
+        \item ``Hello World from Thread (1, 2) in Block 10!''
+         \item 主线程输出``Hello World from the host!''。
+        \item 在 main 函数结束前，调用 \texttt{cudaDeviceSynchronize()}。
+    \end{itemize}
+    \item 完成上述内容，观察输出，并回答线程输出顺序是否有规律。
+\end{enumerate}
+
+\subsection{使用 CUDA 实现矩阵转置及优化}
+\begin{enumerate}
+    \item 使用 CUDA 完成并行矩阵转置。
+    \item 随机生成 $N \times N$ 的矩阵 A。
+    \item 对其进行转置得到 $A^T$。
+    \item 分析不同线程块大小、矩阵规模、访存方式(全局内存访问，共享内存访问)、任务/数据划分和映射方式，对程序性能的影响。
+    \item 实现并对比以下两种矩阵转置方法：
+    \begin{itemize}
+        \item 仅使用全局内存的 CUDA 矩阵转置。
+        \item 使用共享内存的 CUDA 矩阵转置，并考虑优化存储体冲突。
+    \end{itemize}
+\end{enumerate}
+\section{实验结果与分析}
+\subsection{CUDA Hello World 并行输出}
+\subsubsection{实验现象}
+
+描述实验观察到的现象，例如线程输出的顺序等。可以粘贴部分关键的运行截图或输出文本。
+
+本实验使用 $n=4, m=2, k=2$（即4个线程块，每个线程块 $2 \times 2$ 共4个线程）的参数配置运行CUDA Hello World程序，输出如下：
+
+\begin{verbatim}
+Configuration: 4 blocks, each block 2 x 2 threads
+Total threads: 16
+
+Hello World from the host!
+
+Hello World from Thread (0, 0) in Block 2!
+Hello World from Thread (0, 1) in Block 2!
+Hello World from Thread (1, 0) in Block 2!
+Hello World from Thread (1, 1) in Block 2!
+Hello World from Thread (0, 0) in Block 1!
+Hello World from Thread (0, 1) in Block 1!
+Hello World from Thread (1, 0) in Block 1!
+Hello World from Thread (1, 1) in Block 1!
+Hello World from Thread (0, 0) in Block 0!
+Hello World from Thread (0, 1) in Block 0!
+Hello World from Thread (1, 0) in Block 0!
+Hello World from Thread (1, 1) in Block 0!
+Hello World from Thread (0, 0) in Block 3!
+Hello World from Thread (0, 1) in Block 3!
+Hello World from Thread (1, 0) in Block 3!
+Hello World from Thread (1, 1) in Block 3!
+\end{verbatim}
+
+当使用 $n=8, m=4, k=2$ 的参数配置再次运行时，输出顺序为：Block 2 → Block 1 → Block 0 → Block 5 → Block 7 → Block 6 → Block 3 → Block 4。
+
+观察发现：(1) 主线程的输出总是最先显示（因为 \texttt{cudaDeviceSynchronize()} 在 kernel 启动之后才被调用，主线程的 printf 先执行）；(2) 线程块的输出顺序不是按编号顺序（0,1,2,...），而是呈现乱序；(3) 每个线程块内部，线程的输出按线程索引顺序排列（先按行索引，再按列索引）。
+
+\subsubsection{结果分析}
+
+线程输出顺序是否有规律？为什么？结合 CUDA 线程调度机制进行解释。
+
+\textbf{线程输出顺序没有规律（线程块之间的执行顺序不确定）。} 原因如下：
+
+\begin{enumerate}
+    \item \textbf{线程块调度机制}：CUDA将线程块（block）映射到流多处理器（SM）上执行。不同SM之间是并行执行的关系，SM的资源分配和线程块的调度由GPU的硬件调度器（GigaThread Engine）负责。调度器根据SM的可用资源动态分配线程块，线程块被分配到哪个SM、何时开始执行，均取决于当时的硬件状态，因此不保证按编号顺序执行。
+
+    \item \textbf{warp调度}：在每个SM内部，线程块被进一步划分为warp（32个线程一组）。warp调度器以warp为单位进行调度，不同warp之间的执行顺序也是不确定的。不同线程块的warp可能会交错执行。
+
+    \item \textbf{printf缓冲区}：CUDA的\texttt{printf}输出通过设备端的缓冲区传回主机端，不同线程块的输出到达主机的顺序取决于各SM上的执行进度和缓冲区刷新时机，进一步加剧了输出顺序的不确定性。
+
+    \item \textbf{块内线程顺序}：在同一个线程块内，线程按线性索引顺序分配到warp中，warp内的32个线程以SIMT方式同步执行。但printf输出的实际顺序也可能受warp调度和缓冲区机制影响。从实验结果看，块内线程的输出基本保持有序（按行优先顺序），这是因为同一warp内的线程执行进度相近。
+\end{enumerate}
+
+\subsection{CUDA 矩阵转置及优化}
+\subsubsection{不同实现方法的性能对比}
+1. 展示不同矩阵转置实现（仅全局内存、使用共享内存、优化共享内存访问）在不同矩阵规模 (N) 和不同线程块大小下的运行时间。可以根据你的实验设置更改表格的矩阵规模、线程块大小。
+
+\begin{table}[h!]
+\centering
+\caption{矩阵转置性能对比 (时间单位: ms, GPU: Tesla V100S)}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+矩阵规模 (N) & 线程块大小 & 全局内存版本 & 共享内存版本 & 优化共享内存版本 \\
+\hline
+\multirow{3}{*}{512} & $8\times8$ & 0.0128 & 0.0138 & 0.0129 \\
+\cline{2-5}
+& $16\times16$ & 0.0116 & 0.0099 & 0.0083 \\
+\cline{2-5}
+& $32\times32$ & 0.0178 & 0.0122 & 0.0138 \\
+\hline
+\multirow{3}{*}{1024} & $8\times8$ & 0.0303 & 0.0303 & 0.0286 \\
+\cline{2-5}
+& $16\times16$ & 0.0252 & 0.0180 & 0.0150 \\
+\cline{2-5}
+& $32\times32$ & 0.0444 & 0.0237 & 0.0150 \\
+\hline
+\multirow{3}{*}{2048} & $8\times8$ & 0.0962 & 0.0954 & 0.0944 \\
+\cline{2-5}
+& $16\times16$ & 0.0846 & 0.0575 & 0.0507 \\
+\cline{2-5}
+& $32\times32$ & 0.1542 & 0.0705 & 0.0468 \\
+\hline
+\end{tabular}
+\end{table}
+
+\newpage
+\subsubsection{矩阵输出示例}
+为验证程序正确性，使用\texttt{--demo}模式运行程序（$N=6$，线程块大小$2\times2$），输出原始矩阵A和转置后的矩阵$A^T$。GPU计算结果（以优化共享内存版本为例）与CPU串行转置结果完全一致（最大误差$<10^{-4}$），验证了CUDA实现的正确性。
+
+\begin{verbatim}
+Original Matrix A:                  Transposed Matrix A^T (CPU & GPU):
+   6.6   4.0   8.1   4.1   1.2   5.8    6.6   2.1   1.7   9.8   2.7   3.3
+   2.1   4.0   3.5   4.3   7.4   4.3    4.0   4.0   0.4   5.9   7.9   0.7
+   1.7   0.4   9.6   6.2   9.2   4.8    8.1   3.5   9.6   6.7   6.9   1.6
+   4.1   4.3   6.2   5.2   0.9   3.3    4.1   4.3   6.2   5.2   0.4   1.4
+   1.2   7.4   9.2   0.9   4.1   7.6    1.2   7.4   9.2   0.9   4.1   0.0
+   5.8   4.3   4.8   3.3   7.6   8.0    5.8   4.3   4.8   3.3   7.6   8.0
+\end{verbatim}
+
+\subsubsection{性能数据汇总}
+为更直观地展示性能差异，计算共享内存版本和优化共享内存版本相对于全局内存版本的加速比，如下表所示。
+
+\begin{table}[h!]
+\centering
+\caption{相对于全局内存版本的加速比}
+\begin{tabular}{|c|c|c|c|}
+\hline
+矩阵规模 (N) & 线程块大小 & 共享内存/全局 & 优化共享/全局 \\
+\hline
+\multirow{3}{*}{512} & $8\times8$ & 0.93$\times$ & 0.99$\times$ \\
+\cline{2-4}
+& $16\times16$ & 1.17$\times$ & 1.40$\times$ \\
+\cline{2-4}
+& $32\times32$ & 1.46$\times$ & 1.29$\times$ \\
+\hline
+\multirow{3}{*}{1024} & $8\times8$ & 1.00$\times$ & 1.06$\times$ \\
+\cline{2-4}
+& $16\times16$ & 1.40$\times$ & 1.68$\times$ \\
+\cline{2-4}
+& $32\times32$ & 1.87$\times$ & 2.96$\times$ \\
+\hline
+\multirow{3}{*}{2048} & $8\times8$ & 1.01$\times$ & 1.02$\times$ \\
+\cline{2-4}
+& $16\times16$ & 1.47$\times$ & 1.67$\times$ \\
+\cline{2-4}
+& $32\times32$ & 2.19$\times$ & 3.29$\times$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\newpage
+
+\subsubsection{性能曲线图}
+为直观展示各因素对性能的影响，基于实验数据绘制以下性能曲线。
+
+\paragraph{图1：运行时间随矩阵规模的变化（分线程块大小）}
+
+图1展示了在固定线程块大小下，三种转置方法的运行时间随矩阵规模$N$的变化趋势。横坐标为矩阵规模$N$，纵坐标为运行时间（ms）。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.75]
+\begin{axis}[
+    title={(a) Block Size = $8\times8$},
+    xlabel={矩阵规模 $N$},
+    ylabel={运行时间 (ms)},
+    xtick={512,1024,2048},
+    legend pos=north west,
+    grid=major,
+    width=0.9\textwidth,
+    height=0.4\textwidth,
+]
+\addplot[color=blue,mark=*,thick] coordinates {(512,0.0128)(1024,0.0303)(2048,0.0962)};
+\addplot[color=red,mark=square*,thick] coordinates {(512,0.0138)(1024,0.0303)(2048,0.0954)};
+\addplot[color=green!50!black,mark=triangle*,thick] coordinates {(512,0.0129)(1024,0.0286)(2048,0.0944)};
+\legend{Global Memory, Shared Memory, Optimized Shared}
+\end{axis}
+\end{tikzpicture}
+
+\vspace{4pt}
+
+\begin{tikzpicture}[scale=0.75]
+\begin{axis}[
+    title={(b) Block Size = $16\times16$},
+    xlabel={矩阵规模 $N$},
+    ylabel={运行时间 (ms)},
+    xtick={512,1024,2048},
+    legend pos=north west,
+    grid=major,
+    width=0.9\textwidth,
+    height=0.4\textwidth,
+]
+\addplot[color=blue,mark=*,thick] coordinates {(512,0.0116)(1024,0.0252)(2048,0.0846)};
+\addplot[color=red,mark=square*,thick] coordinates {(512,0.0099)(1024,0.0180)(2048,0.0575)};
+\addplot[color=green!50!black,mark=triangle*,thick] coordinates {(512,0.0083)(1024,0.0150)(2048,0.0507)};
+\legend{Global Memory, Shared Memory, Optimized Shared}
+\end{axis}
+\end{tikzpicture}
+
+\vspace{4pt}
+
+\begin{tikzpicture}[scale=0.75]
+\begin{axis}[
+    title={(c) Block Size = $32\times32$},
+    xlabel={矩阵规模 $N$},
+    ylabel={运行时间 (ms)},
+    xtick={512,1024,2048},
+    legend pos=north west,
+    grid=major,
+    width=0.9\textwidth,
+    height=0.4\textwidth,
+]
+\addplot[color=blue,mark=*,thick] coordinates {(512,0.0178)(1024,0.0444)(2048,0.1542)};
+\addplot[color=red,mark=square*,thick] coordinates {(512,0.0122)(1024,0.0237)(2048,0.0705)};
+\addplot[color=green!50!black,mark=triangle*,thick] coordinates {(512,0.0138)(1024,0.0150)(2048,0.0468)};
+\legend{Global Memory, Shared Memory, Optimized Shared}
+\end{axis}
+\end{tikzpicture}
+\caption{不同线程块大小下运行时间随矩阵规模的变化}
+\label{fig:time-vs-n}
+\end{figure}
+
+从图1可以看出：(a) 当线程块为$8\times8$时，三种方法的性能几乎重叠，说明小线程块无法有效利用共享内存优势；(b) 当线程块为$16\times16$时，共享内存方法的优势开始显现；(c) 当线程块为$32\times32$时，优化共享内存版本显著领先，且全局内存版本性能急剧恶化（$N=2048$时达0.1542ms），呈现明显的``喇叭口''形态。这表明大矩阵规模配合大线程块才能充分发挥共享内存优化的效果。
+
+\paragraph{图2：运行时间随线程块大小的变化（N=2048）}
+
+图2以柱状图形式展示了最大矩阵规模$N=2048$下，不同线程块大小对三种方法运行时间的影响。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.75]
+\begin{axis}[
+    title={运行时间 vs 线程块大小 ($N=2048$)},
+    xlabel={线程块大小},
+    ylabel={运行时间 (ms)},
+    xtick={0,1,2},
+    xticklabels={$8\times8$, $16\times16$, $32\times32$},
+    ybar=2pt,
+    bar width=14pt,
+    legend style={at={(0.5,0.95)}, anchor=north, legend columns=-1},
+    grid=major,
+    width=0.9\textwidth,
+    height=0.45\textwidth,
+]
+\addplot[color=blue,fill=blue!30]  coordinates {(0,0.0962)(1,0.0846)(2,0.1542)};
+\addplot[color=red,fill=red!30]   coordinates {(0,0.0954)(1,0.0575)(2,0.0705)};
+\addplot[color=green!50!black,fill=green!30] coordinates {(0,0.0944)(1,0.0507)(2,0.0468)};
+\legend{Global Memory, Shared Memory, Optimized Shared}
+\end{axis}
+\end{tikzpicture}
+\caption{$N=2048$时三种方法在不同线程块大小下的运行时间对比}
+\label{fig:time-vs-block}
+\end{figure}
+
+图2清晰地展示：(1) 全局内存版本在$32\times32$时性能最差（0.1542ms），在$16\times16$时最优（0.0846ms）；(2) 共享内存版本在$16\times16$时性能最优（0.0575ms），$32\times32$时因bank conflict反而回升至0.0705ms；(3) 优化共享内存版本随线程块增大持续改善，$32\times32$时达到最优（0.0468ms），比全局内存版本快3.29倍。
+
+\paragraph{图3：加速比随线程块大小的变化（N=2048）}
+
+图3展示了$N=2048$时，共享内存版本和优化共享内存版本相对于全局内存版本的加速比。
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.75]
+\begin{axis}[
+    title={加速比 vs 线程块大小 ($N=2048$)},
+    xlabel={线程块大小},
+    ylabel={加速比（相对于Global Memory）},
+    xtick={0,1,2},
+    xticklabels={$8\times8$, $16\times16$, $32\times32$},
+    legend pos=north west,
+    grid=major,
+    width=0.9\textwidth,
+    height=0.45\textwidth,
+    ymin=0.5,
+]
+\addplot[color=red,mark=square*,thick] coordinates {(0,1.01)(1,1.47)(2,2.19)};
+\addplot[color=green!50!black,mark=triangle*,thick] coordinates {(0,1.02)(1,1.67)(2,3.29)};
+\addplot[color=gray,dashed,thin] coordinates {(0,1)(2,1)};
+\node at (axis cs:0.2,1.08) {基线 (1.0$\times$)};
+\legend{Shared Memory, Optimized Shared}
+\end{axis}
+\end{tikzpicture}
+\caption{$N=2048$时两种优化方法的加速比}
+\label{fig:speedup}
+\end{figure}
+
+图3显示：(1) 加速比随线程块增大而提升，体现了大tile在减少全局内存访问次数方面的优势；(2) 优化共享内存版本在$32\times32$时加速比达3.29倍，远超未优化版本的2.19倍（提升约50\%），直接证明了消除bank conflict的实际收益；(3) 在线程块为$8\times8$时，两种方法的加速比均接近1.0倍，这是因为线程块太小，共享内存的带宽优势被启动开销和同步开销所抵消。
+
+\subsubsection{结果分析}
+
+\textbf{1. 根据实验结果，总结线程块大小、矩阵规模对程序性能的影响。哪种配置下性能最优？为什么？}
+
+\textbf{线程块大小对性能的影响：}
+
+\begin{itemize}
+    \item \textbf{全局内存版本}：线程块大小为 $16\times16$ 时性能最优。当增加到 $32\times32$ 时，性能反而下降（如 $N=2048$ 时从0.0846ms升至0.1542ms）。原因是：(1) 全局内存版本的非合并写入导致每次内存事务仅服务少量数据，带宽利用率低；(2) 线程块过大时，每个SM上可同时驻留的线程块数量减少（occupancy降低），隐藏内存访问延迟的能力下降。注意：全局内存写入的地址模式（跨度为N）与线程块大小无关——每个warp的写操作始终是非合并的；线程块增大导致性能下降的关键因素是occupancy降低，而非内存事务分散性加剧。
+
+    \item \textbf{共享内存版本}：性能随线程块增大而显著提升。$32\times32$ 相比 $8\times8$ 在 $N=2048$ 时加速1.35倍（从0.0954ms降至0.0705ms）。大线程块更好地利用了共享内存的带宽优势和数据局部性。但存储体冲突随块大小增大而加剧（$32\times32$ 时冲突最严重）。
+
+    \item \textbf{优化共享内存版本}：$32\times32$ 在大多数情况下最优，尤其在 $N=2048$ 时达到最佳性能0.0468ms。通过添加填充列（stride从32变为33），消除了存储体冲突，使大线程块的共享内存带宽得到充分利用。
+
+    \item \textbf{一个值得注意的异常}：当 $N=512$、线程块大小为 $32\times32$ 时，优化共享内存版本（0.0138ms）反而不如未优化的共享内存版本（0.0122ms）。原因有三：其一，$N=512$ 时矩阵数据量仅1MB，可完全容纳在V100的6MB L2缓存中，全局内存带宽瓶颈不显著，存储体冲突的实际影响被缓存效应掩盖；其二，优化版本使用\texttt{tile[32][33]}比未优化版本的\texttt{tile[32][32]}多占用128字节共享内存，略微降低了每个SM上可驻留的线程块数量；其三，运行时间在0.01ms量级，CUDA Event的测量精度（约0.5$\mu$s分辨率）使得微小时间差异可能被测量噪声淹没。
+\end{itemize}
+
+\textbf{矩阵规模对性能的影响：}
+
+\begin{itemize}
+    \item 随着矩阵规模增大，三种方法的运行时间均增加（与$N^2$成正比），但优化方法相对于全局内存方法的加速比也随之增大。例如，优化共享内存版本在 $N=512$ 时最高加速1.40倍，在 $N=2048$ 时最高加速3.29倍。这说明矩阵规模越大，内存访问优化的收益越显著。
+
+    \item 当 $N=512$ 时，矩阵数据较小（1MB），可能完全容纳在L2缓存中，因此不同方法的性能差异不大。当 $N=2048$ 时，数据量达到16MB，远超缓存容量，此时全局内存带宽成为瓶颈，共享内存优化的优势充分体现。
+\end{itemize}
+
+\textbf{最优配置：} $N=2048$，线程块大小 $32\times32$，使用优化共享内存版本，运行时间0.0468ms，相对全局内存版本加速3.29倍。这是大线程块利用共享内存高带宽和大矩阵规模凸显优化优势的综合结果。
+
+\textbf{2. 讨论任务/数据划分和映射方式对性能的影响。}
+
+\begin{itemize}
+    \item \textbf{数据划分（Tile Size）}：本实验采用二维线程块将矩阵划分为正方形数据块（tile）。线程块大小决定了每个tile的尺寸。较小的tile（如 $8\times8$）导致更多的线程块和更多的全局内存访问次数，但每个SM上可驻留更多线程块，有利于延迟隐藏。较大的tile（如 $32\times32$）减少了线程块总数和全局内存访问次数，但增大了共享内存需求，可能降低occupancy。实验结果表明，对于矩阵转置这一内存密集型操作，较大tile更有效（但需配合存储体冲突优化）。
+
+    \item \textbf{任务映射方式}：本实验采用二维网格和二维线程块的映射方式，每个线程负责一个矩阵元素的转置。这种one-thread-per-element的映射简洁直观。在共享内存版本中，每个线程块协作加载一个tile的数据到共享内存，然后各线程从共享内存读取转置后的元素写入全局内存。线程块内所有线程通过\texttt{\_\_syncthreads()}同步，确保共享内存数据的一致性。
+
+    \item \textbf{全局内存访问模式}：
+    \begin{itemize}
+        \item 读操作（\texttt{in[row*N+col]}）：由于同一warp内线程的\texttt{col}索引连续，读取地址连续，属于合并访问（coalesced access），效率高。
+        \item 写操作（\texttt{out[col*N+row]}）：由于同一warp内线程的\texttt{col}（转置后的行索引）连续而\texttt{row}不变，写入地址跨度为N，属于非合并访问（strided writes），严重降低带宽利用率。这是全局内存版本性能差的根本原因。
+    \end{itemize}
+
+    \item \textbf{共享内存访问模式与存储体冲突}：
+    \begin{itemize}
+        \item 写入共享内存（\texttt{tile[ty][tx]}）：同一warp内线程按行写入，地址连续，无存储体冲突。
+        \item 读取共享内存（\texttt{tile[tx][ty]}）：同一warp内线程按列读取，当tile维度为32（等于bank数量）时，所有32个线程访问的地址映射到同一个bank，产生32路存储体冲突。对于16$\times$16的线程块，warp内前16个线程和后16个线程分别产生16路冲突。冲突使共享内存的有效带宽降低，影响性能。
+        \item 优化方案：将共享内存数组声明为\texttt{tile[TILE\_DIM][TILE\_DIM+1]}，增加一个填充列使行宽变为33。由于$33 \equiv 1 \pmod{32}$，按列读取时地址为$\text{tx} \times 33 + \text{ty}$，bank索引为$(\text{tx} \times 33 + \text{ty}) \bmod 32 = (\text{tx} + \text{ty}) \bmod 32$，即同一warp内连续tx的线程恰好访问连续的不同bank，消除了存储体冲突。实验数据验证了这一优化的有效性：在 $N=2048$、$32\times32$ 配置下，优化版本比未优化版本快1.51倍（0.0468ms vs 0.0705ms）。
+    \end{itemize}
+
+    \item \textbf{合并写入全局内存}：共享内存版本在将转置后的数据写回全局内存时，通过将输出索引计算为\texttt{(bx+ty)*N+(by+tx)}，使得同一warp内线程的写入地址连续，实现了合并写入。这是共享内存版本相比全局内存版本的主要优势之一。
+\end{itemize}
+
+\end{document}

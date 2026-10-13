@@ -1,0 +1,14 @@
+[project]
+name = "stock-prediction-homework"
+version = "0.1.0"
+description = "Stock prediction homework: ARIMA vs hand-written LSTM"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26.0",
+    "pandas>=2.2.0",
+    "matplotlib>=3.8.0",
+    "statsmodels>=0.14.0",
+    "torch>=2.3.0",
+    "yfinance>=0.2.26",
+]

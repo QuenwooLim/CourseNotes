@@ -1,0 +1,24 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}第一题}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}题目}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}答案}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}s\_tile的内存类型及特性}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}c\_alpha的内存类型及适用场景}{2}{subsection.1.2.2}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}第二题}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}题目}{3}{section.2.1}%
+\contentsline {section}{\numberline {2.2}答案}{3}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}核函数的潜在错误}{3}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}线程数量及越界访问分析}{4}{subsection.2.2.2}%
+\contentsline {chapter}{\numberline {3\hspace {.3em}}第三题}{5}{chapter.3}%
+\contentsline {section}{\numberline {3.1}题目}{5}{section.3.1}%
+\contentsline {section}{\numberline {3.2}答案}{5}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}gridSize的计算}{5}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}线程占用及无效线程数}{6}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}边界判断的重要性}{6}{subsection.3.2.3}%
+\contentsline {chapter}{\numberline {4\hspace {.3em}}第四题}{8}{chapter.4}%
+\contentsline {section}{\numberline {4.1}题目}{8}{section.4.1}%
+\contentsline {section}{\numberline {4.2}答案}{8}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}线程处理的元素位置}{8}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}补全kernel代码}{9}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}gridSize计算及边界判断必要性}{9}{subsection.4.2.3}%
+\contentsline {chapter}{参考文献}{10}{chapter*.2}%

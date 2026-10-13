@@ -1,0 +1,38 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}第一题}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}题目}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}解答}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}第一问}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}第二问}{2}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}第三问}{2}{subsection.1.2.3}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}第二题}{4}{chapter.2}%
+\contentsline {section}{\numberline {2.1}题目}{4}{section.2.1}%
+\contentsline {section}{\numberline {2.2}解答}{4}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}基本概念}{4}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}单核情况}{4}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.2.3}多核情况}{4}{subsection.2.2.3}%
+\contentsline {subsection}{\numberline {2.2.4}性能对比}{5}{subsection.2.2.4}%
+\contentsline {subsection}{\numberline {2.2.5}树形规约示意图}{5}{subsection.2.2.5}%
+\contentsline {chapter}{\numberline {3\hspace {.3em}}第三题}{6}{chapter.3}%
+\contentsline {section}{\numberline {3.1}题目}{6}{section.3.1}%
+\contentsline {section}{\numberline {3.2}解答}{6}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}第一问：Flynn 分类}{6}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}第二问：MISD 架构分析}{7}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}第三问：混合架构}{7}{subsection.3.2.3}%
+\contentsline {chapter}{\numberline {4\hspace {.3em}}第四题}{9}{chapter.4}%
+\contentsline {section}{\numberline {4.1}题目}{9}{section.4.1}%
+\contentsline {section}{\numberline {4.2}解答}{10}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}第一问：串行搜索}{10}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}第二问：并行搜索}{10}{subsection.4.2.2}%
+\contentsline {chapter}{\numberline {5\hspace {.3em}}第五题}{12}{chapter.5}%
+\contentsline {section}{\numberline {5.1}题目}{12}{section.5.1}%
+\contentsline {section}{\numberline {5.2}解答}{12}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}第一问：缓存效率}{12}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}第二问：空间局部性}{13}{subsection.5.2.2}%
+\contentsline {subsection}{\numberline {5.2.3}第三问：性能差异变化}{13}{subsection.5.2.3}%
+\contentsline {chapter}{\numberline {6\hspace {.3em}}第六题}{15}{chapter.6}%
+\contentsline {section}{\numberline {6.1}题目}{15}{section.6.1}%
+\contentsline {section}{\numberline {6.2}解答}{15}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}第一问：选择合适的输入数据}{15}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}第二问：短时间计时的改进方法}{16}{subsection.6.2.2}%
+\contentsline {chapter}{参考文献}{17}{chapter*.4}%

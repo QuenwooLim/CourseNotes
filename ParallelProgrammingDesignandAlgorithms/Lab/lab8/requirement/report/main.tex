@@ -1,0 +1,389 @@
+%!TeX program = xelatex
+\documentclass{SYSUReport}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% 根据个人情况修改
+\headl{}
+\headc{}
+\headr{并行程序设计与算法实验}
+\lessonTitle{并行程序设计与算法实验}
+\reportTitle{Lab8-并行多源最短路径搜索}
+\stuname{林宏宇}
+\stuid{23320093}
+\inst{计算机学院}
+\major{计算机科学与技术}
+\date{2026年6月2日}
+
+\begin{document}
+
+% =============================================
+% Part 1: 封面
+% =============================================
+\cover
+\thispagestyle{empty} % 首页不显示页码
+\clearpage
+
+% =============================================
+% Part 2: 正文内容
+% =============================================
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\section{实验目的}
+\begin{itemize}
+    \item 评估并行化最短路径算法的性能。
+    \item 探索不同最短路径算法的并行适应性。
+\end{itemize}
+
+\section{实验内容}
+实现并行的多源最短路径搜索，具体要求如下：
+\begin{itemize}
+\item 使用 OpenMP、Pthreads 或 MPI 中的任意一种或多种并行编程模型来实现。
+
+\textbf{你选择的并行框架是：}OpenMP
+
+\item 选用任意一种最短路径算法作为基础进行并行化，如Bellman-Ford、Dijkstra（针对每个源点执行）、Floyd-Warshall 或 Johnson 算法。
+
+\textbf{你选用的算法是：}以每个顶点为源点独立执行 Dijkstra 算法（Dijkstra-per-Source），同时对 Floyd-Warshall 算法进行对比实验。
+
+\item 简要描述所选算法的实现要点。
+
+\textbf{回答：}
+\begin{enumerate}
+    \item \textbf{数据结构}：使用邻接表存储稀疏图，每条边存储目标节点、权重及下一条边索引。源点距离矩阵采用行主序连续内存布局以提升缓存性能。
+    \item \textbf{Dijkstra 算法}：对每个源点独立运行堆优化的 Dijkstra 算法。使用二叉最小堆维护待松弛节点，时间复杂度为 $O((V+E)\log V)$ 每源点，全集为 $O(V(V+E)\log V)$。
+    \item \textbf{并行策略}：外层源点循环并行化，使用 \texttt{parallel for} 结合动态调度（chunk size = 1），将不同源点分配到各线程独立运行。动态调度有效缓解了因不同源点计算量差异导致的负载不均问题。
+    \item \textbf{Floyd-Warshall 对比实现}：中间节点 $k$ 循环保持串行，内层源点 $i$ 循环并行化（\texttt{parallel for} + \texttt{schedule(static)}），$j$ 循环使用 SIMD 向量化。利用稀疏图特性进行提前剪枝：若 $\texttt{dist}[i][k]$ 为 INF 则跳过整个内层循环。
+\end{enumerate}
+\end{itemize}
+
+\section{实验结果与分析}
+
+\subsection{实验配置简述}
+\begin{itemize}
+    \item \textbf{所用算法：} Dijkstra-per-Source（主要）+ Floyd-Warshall（对比）
+    \item \textbf{并行框架：} OpenMP
+    \item \textbf{并行方式（核心并行策略）：}
+        \begin{itemize}
+            \item \textbf{Dijkstra-per-Source — 外层循环并行化 + 数据按源点划分}：
+            \begin{itemize}
+                \item \textit{并行粒度}：以单个源点的完整 Dijkstra 计算为任务单元，属于粗粒度并行。外层 \texttt{for (src = 0; src < V; src++)} 循环使用 \texttt{\#pragma omp parallel for} 并行化。
+                \item \textit{数据划分}：距离矩阵 $\texttt{dist}[V][V]$ 按源点行（row）进行划分——每个线程负责若干完整源点行，线程 $t$ 处理源点子集 $\{t, t+p, t+2p, \dots\}$（或由调度器动态分配）。每个线程写入的矩阵行互不重叠，无需同步。
+                \item \textit{调度策略}：采用 \texttt{schedule(dynamic, 1)}，即 chunk size=1 的动态调度。运行时，每当一个线程完成当前源点的 Dijkstra 计算，立即从任务池中获取下一个未处理的源点。此策略有效应对不同源点计算量不均的问题（图的中心节点通常需要松弛更多邻接边，计算时间更长）。
+                \item \textit{同步开销}：仅在 \texttt{parallel for} 结束时进行一次全局 barrier 同步，整个并行区间内无中间同步点。
+            \end{itemize}
+            \item \textbf{Floyd-Warshall — 内层循环并行化 + 数据按行带状划分}：
+            \begin{itemize}
+                \item \textit{并行粒度}：以单个源点行的一次 $k$ 迭代更新为任务单元，属于细粒度并行。中间节点循环 $k$ 必须串行执行（迭代 $k$ 依赖于 $k-1$ 的结果），仅对源点循环 $i$ 进行并行化。
+                \item \textit{数据划分}：距离矩阵按源点行带状（block-striped）划分——使用静态调度将 $V$ 行均匀分为 $p$ 个连续块，每线程处理约 $V/p$ 个连续行。连续行分配有利于缓存局部性，减少 TLB 缺失。
+                \item \textit{向量化}：最内层 $j$ 循环使用 \texttt{\#pragma omp simd} 提示编译器进行 SIMD 自动向量化，利用 AVX/SSE 指令同时处理多个目标节点。
+                \item \textit{提前剪枝}：利用稀疏图特性，若 $\texttt{dist}[i][k]$ 为 INF（即尚无 $i \rightarrow k$ 的路径），直接跳过整个 $j$ 循环，避免无效计算。
+                \item \textit{同步开销}：每次 $k$ 迭代结束时进行一次隐式 barrier 同步，总计 $V$ 次 fork/join 操作，这是 FW 并行效率低于 Dijkstra 的根本原因。
+            \end{itemize}
+        \end{itemize}
+    \item \textbf{测试数据特征：}
+        \begin{itemize}
+            \item 数据集1（Mouse Brain）：节点数量 $V_1 = 525$，边数量 $E_1 = 14691$，平均度数 $D_1 \approx 55.97$，边权范围 $[1.00, 1.11]$，稀疏度 $\frac{2E}{V(V-1)} \approx 10.7\%$
+            \item 数据集2（Flower Network）：节点数量 $V_2 = 930$，边数量 $E_2 = 13521$，平均度数 $D_2 \approx 29.08$，边权均为 $1$，稀疏度 $\frac{2E}{V(V-1)} \approx 3.1\%$
+        \end{itemize}
+    \item \textbf{实验环境：} Ubuntu 22.04, GCC 11.4.0, OpenMP 4.5, 96 核 CPU（实验中限制使用 1--16 线程），每次配置重复运行 5 次取平均值。
+\end{itemize}
+
+\subsection{数据集1：Mouse Brain 网络性能数据}
+
+\textbf{数据集1 (节点数量: 525, 平均度数: 55.97) 的性能数据：}
+
+% ===== Dijkstra on Mouse =====
+\begin{table}[H]
+  \centering
+  \caption{数据集1 (525节点, 平均度数55.97) 上 Dijkstra-per-Source 的并行性能 (串行时间 $T_s$: 0.1422 秒)}
+  \label{tab:results_mouse_dijkstra}
+  \begin{tabular}{cccc}
+    \toprule
+    \textbf{线程数量 ($p$)} & \textbf{运行时间 $T_p$ (秒)} & \textbf{加速比 $S_p = T_s / T_p$} & \textbf{并行效率 $E_p = S_p / p$} \\
+    \midrule
+    1   & 0.1422 & 1.00 & 1.00 \\
+    2   & 0.0801 & 1.78 & 0.89 \\
+    4   & 0.0488 & 2.92 & 0.73 \\
+    8   & 0.0328 & 4.34 & 0.54 \\
+    16  & 0.0228 & 6.24 & 0.39 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% ===== Floyd-Warshall on Mouse =====
+\begin{table}[H]
+  \centering
+  \caption{数据集1 (525节点, 平均度数55.97) 上 Floyd-Warshall 的并行性能 (串行时间 $T_s$: 0.1205 秒)}
+  \label{tab:results_mouse_fw}
+  \begin{tabular}{cccc}
+    \toprule
+    \textbf{线程数量 ($p$)} & \textbf{运行时间 $T_p$ (秒)} & \textbf{加速比 $S_p = T_s / T_p$} & \textbf{并行效率 $E_p = S_p / p$} \\
+    \midrule
+    1   & 0.1205 & 1.00 & 1.00 \\
+    2   & 0.0792 & 1.52 & 0.76 \\
+    4   & 0.0537 & 2.24 & 0.56 \\
+    8   & 0.0390 & 3.09 & 0.39 \\
+    16  & 0.0296 & 4.07 & 0.25 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{数据集2：Flower Network 性能数据}
+
+\textbf{数据集2 (节点数量: 930, 平均度数: 29.08) 的性能数据：}
+
+% ===== Dijkstra on Flower =====
+\begin{table}[H]
+  \centering
+  \caption{数据集2 (930节点, 平均度数29.08) 上 Dijkstra-per-Source 的并行性能 (串行时间 $T_s$: 0.0813 秒)}
+  \label{tab:results_flower_dijkstra}
+  \begin{tabular}{cccc}
+    \toprule
+    \textbf{线程数量 ($p$)} & \textbf{运行时间 $T_p$ (秒)} & \textbf{加速比 $S_p = T_s / T_p$} & \textbf{并行效率 $E_p = S_p / p$} \\
+    \midrule
+    1   & 0.0813 & 1.00 & 1.00 \\
+    2   & 0.0503 & 1.62 & 0.81 \\
+    4   & 0.0337 & 2.41 & 0.60 \\
+    8   & 0.0232 & 3.51 & 0.44 \\
+    16  & 0.0157 & 5.17 & 0.32 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% ===== Floyd-Warshall on Flower =====
+\begin{table}[H]
+  \centering
+  \caption{数据集2 (930节点, 平均度数29.08) 上 Floyd-Warshall 的并行性能 (串行时间 $T_s$: 0.4718 秒)}
+  \label{tab:results_flower_fw}
+  \begin{tabular}{cccc}
+    \toprule
+    \textbf{线程数量 ($p$)} & \textbf{运行时间 $T_p$ (秒)} & \textbf{加速比 $S_p = T_s / T_p$} & \textbf{并行效率 $E_p = S_p / p$} \\
+    \midrule
+    1   & 0.4718 & 1.00 & 1.00 \\
+    2   & 0.3348 & 1.41 & 0.70 \\
+    4   & 0.2000 & 2.36 & 0.59 \\
+    8   & 0.1195 & 3.95 & 0.49 \\
+    16  & 0.0788 & 5.98 & 0.37 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{并行性能分析}
+
+\subsubsection{运行时间随线程数增加的变化趋势}
+
+\textbf{回答：} 四种实验配置的运行时间均随线程数增加而单调递减，但递减速率逐渐放缓，呈现出典型的 Amdahl 定律特征。
+
+\begin{itemize}
+    \item \textbf{Dijkstra (Mouse)}：从 1 线程的 0.1422s 降至 16 线程的 0.0228s，加速比为 6.24x，运行时间缩短至原来的 16.0\%。
+    \item \textbf{Dijkstra (Flower)}：从 1 线程的 0.0813s 降至 16 线程的 0.0157s，加速比为 5.17x，运行时间缩短至原来的 19.3\%。注意，Flower 数据集的串行运行时间反而比 Mouse 更短（0.0813s vs 0.1422s），这是因为 Dijkstra 算法的时间复杂度依赖于边数和度数——Mouse 网络的平均度数（55.97）几乎是 Flower 网络（29.08）的两倍，每次松弛操作需要检查更多邻接边，导致单源 Dijkstra 的计算量显著更大。
+    \item \textbf{Floyd-Warshall (Mouse)}：从 0.1205s 降至 0.0296s。
+    \item \textbf{Floyd-Warshall (Flower)}：从 0.4718s 降至 0.0788s。Floyd-Warshall 的串行运行时间随节点数增长显著（$O(V^3)$：$525^3 \approx 1.45 \times 10^8$ vs $930^3 \approx 8.04 \times 10^8$），Flower 的操作量约为 Mouse 的 5.5 倍，实测时间比例约为 3.9 倍（0.4718/0.1205），差异由稀疏性带来的提前剪枝优化效果不同所致。
+\end{itemize}
+
+\subsubsection{加速比的变化情况}
+
+\textbf{回答：} 加速比随线程数增加而持续增长，但增长率逐渐降低。
+
+\begin{itemize}
+    \item \textbf{Dijkstra (Mouse)} 加速比最高，16 线程达到 6.24x。原因是：(1) 各源点的 Dijkstra 任务完全独立，不存在迭代间同步开销；(2) 动态调度有效平衡了不同源点计算量的差异。
+    \item \textbf{Dijkstra (Flower)} 加速比相对较低（16 线程 5.17x），主因是串行基线时间短（仅 0.0813s），线程管理开销占比更大。单个 Dijkstra 源点计算量更小（平均度数低），动态调度的任务粒度更细，开销比例上升。
+    \item \textbf{Floyd-Warshall (Flower)} 在两种 FW 实现中获得更高加速比（5.98x vs Mouse 的 4.07x），因为更大的问题规模（$V=930$，$V^3 \approx 8.04 \times 10^8$）更好地摊还了并行开销。但 FW 的绝对加速比仍低于 Dijkstra，原因在于 FW 每次 $k$ 迭代都需要线程 fork/join，$V$ 次同步开销累积显著。
+    \item \textbf{Floyd-Warshall (Mouse)} 加速比最低（16 线程仅 4.07x），问题规模小（$V=525$）且同步开销占比最高。
+\end{itemize}
+
+\subsubsection{并行效率的变化情况及影响因素}
+
+\textbf{回答：} 并行效率随线程数增加而下降，这是并行计算中的普遍现象。具体分析：
+
+\begin{enumerate}
+    \item \textbf{效率下降趋势}：
+    \begin{itemize}
+        \item Dijkstra (Mouse)：效率从 $p=2$ 的 0.89 降至 $p=16$ 的 0.39
+        \item Dijkstra (Flower)：从 0.81 降至 0.32
+        \item Floyd-Warshall (Mouse)：从 0.76 降至 0.25
+        \item Floyd-Warshall (Flower)：从 0.70 降至 0.37
+    \end{itemize}
+
+    \item \textbf{影响并行效率的主要因素}：
+
+    \textbf{(a) 同步开销（Synchronization Overhead）}：Floyd-Warshall 算法的效率显著低于 Dijkstra，核心原因在于 FW 需要在每次 $k$ 迭代末尾进行隐式 barrier 同步（\texttt{\#pragma omp parallel for} 包含隐式同步）。对于 $V=930$ 的图，这意味着 930 次线程 fork/join 操作。每次 fork/join 涉及线程唤醒、工作分配和同步等待，累积开销随线程数增加而放大。
+
+    \textbf{(b) 任务粒度（Task Granularity）}：Dijkstra 算法以整个源点的最短路径树计算为任务单元，粒度较粗（每个任务 $O((V+E)\log V)$）；Floyd-Warshall 以单个源点行的一次 $k$ 迭代为任务单元，粒度较细（$O(V)$）。当问题规模不足以摊还并行开销时，细粒度任务的效率损失更明显。
+
+    \textbf{(c) 负载均衡（Load Balance）}：Dijkstra 算法中不同源点的计算量可能存在差异——位于图中心的源点需要探索更多节点。本实验采用 \texttt{schedule(dynamic, 1)} 动态调度策略，每次分配一个源点任务，有效缓解了负载不均问题。
+
+    \textbf{(d) 内存带宽竞争（Memory Bandwidth Contention）}：两种算法都是内存密集型——Dijkstra 频繁访问邻接表和距离矩阵，Floyd-Warshall 执行大量矩阵读写。随着线程数增加，多核共享的最后一级缓存（LLC）和内存带宽成为瓶颈。在 16 线程下，多个核心同时访问主存导致带宽饱和，限制了进一步加速。
+
+    \textbf{(e) 串行部分（Amdahl's Law）}：图数据加载、结果矩阵初始化、测试查询处理等串行部分占总执行时间的比例虽小，但随着并行部分加速，串行部分占比相对增大，成为性能瓶颈。
+\end{enumerate}
+
+\subsubsection{性能曲线可视化}
+
+为更直观地展示并行性能，图~\ref{fig:speedup} 和图~\ref{fig:efficiency} 分别绘制了四种实验配置的加速比曲线和并行效率曲线。
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        width=0.85\textwidth,
+        height=0.45\textwidth,
+        xlabel={线程数量 $p$},
+        ylabel={加速比 $S_p$},
+        xmin=0, xmax=17,
+        ymin=0, ymax=18,
+        xtick={1,2,4,8,16},
+        ytick={0,2,4,6,8,10,12,14,16,18},
+        legend pos=north west,
+        legend style={font=\small},
+        grid=major,
+        title={加速比曲线对比},
+        mark size=3pt,
+        line width=1.2pt,
+    ]
+    % Ideal linear speedup
+    \addplot[color=gray, dashed, line width=0.8pt, mark=none] coordinates {(1,1) (16,16)};
+    \addlegendentry{理想线性加速}
+
+    % Dijkstra Mouse
+    \addplot[color=blue, mark=*, thick] coordinates {
+        (1, 1.00) (2, 1.78) (4, 2.92) (8, 4.34) (16, 6.24)
+    };
+    \addlegendentry{Dijkstra (Mouse, V=525)}
+
+    % Dijkstra Flower
+    \addplot[color=red, mark=triangle*, thick] coordinates {
+        (1, 1.00) (2, 1.62) (4, 2.41) (8, 3.51) (16, 5.17)
+    };
+    \addlegendentry{Dijkstra (Flower, V=930)}
+
+    % FW Mouse
+    \addplot[color=green!50!black, mark=square*, thick] coordinates {
+        (1, 1.00) (2, 1.52) (4, 2.24) (8, 3.09) (16, 4.07)
+    };
+    \addlegendentry{Floyd-Warshall (Mouse, V=525)}
+
+    % FW Flower
+    \addplot[color=orange, mark=diamond*, thick] coordinates {
+        (1, 1.00) (2, 1.41) (4, 2.36) (8, 3.95) (16, 5.98)
+    };
+    \addlegendentry{Floyd-Warshall (Flower, V=930)}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{四种实验配置的加速比曲线（灰色虚线为线性加速参考线）}
+  \label{fig:speedup}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        width=0.85\textwidth,
+        height=0.45\textwidth,
+        xlabel={线程数量 $p$},
+        ylabel={并行效率 $E_p$},
+        xmin=0, xmax=17,
+        ymin=0, ymax=1.1,
+        xtick={1,2,4,8,16},
+        ytick={0,0.2,0.4,0.6,0.8,1.0},
+        legend pos=north east,
+        legend style={font=\small},
+        grid=major,
+        title={并行效率曲线对比},
+        mark size=3pt,
+        line width=1.2pt,
+    ]
+    % Ideal efficiency
+    \addplot[color=gray, dashed, line width=0.8pt, mark=none] coordinates {(1,1) (16,1)};
+    \addlegendentry{理想效率 ($E=1$)}
+
+    % Dijkstra Mouse
+    \addplot[color=blue, mark=*, thick] coordinates {
+        (1, 1.00) (2, 0.89) (4, 0.73) (8, 0.54) (16, 0.39)
+    };
+    \addlegendentry{Dijkstra (Mouse, V=525)}
+
+    % Dijkstra Flower
+    \addplot[color=red, mark=triangle*, thick] coordinates {
+        (1, 1.00) (2, 0.81) (4, 0.60) (8, 0.44) (16, 0.32)
+    };
+    \addlegendentry{Dijkstra (Flower, V=930)}
+
+    % FW Mouse
+    \addplot[color=green!50!black, mark=square*, thick] coordinates {
+        (1, 1.00) (2, 0.76) (4, 0.56) (8, 0.39) (16, 0.25)
+    };
+    \addlegendentry{Floyd-Warshall (Mouse, V=525)}
+
+    % FW Flower
+    \addplot[color=orange, mark=diamond*, thick] coordinates {
+        (1, 1.00) (2, 0.70) (4, 0.59) (8, 0.49) (16, 0.37)
+    };
+    \addlegendentry{Floyd-Warshall (Flower, V=930)}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{四种实验配置的并行效率曲线（灰色虚线为理想效率 $E=1$）}
+  \label{fig:efficiency}
+\end{figure}
+
+\subsubsection{不同数据特征对并行性能的影响}
+
+\textbf{回答：}
+
+\begin{enumerate}
+    \item \textbf{节点数量（$V$）的影响}：
+
+    \begin{itemize}
+        \item 对 Floyd-Warshall：节点数量是最关键因素。FW 时间复杂度为 $O(V^3)$，$V$ 从 525 增至 930（增加 77\%），计算量增加约 455\%。Flower 数据集上 FW 的加速比（5.98x）显著优于 Mouse（4.07x），因为更大的计算量更好地摊还了 $V$ 次同步开销。这验证了更大问题规模能更好摊还并行固定开销的规律。该现象也与 Gustafson 定律的精神一致：当问题规模随处理器数量同步增长时，加速比可以接近线性。
+        \item 对 Dijkstra：节点数量的影响通过平均度数间接体现。虽然 Flower 的 $V$ 更大，但因其平均度数低（29 vs 56），总计算量 $O(V(V+E)\log V)$ 反而更小——Flower 每个源点平均遍历更少的边。这解释了 Flower 上 Dijkstra 的加速比（5.17x）反而不如 Mouse（6.24x）。
+    \end{itemize}
+
+    \item \textbf{平均度数（$D$）的影响}：
+
+    \begin{itemize}
+        \item 对 Dijkstra：平均度数直接决定每个源点的 Dijkstra 计算量。度数越高，每次从堆中弹出节点时需要松弛的邻接边越多，单个任务的计算时间越长。Mouse 网络的高度数（55.97 vs 29.08）使得每个源点任务更\"重\"，任务粒度更粗，因此并行效率更高（$p=16$ 时 $E=0.39$ vs $0.32$）。
+        \item 对 Floyd-Warshall：平均度数影响提前剪枝优化的效果。在稀疏图中（如 Flower，稀疏度 3.1\%），大量 $\texttt{dist}[i][k]$ 在迭代初期为无穷大，提前剪枝跳过了大量无用计算，实际计算量远小于 $V^3$ 的理论峰值。随着 $k$ 增大、可达路径增多，计算密度逐渐上升。
+    \end{itemize}
+
+    \item \textbf{算法-数据匹配性}：
+
+    实验结果表明，对于稀疏图（两个数据集稀疏度均在 3--11\%），Dijkstra-per-Source 在绝对性能上优于 Floyd-Warshall：
+    \begin{itemize}
+        \item Mouse 数据集（$D \approx 56$）：Dijkstra 1 线程 0.1422s vs FW 1 线程 0.1205s（FW 略快），但 16 线程下 Dijkstra（0.0228s）明显快于 FW（0.0296s）
+        \item Flower 数据集（$D \approx 29$）：Dijkstra 在所有线程数下均显著优于 FW（1 线程：0.0813s vs 0.4718s；16 线程：0.0157s vs 0.0788s）
+    \end{itemize}
+    图的稀疏性越高，Dijkstra 相对 Floyd-Warshall 的优势越大。如果图变得更稠密（如 $D > 100$），Floyd-Warshall 的 $O(V^3)$ 固定计算模式优势将逐渐显现。
+\end{enumerate}
+
+\subsection{算法对比总结}
+
+\begin{table}[H]
+  \centering
+  \caption{两种并行算法在不同数据集上的 16 线程性能对比}
+  \label{tab:comparison}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{算法} & \textbf{数据集} & \textbf{$T_1$ (s)} & \textbf{$T_{16}$ (s)} & \textbf{$S_{16}$} \\
+    \midrule
+    Dijkstra-per-Source & Mouse (525, D=56)   & 0.1422 & 0.0228 & 6.24 \\
+    Dijkstra-per-Source & Flower (930, D=29)  & 0.0813 & 0.0157 & 5.17 \\
+    Floyd-Warshall      & Mouse (525, D=56)   & 0.1205 & 0.0296 & 4.07 \\
+    Floyd-Warshall      & Flower (930, D=29)  & 0.4718 & 0.0788 & 5.98 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{结论}：
+\begin{itemize}
+    \item 对于稀疏图，Dijkstra-per-Source 结合动态调度是更优的并行策略，因为它消除了迭代间的同步开销，且任务粒度更粗。
+    \item Floyd-Warshall 在节点数增大时展现出更好的可扩展性（Flower 上 $S_{16}=5.98$），适合稠密图或中等规模图的全对最短路径批量计算。
+    \item 并行框架 OpenMP 能够以较少的代码修改实现显著的性能提升，循环级并行化（\texttt{parallel for}）是最高效的并行模式之一。
+    \item 实际应用中应根据图的规模和稀疏度选择合适的算法：稀疏图优先选择 Dijkstra-per-Source，稠密图或节点数适中的图可选择 Floyd-Warshall。
+\end{itemize}
+
+\end{document}

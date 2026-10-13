@@ -1,0 +1,67 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+A level-1 auxiliary file: chap01.aux
+The style file: gbt7714-numerical.bst
+A level-1 auxiliary file: appendix1.aux
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 150 items from 100.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
+Reallocated global_strs (elt_size=200001) to 20 items from 10.
+Reallocated glb_str_end (elt_size=4) to 20 items from 10.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Database file #1: reference.bib
+Warning--empty year in zhisuan
+Warning--empty year in zhisuan
+Warning--empty author and editor in zhisuan
+Warning--empty title in zhisuan
+Warning--empty year in zhisuan
+Warning--empty year in zhisuan
+You've used 1 entry,
+            5374 wiz_defined-function locations,
+            1048 strings with 7710 characters,
+and the built_in function-call counts, 662 in all, are:
+= -- 38
+> -- 9
+< -- 1
++ -- 6
+- -- 6
+* -- 27
+:= -- 101
+add.period$ -- 2
+call.type$ -- 1
+change.case$ -- 1
+chr.to.int$ -- 0
+cite$ -- 8
+duplicate$ -- 21
+empty$ -- 77
+format.name$ -- 0
+if$ -- 211
+int.to.chr$ -- 1
+int.to.str$ -- 2
+missing$ -- 0
+newline$ -- 18
+num.names$ -- 0
+pop$ -- 26
+preamble$ -- 1
+purify$ -- 1
+quote$ -- 0
+skip$ -- 45
+stack$ -- 0
+substring$ -- 9
+swap$ -- 1
+text.length$ -- 7
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 11
+warning$ -- 6
+while$ -- 4
+width$ -- 0
+write$ -- 21
+(There were 6 warnings)

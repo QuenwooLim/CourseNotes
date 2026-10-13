@@ -1,0 +1,31 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}第一题}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}题目}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}答案}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}片段A的并行化分析}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}片段B的并行化分析}{1}{subsection.1.2.2}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}第二题}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}题目}{3}{section.2.1}%
+\contentsline {section}{\numberline {2.2}答案}{3}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}性能问题分析}{3}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}默认调度策略及效率问题}{4}{subsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.2.3}改进的调度策略}{4}{subsection.2.2.3}%
+\contentsline {chapter}{\numberline {3\hspace {.3em}}第三题}{5}{chapter.3}%
+\contentsline {section}{\numberline {3.1}题目}{5}{section.3.1}%
+\contentsline {section}{\numberline {3.2}答案}{5}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}变量类型分析}{5}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}代码存在的问题}{6}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}最终输出分析}{6}{subsection.3.2.3}%
+\contentsline {chapter}{\numberline {4\hspace {.3em}}第四题}{7}{chapter.4}%
+\contentsline {section}{\numberline {4.1}题目}{7}{section.4.1}%
+\contentsline {section}{\numberline {4.2}答案}{7}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}迭代分配范围}{7}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}分配方式的优点}{7}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}计算量差异大时的问题}{8}{subsection.4.2.3}%
+\contentsline {chapter}{\numberline {5\hspace {.3em}}第五题}{9}{chapter.5}%
+\contentsline {section}{\numberline {5.1}题目}{9}{section.5.1}%
+\contentsline {section}{\numberline {5.2}答案}{9}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}atomic指令保护的操作}{9}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}临界区分析}{9}{subsection.5.2.2}%
+\contentsline {subsection}{\numberline {5.2.3}使用critical代码块的影响}{10}{subsection.5.2.3}%
+\contentsline {chapter}{参考文献}{11}{chapter*.2}%

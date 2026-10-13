@@ -1,0 +1,6 @@
+{
+    "code-runner.executorMap": {
+        "c": "cd $dir && mpicc $fileName -o $fileNameWithoutExt && mpirun -np 2 $fileNameWithoutExt",
+        "cpp": "cd $dir && mpic++ $fileName -o $fileNameWithoutExt && mpirun -np 2 $fileNameWithoutExt"
+    }
+}

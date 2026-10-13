@@ -1,0 +1,384 @@
+%!TeX program = xelatex
+\documentclass{SYSUReport}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\setlist{itemsep=2pt,topsep=3pt,parsep=0pt,partopsep=0pt}
+\lstdefinestyle{cuda_cpp}{
+    language=C++,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!40!black},
+    stringstyle=\color{purple},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=2,
+    captionpos=b,
+    escapeinside={\%*}{*)},
+    morekeywords={__global__, __shared__, threadIdx, blockIdx, blockDim, gridDim, cudaMalloc, cudaMemcpy, cudaFree, __syncthreads, dim3},
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    framerule=0.5pt,
+    rulecolor=\color{gray!40}
+}
+% 根据个人情况修改
+\headl{}
+\headc{}
+\headr{并行程序设计与算法实验}
+\lessonTitle{并行程序设计与算法实验}
+\reportTitle{Lab11-CUDA卷积计算}
+\stuname{林宏宇}
+\stuid{23320093}
+\inst{计算机学院}
+\major{计算机科学与技术}
+\date{2026年6月15日}
+
+\begin{document}
+
+% =============================================
+% 封面
+% =============================================
+\cover
+\thispagestyle{empty}
+\clearpage
+
+% =============================================
+% 正文
+% =============================================
+\section{实验目的}
+\begin{itemize}
+    \item 理解神经网络中二维卷积的基本计算过程，以及 stride 和 padding 对输出尺寸与计算量的影响。
+    \item 掌握 CUDA 直接卷积（滑窗法）的实现方法，理解线程块配置、任务映射和访存方式对性能的影响。
+    \item 掌握 im2col 方法，将卷积转换为矩阵乘法并使用已有的 CUDA 矩阵乘法程序完成计算。
+    \item 学习使用 cuDNN 卷积接口，对比直接卷积、im2col 方法和 cuDNN 的运行性能。
+\end{itemize}
+
+\section{实验内容}
+本实验实现神经网络中的二维卷积操作。卷积核不进行翻转（即互相关操作），不考虑偏置项，bias 设置为 0。为保证不同实现之间能够公平比较，统一采用以下实验设置：
+\begin{itemize}
+    \item 输入为 $N\times N\times3$ 的单精度数据（NCHW布局），batch size 为 1；
+    \item 使用一个 $3\times3\times3$ 卷积核，输出通道数为 1；
+    \item padding 设置为 1，stride 分别设置为 1、2 和 3；
+    \item 选择了 $256\times256$、$512\times512$、$1024\times1024$ 三组输入规模作为主要对比组；三种实现采用相同的输入和卷积参数。
+\end{itemize}
+输出尺寸计算公式为：
+\begin{equation*}
+N_{\mathrm{out}}
+=
+\left\lfloor
+\frac{N+2P-K}{S}
+\right\rfloor
++1.
+\end{equation*}
+其中，$P$、$K$ 和 $S$ 分别表示 padding、卷积核大小和 stride。
+
+\subsection{CUDA直接卷积}
+使用 CUDA 实现直接卷积（滑窗法），由 CUDA 线程计算各个输出位置的卷积结果。每个线程负责输出特征图上的一个像素点，遍历3个输入通道和$3\times3$卷积核的9个位置进行乘加运算，边界超出范围的值视为0（零填充）。测试不同输入图像大小、stride 和线程块大小下的运行时间；自行设计并说明输出任务到 CUDA 线程的映射方式，至少比较两种不同的任务粒度或线程映射方式。这里比较的是线程任务映射方式，而不是不同的卷积算法。
+
+直接卷积核函数实现如下：
+\begin{lstlisting}[style=cuda_cpp, caption={直接卷积核函数}]
+__global__ void conv2d_direct(float *in, float *ker, float *out,
+                               int N, int C, int K, int P, int S, int N_out) {
+    int ow = blockIdx.x * blockDim.x + threadIdx.x;
+    int oh = blockIdx.y * blockDim.y + threadIdx.y;
+    if (oh >= N_out || ow >= N_out) return;
+    float sum = 0.0f;
+    for (int c = 0; c < C; c++)
+        for (int kh = 0; kh < K; kh++)
+            for (int kw = 0; kw < K; kw++) {
+                int ih = oh * S + kh - P, iw = ow * S + kw - P;
+                if ((unsigned)ih < (unsigned)N && (unsigned)iw < (unsigned)N)
+                    sum += in[c * N * N + ih * N + iw]
+                         * ker[c * K * K + kh * K + kw];
+            }
+    out[oh * N_out + ow] = sum;
+}
+\end{lstlisting}
+
+\subsection{im2col方法}
+使用 im2col 将各个滑动窗口展开为矩阵，将卷积核展开为向量，再使用矩阵-向量乘法完成卷积计算。im2col 将输入张量$[C][H][W]$中每个滑动窗口（$C\times K\times K = 27$个元素）展平为列向量，所有窗口组合成矩阵$col\_matrix$，维度为$M_{patches}\times K_{dim}$，其中$M_{patches}=N_{out}\times N_{out}$为输出像素总数，$K_{dim}=C\times K\times K=27$为每个窗口展平后的维度。矩阵乘法采用 CUDA 实现的矩阵-向量乘法核函数，每个线程计算一个输出元素（col\_matrix的一行）与卷积核向量的内积。
+
+im2col 展开核函数：
+\begin{lstlisting}[style=cuda_cpp, caption={im2col核函数}]
+__global__ void im2col(float *in, float *col,
+                        int N, int C, int K, int P, int S, int N_out) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int M = N_out * N_out;
+    if (idx >= M) return;
+    int oh = idx / N_out, ow = idx % N_out;
+    int K_dim = C * K * K, base = idx * K_dim;
+    for (int c = 0; c < C; c++)
+        for (int kh = 0; kh < K; kh++)
+            for (int kw = 0; kw < K; kw++) {
+                int ih = oh * S + kh - P, iw = ow * S + kw - P;
+                float val = 0.0f;
+                if ((unsigned)ih < (unsigned)N && (unsigned)iw < (unsigned)N)
+                    val = in[c * N * N + ih * N + iw];
+                col[base + c * K * K + kh * K + kw] = val;
+            }
+}
+\end{lstlisting}
+
+矩阵-向量乘法核函数（GEMV）：
+\begin{lstlisting}[style=cuda_cpp, caption={矩阵-向量乘法核函数}]
+__global__ void gemv_simple(float *col, float *ker, float *out, int M, int K_dim) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= M) return;
+    float sum = 0.0f;
+    float *row = col + idx * K_dim;
+    for (int i = 0; i < K_dim; i++) sum += row[i] * ker[i];
+    out[idx] = sum;
+}
+\end{lstlisting}
+
+\subsection{cuDNN卷积}
+使用 cuDNN 9.1.0 提供的 Legacy API（基于描述符的API）完成卷积操作。cuDNN 编程模型的核心流程为：首先创建 cuDNN 句柄作为所有操作的上下文；然后用描述符定义输入张量、卷积核、卷积操作和输出张量的属性（维度、数据类型、padding、stride 等）；接着调用 \texttt{cudnnFindConvolutionForwardAlgorithm} 自动基准测试并选择最优算法；获取该算法所需的 workspace 大小并分配 GPU 内存；最后调用 \texttt{cudnnConvolutionForward} 执行卷积。使用完毕后释放描述符、workspace 和句柄。
+
+cuDNN卷积的完整实现代码如下：
+\begin{lstlisting}[style=cuda_cpp, caption={cuDNN卷积实现}]
+// 1. 创建cuDNN句柄
+cudnnHandle_t handle;
+cudnnCreate(&handle);
+
+// 2. 描述输入张量 [N=1, C=3, H=N, W=N], NCHW布局
+cudnnTensorDescriptor_t in_desc;
+cudnnCreateTensorDescriptor(&in_desc);
+cudnnSetTensor4dDescriptor(in_desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
+                            1, C, N, N);  // batch=1, channels=3, H, W
+
+// 3. 描述卷积核 [K_out=1, C=3, K_h=3, K_w=3]
+cudnnFilterDescriptor_t flt_desc;
+cudnnCreateFilterDescriptor(&flt_desc);
+cudnnSetFilter4dDescriptor(flt_desc, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW,
+                            K_out, C, K, K);
+
+// 4. 描述卷积操作: padding=P, stride=S, dilation=1, cross-correlation
+cudnnConvolutionDescriptor_t conv_desc;
+cudnnCreateConvolutionDescriptor(&conv_desc);
+cudnnSetConvolution2dDescriptor(conv_desc, P, P, S, S, 1, 1,
+                                 CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT);
+
+// 5. 描述输出张量 [N=1, K_out=1, H=N_out, W=N_out]
+cudnnTensorDescriptor_t out_desc;
+cudnnCreateTensorDescriptor(&out_desc);
+cudnnSetTensor4dDescriptor(out_desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
+                            1, K_out, N_out, N_out);
+
+// 6. 自动选择最优前向卷积算法（cuDNN内部对多种算法做基准测试）
+int req_cnt = 8, ret_cnt = 0;
+cudnnConvolutionFwdAlgoPerf_t perf[8];
+cudnnFindConvolutionForwardAlgorithm(handle,
+    in_desc, flt_desc, conv_desc, out_desc, req_cnt, &ret_cnt, perf);
+cudnnConvolutionFwdAlgo_t algo = perf[0].algo;  // 取最快的算法
+
+// 7. 获取该算法所需的workspace大小并分配
+size_t ws_size = 0;
+cudnnGetConvolutionForwardWorkspaceSize(handle,
+    in_desc, flt_desc, conv_desc, out_desc, algo, &ws_size);
+void *d_workspace = NULL;
+if (ws_size > 0) cudaMalloc(&d_workspace, ws_size);
+
+// 8. 执行卷积（计时仅包含此调用）
+float alpha = 1.0f, beta = 0.0f;
+cudnnConvolutionForward(handle,
+    &alpha, in_desc, d_input,
+    flt_desc, d_kernel,
+    conv_desc, algo,
+    d_workspace, ws_size,
+    &beta, out_desc, d_output);
+
+// 9. 释放资源
+cudnnDestroyTensorDescriptor(in_desc);
+cudnnDestroyTensorDescriptor(out_desc);
+cudnnDestroyFilterDescriptor(flt_desc);
+cudnnDestroyConvolutionDescriptor(conv_desc);
+if (d_workspace) cudaFree(d_workspace);
+cudnnDestroy(handle);
+\end{lstlisting}
+
+cuDNN 通过描述符（Descriptor）抽象出张量形状、内存布局、卷积参数等信息，使得同一套 API 可以适配不同的输入尺寸和卷积配置。\texttt{cudnnFindConvolutionForwardAlgorithm} 内部对可用算法（IMPLICIT\_GEMM、GEMM、Winograd、FFT等）逐一进行快速基准测试，返回性能排序后的算法列表，程序取最快的算法使用。与前两种方法一样，只统计 GPU 计算阶段时间（仅统计 \texttt{cudnnConvolutionForward} 的执行时间），预热10次后测量50次取平均值。
+
+\section{实验结果}
+本节记录所有性能数据。所有kernel时间使用CUDA Event计时（\texttt{cudaEventRecord}），每组实验预热10次后测量50次取平均值，仅统计GPU计算阶段时间，不包含显存申请、程序初始化和主机与设备之间的数据传输时间。
+
+\textbf{关于时间尺度的说明}：本实验所有时间数据均通过CUDA Event计时获取，每组配置预热10次后测量50次取平均值，计时结果稳定（多次运行波动$<5\%$）。由于只统计GPU kernel执行阶段，不包含显存分配与H2D/D2H传输，且卷积规模最大仅约$10^6$输出像素，因此时间处于微秒量级。
+
+以最大规模$1024\times1024$、stride=1为例：输出像素约$1.05\times10^6$，总计算量约$2.83\times10^7$次FMA。若仅按V100单精度峰值（约14 TFLOPS）估算，纯计算下限约0.002 ms——\textbf{该数值仅供数量级参考，不代表实际可达性能}。卷积是访存密集型运算：无缓存优化时，每像素最多需从全局内存读取27个float（约108 bytes），$10^6$像素对应约108 MB读取量，V100的HBM2带宽约900 GB/s，仅全局内存读取就需约0.12 ms。实测0.055 ms处于计算下限与带宽下限之间，说明GPU的L1/L2缓存有效降低了实际全局内存访问量。对于$256\times256$等更小规模，kernel launch开销（约3--5$\mu$s）在总时间中占比上升，但数据仍在合理范围。
+
+\subsection{线程块大小对直接卷积性能的影响}
+固定输入图像大小$512\times512\times3$、stride=1和任务映射方式（每线程1个输出像素，2D线程块），测量不同线程块大小下 CUDA 直接卷积的运行时间。
+
+\begin{table}[H]
+\centering
+\caption{不同线程块大小下CUDA直接卷积的运行时间（ms）}
+\label{tab:block_size}
+\begin{tabular}{|c|c|c|}
+\hline
+输入图像大小 & 线程块大小 & 运行时间 \\
+\hline
+\multirow{3}{*}{$512\times512$}
+& $8\times8$   & 0.015599 \\
+\cline{2-3}
+& $16\times16$ & 0.012436 \\
+\cline{2-3}
+& $32\times32$ & 0.013580 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{结果分析}：三种配置中，$16\times16$（256线程）性能最优。$8\times8$（64线程，仅2个Warp）并行度不足，无法有效隐藏内存访问延迟，性能最差。$32\times32$（1024线程，已达 GPU 线程块上限）虽块内并行度高，但每个SM最多同时驻留2个此类线程块（$2\times1024=2048$线程），线程块间切换的延迟隐藏能力较弱。$16\times16$每个SM可驻留8个线程块（$8\times256=2048$线程，64个Warp），在保持高占用率的同时确保足够的线程块级并行度，实现了并行度与资源利用率的最佳平衡。
+
+\subsection{任务划分与线程映射方式对性能的影响}
+固定输入图像大小$512\times512\times3$、stride=1，保持约256线程/块，测量不同任务划分与线程映射方式下直接卷积的运行时间。
+
+\begin{table}[H]
+\centering
+\caption{不同任务划分与线程映射方式下直接卷积的运行时间（ms）}
+\label{tab:mapping}
+\begin{tabularx}{0.92\textwidth}{|c|X|c|}
+\hline
+编号 & 任务划分与线程映射方式 & 运行时间 \\
+\hline
+方式一 & 每线程1个输出像素，2D线程块$16\times16$，Grid覆盖$(W_{out},H_{out})$ & 0.012436 \\
+\hline
+方式二 & 每线程1个输出像素，1D线程块256线程，grid.y映射输出行索引 & 0.012420 \\
+\hline
+方式三（可选） & 每线程$2\times2=4$个输出像素（寄存器分块），$16\times16$线程块 & 0.041247 \\
+\hline
+\end{tabularx}
+\end{table}
+
+\textbf{各方式说明}：
+
+\textbf{方式一（2D线程块映射）}：将输出特征图的二维空间直接映射到2D Grid和2D Block。每个线程索引$(threadIdx.x, threadIdx.y)$对应输出空间的一个像素坐标$(ow, oh)$。同一Warp内相邻threadIdx.x的线程访问空间相邻的输入数据，有利于L2缓存命中。
+
+\textbf{方式二（1D行映射）}：Grid的y维度映射输出行索引，Block包含256个1D线程处理该行的各列。每个线程块处理一行（或一行的一段），线程之间通过blockIdx.y区分不同行。此映射方式将输出行的概念显式化，在处理非正方形特征图时更灵活。
+
+\textbf{方式三（寄存器分块）}：每线程计算$2\times2=4$个相邻输出像素。将卷积核缓存到寄存器（27个float），4个累加器也保留在寄存器中。目的是增加每线程计算密度以换取更少的线程调度开销。
+
+\textbf{结果分析}：方式一和方式二性能几乎相同（差异$<0.3\%$），说明对于规整的2D卷积，两种线程组织方式在内存合并访存方面表现相似。方式三性能明显下降（约3.3倍）。从核函数结构分析，每线程需要维护4个输出累加器、27个卷积核缓存值以及多个循环索引，寄存器需求远高于方式一；这会导致每个SM能同时驻留的线程数减少，降低延迟隐藏能力（可通过\texttt{nvcc --ptxas-options=-v}进一步确认实际寄存器用量）。此外$2\times2$分块引入了更多内层分支判断（需逐一检查4个输出位置是否越界），也增加了指令开销。分块策略在更大卷积核（如$5\times5$以上）或更深通道数场景中可能更有优势。
+
+\subsection{不同卷积实现的性能对比}
+在相同输入图像大小、stride、padding和卷积核设置下，测量直接卷积、im2col方法和cuDNN的运行时间。im2col总时间 = im2col数据展开时间 + GEMV矩阵乘法时间。cuDNN使用\texttt{cudnnFindConvolutionForwardAlgorithm}自动选择算法。根据实验观察，cuDNN在本实验配置下未表现出Winograd算法常见的性能优势，推测其可能选择了基于GEMM的实现路径（cuDNN 9.x在batch=1、FP32条件下，启发式算法可能判定Winograd的变换开销超过了计算收益）。
+
+\begin{table}[H]
+\centering
+\caption{不同卷积实现的性能对比（时间单位：ms）}
+\label{tab:conv_compare}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+输入图像大小 & stride & 直接卷积 & im2col方法 & cuDNN \\
+\hline
+\multirow{3}{*}{$256\times256$}
+& 1 & 0.006204 & 0.103764 & 0.024509 \\
+\cline{2-5}
+& 2 & 0.004524 & 0.024716 & 0.016612 \\
+\cline{2-5}
+& 3 & 0.004694 & 0.015410 & 0.016538 \\
+\hline
+\multirow{3}{*}{$512\times512$}
+& 1 & 0.012459 & 0.977715 & 0.023800 \\
+\cline{2-5}
+& 2 & 0.005668 & 0.114914 & 0.012028 \\
+\cline{2-5}
+& 3 & 0.005032 & 0.037411 & 0.012154 \\
+\hline
+\multirow{3}{*}{$1024\times1024$}
+& 1 & 0.055440 & 4.700619 & 0.084531 \\
+\cline{2-5}
+& 2 & 0.021998 & 0.970368 & 0.031362 \\
+\cline{2-5}
+& 3 & 0.018836 & 0.355535 & 0.023099 \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{实验分析}
+
+\subsection{问题一}
+
+\textbf{分析输入图像大小、stride 和线程块大小对直接卷积运行时间的影响；说明哪种线程块配置性能较好，并结合并行度和硬件资源使用分析原因。}
+
+\textbf{回答：}
+
+\textbf{（1）输入图像大小的影响}：直接卷积运行时间随输入尺寸增大而增加。以stride=1为例，当输入从$256\times256$增至$1024\times1024$时，输出像素数从$256^2=65,536$增至$1024^2=1,048,576$（增长16倍），而运行时间从0.006204 ms增至0.055440 ms（增长约9倍）。时间增长低于计算量的线性增长，体现了GPU在大规模并行计算中的优势——更大的问题规模能更充分地利用 GPU 的多个 SM（流式多处理器）和数千个 CUDA 核心，有效摊薄了 kernel 启动开销。
+
+\textbf{（2）stride的影响}：stride增大导致输出尺寸减小，运行时间显著下降。以$512\times512$输入为例，stride=1时输出为$512\times512$（262,144像素），stride=3时输出为$171\times171$（29,241像素），计算量减少约89\%，运行时间从0.012459 ms降至0.005032 ms（减少约60\%）。注意stride不影响每个输出像素的计算量（始终为$C\times K^2=27$次乘加运算），仅改变总输出像素数。运行时间的减少比例低于计算量的减少比例，原因是kernel启动开销（约3--5 $\mu$s）在总时间中占比随计算量减少而增大。
+
+\textbf{（3）线程块大小的影响}：$16\times16$（256线程=8个Warp）表现最优，是推荐配置。理论分析如下：以本实验使用的 GPU（计算能力 7.0）为例，每个 SM 最多驻留 2048 个线程（64 个 Warp）或 32 个线程块。$8\times8$（64线程=2 Warp/块）需32个线程块方能占满SM（恰达上限），但频繁的线程块调度带来开销；$32\times32$（1024线程=32 Warp/块）仅能驻留2个线程块（$2\times1024=2048$线程），块间切换次数少导致延迟隐藏不足；$16\times16$（256线程=8 Warp/块）可驻留8个线程块（$8\times256=2048$线程），在Warp调度灵活性和线程块级并行度之间取得最佳平衡。
+
+\subsection{问题二}
+
+\textbf{说明所采用的任务划分与线程映射方式，分析不同方式对任务粒度、负载均衡和全局内存访问的影响。}
+
+\textbf{回答：}
+
+\textbf{方式一（2D线程块映射）}将输出空间$(H_{out},W_{out})$直接映射到2D Grid，线程索引与输出坐标一一对应，代码简洁直观。在全局内存访问方面，同一Warp内相邻threadIdx.x的32个线程访问输入数据时具有空间局部性——它们对应的$ih,iw$坐标相差不大，有利于L2缓存行命中。任务粒度方面，每线程27次乘加运算，属于细粒度任务划分，线程总数多（对$512\times512$为262,144个线程），线程调度开销相对较大但被大量计算充分隐藏。
+
+\textbf{方式二（1D行映射）}将输出行显式化为grid.y维度，block含256个1D线程处理行内各列。此方式与方式一的本质区别在于线程块内线程的空间关系：方式一中同一block的线程覆盖$16\times16$的2D区域，方式二中同一block的线程覆盖一行中256个连续像素。从合并访存角度，两种方式的同一Warp内相邻线程访问空间相邻的输入数据，访存效率相当。方式二的优点是对非正方形特征图（如$H_{out}\gg W_{out}$）更灵活，可通过调整grid.y和block.x实现更均衡的负载分配。
+
+\textbf{方式三（寄存器分块）}每线程处理$2\times2=4$个输出像素。任务粒度从细粒度（1像素/线程）变为中粒度（4像素/线程），总线程数减少至原来的1/4。理想情况下，通过减少线程调度开销和增加数据重用（相邻$2\times2$像素的输入窗口高度重叠），应能获得性能提升。但实验结果显示性能反而下降（约为方式一的3.3倍）。从核函数结构看，每线程需维护4个累加器和27个卷积核寄存器值，加上循环索引等变量，寄存器需求远高于方式一。GPU每个SM的寄存器总量是固定的，单线程寄存器用量越大，SM能同时驻留的线程数就越少，延迟隐藏能力随之下降。寄存器压力增大导致的占用率降低，是分块策略在当前场景性能不佳的主要原因（可通过\texttt{nvcc --ptxas-options=-v}查看编译器报告的寄存器用量来进一步验证这一推测）。
+
+三种方式的负载均衡均表现良好——每个线程的计算量完全相同（方式一/二为27次乘加，方式三为108次乘加），不存在负载不均导致的线程等待问题。
+
+\subsection{问题三}
+
+\textbf{对比直接卷积与 im2col 方法的性能，分析 im2col 的数据展开与额外内存访问开销，以及规则矩阵乘法可能带来的收益。}
+
+\textbf{回答：}
+
+实验结果表明，对于$3\times3\times3$小卷积核，直接卷积在所有配置下都快于im2col方法。以$512\times512$、stride=1为例：直接卷积需要0.012459 ms，im2col方法总计0.977715 ms（im2col展开0.900019 ms + GEMV 0.077696 ms），直接卷积快约78倍。以$1024\times1024$、stride=1为例差距更大：直接卷积0.055440 ms vs im2col 4.700619 ms（约85倍）。
+
+\textbf{im2col性能低于直接卷积的核心原因}：
+
+\textbf{(a) 内存数据量膨胀}：im2col将$N\times N\times3$的输入（$3N^2$个float）展开为$N_{out}^2\times27$的矩阵。当$N=512$、stride=1时，输入为$512^2\times3=786,432$个float（约3 MB），im2col矩阵为$512^2\times27=7,077,888$个float（约27 MB）——数据量膨胀了9倍（恰好等于$K^2$）。大量冗余的内存写入成为瓶颈。
+
+\textbf{(b) im2col展开开销}：im2col核函数对每个输出位置需执行27次全局内存写入（展开矩阵的27个元素），加上边界检查和索引计算。而直接卷积核函数每个线程仅需1次全局内存写入（输出结果），所有中间累加在寄存器中完成。对于$512\times512$输出，im2col需要$512^2\times27\approx7.08\times10^6$次全局内存写入，直接卷积仅需$512^2\approx2.62\times10^5$次写入（差距27倍）。
+
+\textbf{(c) GEMV阶段的访存开销}：矩阵-向量乘法需读取整个col\_matrix（27 MB），加上对卷积核的重复读取（虽然只有27个float，但被每个线程读取一次）。而直接卷积的输入数据读取在计算发生时进行，配合L1/L2缓存可显著减少实际的内存带宽消耗。
+
+\textbf{im2col的适用场景}：当卷积核较大（如$5\times5$、$7\times7$或更大）时，直接卷积的嵌套循环（$C\times K\times K$次迭代）难以被编译器有效展开优化，分支预测失败率升高。而im2col将问题统一转换为矩阵乘法后，可利用高度优化的cuBLAS SGEMM/SGEMV实现（利用Tensor Core、共享内存分块等硬件特性）。此外，当batch size较大或输出通道数较多时，im2col产生的矩阵维度更大，GEMM的计算密度（FLOP/byte）随之提高，im2col方法的相对劣势会逐渐减小甚至反转。
+
+\subsection{问题四}
+
+\textbf{对比自行实现的卷积与 cuDNN 的性能；如果性能低于 cuDNN，结合数据复用、合并访存、共享内存、常量内存和线程块配置说明可能的改进方向。}
+
+\textbf{回答：}
+
+实测cuDNN 9.1.0的结果已列于表~\ref{tab:conv_compare}。将三种方法对比分析：
+
+\textbf{（1）直接卷积 vs cuDNN}：
+
+从实测数据看：在$3\times3\times3$、batch=1的配置下，直接卷积在多数测试中的耗时低于cuDNN。以$512\times512$ stride=1为例：直接卷积0.012459 ms vs cuDNN 0.023800 ms（直接卷积约为cuDNN耗时的52\%）。$256\times256$ stride=1时：直接卷积0.006204 ms vs cuDNN 0.024509 ms（直接卷积约为cuDNN耗时的25\%）。
+
+这一反直觉结果的原因：
+\begin{itemize}
+    \item \textbf{cuDNN未选择Winograd路径}：从cuDNN返回的算法名称来看，本实验配置下cuDNN倾向于选择基于GEMM的实现而非Winograd。GEMM路径内部需要im2col式的数据重排，对于batch=1的极薄矩阵，计算密度低，数据重排开销占主导；
+    \item \textbf{Winograd未被触发}：cuDNN 9.x中Winograd算法可能需要特定的tile配置、对齐条件或FP16精度才会被选中。在FP32、batch=1下，启发式算法判定Winograd的变换开销超过了计算节省量；
+    \item \textbf{单batch下的固定开销}：cuDNN面向大batch深度学习训练优化。batch=1时，算法auto-tune、workspace分配和描述符管理的固定开销占总执行时间比例较高；
+    \item \textbf{直接卷积无数据重排开销}：$3\times3$小卷积核下直接滑窗法不需要im2col式的数据变换，每线程仅27次乘加，无额外内存开销。
+\end{itemize}
+
+但$1024\times1024$ stride=1时差距缩小（直接0.055440 vs cuDNN 0.084531 ms），趋势上大计算量下cuDNN的优化优势在逐步显现。
+
+\textbf{（2）cuDNN vs im2col}：cuDNN在所有配置下均明显快于im2col（$1024\times1024$ stride=1: 0.084531 vs 4.700619 ms，im2col耗时约为cuDNN的55倍），说明即使cuDNN未启用Winograd，其内部高度优化的实现也比简单的手工GEMV高效得多。
+
+\textbf{（3）改进方向}：虽然本实验在batch=1、小卷积核场景下直接卷积在多数配置中略优于cuDNN，但这种优势主要来源于问题规模较小以及cuDNN固定开销（算法选择、描述符管理）占比较高。在更大卷积核、多输出通道或更大batch等更典型的深度学习场景下，cuDNN通常具有明显优势。因此以下优化方向仍有实际意义：
+
+\textbf{(a) 共享内存输入分块}：将输入tile加载到共享内存。$3\times3$卷积和$16\times16$线程块需约$(16+2)^2\times3=972$个float（约3.8 KB），每个输入像素被9个线程共享，全局内存读取减至1/9。
+
+\textbf{(b) 常量内存存储卷积核}：将27个float的卷积核存入常量内存（\texttt{\_\_constant\_\_}）。同一Warp内广播访问，消除每线程的卷积核全局内存读取。
+
+\textbf{(c) 向量化访存}：使用\texttt{float4}一次读取4个float，将内存事务数减至1/4，更充分利用 GPU 的高带宽显存（如本实验 GPU 的 900 GB/s HBM2 带宽）。
+
+\textbf{(d) Winograd算法}：对$3\times3$卷积实现$F(2\times2,3\times3)$ Winograd，可将乘法次数降低约2.25倍。在特定的小卷积核场景下，Winograd算法有望进一步减少计算量，从而获得一定性能提升。
+
+综合而言，当前直接卷积在batch=1、小卷积核这一特定场景下耗时低于cuDNN，主要得益于问题规模小、无额外数据重排开销。引入共享内存和常量内存优化后可进一步降低访存开销；在更大batch、更大卷积核等更通用的场景下，共享内存分块和Winograd算法是进一步缩小与cuDNN差距的关键方向。
+
+\end{document}

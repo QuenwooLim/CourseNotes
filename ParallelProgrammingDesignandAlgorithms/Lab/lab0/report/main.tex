@@ -1,0 +1,170 @@
+%!TeX program = xelatex
+\documentclass{SYSUReport}
+\usepackage{tabularx} % 在导言区添加此行
+
+% 根据个人情况修改
+\headl{}
+\headc{}
+\headr{并行程序设计与算法实验}
+\lessonTitle{并行程序设计与算法实验}
+\reportTitle{Lab0-环境设置与串行矩阵乘法}
+\stuname{林宏宇}
+\stuid{23320093}
+\inst{计算机学院}
+\major{计算机科学与技术}
+\date{\today}
+
+\begin{document}
+
+% =============================================
+% Part 1: 封面
+% =============================================
+\cover
+\thispagestyle{empty} % 首页不显示页码
+\clearpage
+
+% % =============================================
+% % Part 4： 正文内容
+% % =============================================
+% % 重置页码，并使用阿拉伯数字
+% \pagenumbering{arabic}
+% \setcounter{page}{1}
+
+%%可选择这里也放一个标题
+%\begin{center}
+%    \title{ \Huge \textbf{{标题}}}
+%\end{center}
+
+\section{实验目的}
+\begin{itemize}
+   \item 理解并行程序设计的基本概念与理论。
+    \item 掌握使用并行编程模型实现常见算法的能力。
+    \item 学习评估并行程序性能的指标及其优化方法。
+\end{itemize}
+
+\section{实验内容}
+\begin{itemize}
+    \item 设计并实现以下矩阵乘法版本：
+    \begin{itemize}
+        \item 使用C语言实现一个串行矩阵乘法。
+        \item 比较不同编译选项、实现方式、算法或库对性能的影响：
+        \begin{itemize}
+            \item 使用Python实现的矩阵乘法。
+            \item 使用C实现的基本矩阵乘法。
+            \item 调整循环顺序优化矩阵乘法。
+            \item 应用编译优化提高性能。
+            \item 使用循环展开技术优化矩阵乘法。
+            \item 使用Intel MKL库进行矩阵乘法运算。
+        \end{itemize}
+    \end{itemize}
+    \item 生成随机矩阵A和B，进行矩阵乘法运算得到矩阵C。
+    \item 衡量各版本的运行时间、加速比、浮点性能等。
+    \item 分析不同实现版本对性能的影响。
+\end{itemize}
+
+
+\section{实验结果}
+\subsection{基础实验结果}
+表中各列定义如下：
+\begin{itemize}
+    \item 相对加速比：相对于表中前一版本的加速比（$T_{prev}/T_{curr}$）。
+    \item 绝对加速比：相对于版本1（手工 Python）实现的加速比（$T_{v1}/T_{curr}$）。
+    \item 浮点性能 (GFLOPS)：按照总浮点运算数 $2\times m\times n\times k$ 除以运行时间计算得到，再除以 $10^9$。
+    \item 峰值性能百分比：GFLOPS 与设备理论峰值 GFLOPS 的比值。
+\end{itemize}
+
+本次实验实现了多个版本、多个规模下的实验结果对比，下面给出 $(m,n,k)=(1024,1024,1024)$ 的结果示例：
+\begin{table}[h]
+    \centering
+    \small
+    \begin{tabular}{|c|c|c|c|c|c|c|}
+        \hline
+        版本 & \shortstack{实现\\描述} & \shortstack{运行时间\\ (s)} & \shortstack{相对\\加速比} & \shortstack{绝对\\加速比} & \shortstack{浮点性能\\ (GFLOPS)} & \shortstack{峰值性能\\百分比} \\
+        \hline
+        1 & Pure Python (for) & 76.605955 & 1.000000 & 1.000000 & 0.028 & 0.00 \\
+        \hline
+        2 & C (-O0) & 3.764368 & 0.049139 & 20.350283 & 0.570 & 0.02 \\
+        \hline
+        3 & 调整循环顺序 (ijk) & 3.230137 & 0.042166 & 23.716008 & 0.665 & 0.02 \\
+        \hline
+        4 & 编译优化 (-O3) & 0.345789 & 0.004514 & 221.539594 & 6.210 & 0.20 \\
+        \hline
+        5 & 循环展开 & 0.369832 & 0.004828 & 207.137172 & 5.807 & 0.19 \\
+        \hline
+        6 & Intel MKL & 0.045228 & 0.000590 & 1693.772767 & 47.481 & 1.55 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{进阶实验结果}
+
+\subsection{不同版本的对比分析}
+在 $(m,n,k)=(1024,1024,1024)$ 的详细对比表：
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+版本 & \shortstack{实现\\描述} & \shortstack{运行时间\\ (s)} & \shortstack{相对\\加速比} & \shortstack{绝对\\加速比} & \shortstack{浮点性能\\ (GFLOPS)} & \shortstack{峰值性能\\百分比} \\
+\hline
+1 & Pure Python (for) & 76.605955 & 1.000000 & 0.0002 & 0.028033 & 0.00 \\
+\hline
+2 & Python (numpy) & 0.0135266 & 5663.3688 & 1.0000 & 158.760398 & 5.17 \\
+\hline
+3 & C basic (-O0) & 3.764368 & 0.0036 & 0.0036 & 0.570477 & 0.02 \\
+\hline
+4 & C (i-j-k) & 3.230137 & 1.1654 & 0.0042 & 0.664827 & 0.02 \\
+\hline
+5 & C optimized (-O3) & 0.345789 & 9.3414 & 0.0391 & 6.210387 & 0.20 \\
+\hline
+6 & 循环展开 & 0.369832 & 0.9350 & 0.0366 & 5.806646 & 0.19 \\
+\hline
+7 & C tiled (64) & 0.271351 & 1.3629 & 0.0498 & 7.914044 & 0.26 \\
+\hline
+8 & C tiled + SIMD & 0.269236 & 1.0079 & 0.0502 & 7.976213 & 0.26 \\
+\hline
+9 & Intel MKL / BLAS & 0.045228 & 192.489896 & 0.299075 & 47.481287 & 1.545615 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{ C-O0 与 C-O3 在不同规模对比}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+尺寸 & \shortstack{实现\\描述} & \shortstack{运行时间\\ (s)} & \shortstack{相对\\加速比} & \shortstack{绝对\\加速比} & \shortstack{浮点性能\\ (GFLOPS)} & \shortstack{峰值性能\\百分比} \\
+\hline
+512x512x512 & C (-O0) & 0.469440 & 1.000000 & 1.000000 & 0.571821 & 0.018614 \\
+\hline
+512x512x512 & C (-O3) & 0.043756 & 10.728586 & 10.728586 & 6.134826 & 0.199701 \\
+\hline
+1024x1024x1024 & C (-O0) & 3.715118 & 1.000000 & 1.000000 & 0.578039 & 0.018816 \\
+\hline
+1024x1024x1024 & C (-O3) & 0.349006 & 10.644854 & 10.644854 & 6.153142 & 0.200298 \\
+\hline
+1536x1536x1536 & C (-O0) & 12.587298 & 1.000000 & 1.000000 & 0.575799 & 0.018743 \\
+\hline
+1536x1536x1536 & C (-O3) & 1.227772 & 10.252146 & 10.252146 & 5.903179 & 0.192161 \\
+\hline
+2048x2048x2048 & C (-O0) & 30.238304 & 1.000000 & 1.000000 & 0.568149 & 0.018494 \\
+\hline
+2048x2048x2048 & C (-O3) & 3.992449 & 7.573874 & 7.573874 & 4.303090 & 0.140075 \\
+\hline
+\end{tabular}
+\end{table}
+
+\newpage
+\section{实验分析}
+
+\begin{itemize}
+    \item 在 $(1024,1024,1024)$ 下，Pure Python 运行时间为 $76.605955\,\mathrm{s}$，GFLOPS 仅为 $0.028$；切换到 C（\texttt{-O0}）后时间降至 $3.764368\,\mathrm{s}$，绝对加速比达到 $20.350283$，GFLOPS 提升到 $0.570$，体现出解释执行与编译执行在同一算法上的明显差异。
+    \item 在基础实验的 C 实现内部，循环顺序调整（ijk）将时间从 $3.764368\,\mathrm{s}$ 降至 $3.230137\,\mathrm{s}$，相对前一版本提升约 $1.165\times$，GFLOPS 从 $0.570$ 提升到 $0.665$，说明仅通过访存模式调整已可获得稳定收益。
+    \item 编译优化（\texttt{-O3}）将时间进一步降至 $0.345789\,\mathrm{s}$，相对上一版本加速约 $9.34\times$，相对 Python 基线绝对加速约 $221.54\times$，GFLOPS 达到 $6.210$。该阶段是基础实验中单步增益最大的环节。
+    \item 循环展开版本时间为 $0.369832\,\mathrm{s}$，略慢于 \texttt{-O3} 版本（$0.345789\,\mathrm{s}$），对应 GFLOPS 由 $6.210$ 降至 $5.807$，说明在该数据规模与实现条件下，手工展开未进一步超过编译器自动优化结果。
+    \item Intel MKL 版本时间为 $0.045228\,\mathrm{s}$，相对上一版本再提升约 $8.18\times$，相对 Python 基线绝对加速约 $1693.77\times$，GFLOPS 达到 $47.481$。从基础实验的整体序列看，性能提升路径呈现为：语言与编译方式切换 $\rightarrow$ 访存与循环优化 $\rightarrow$ 高性能库调用。
+    \item 从“C-O0 与 C-O3 在不同规模对比”可见，\texttt{-O3} 在 $512$、$1024$、$1536$ 规模下加速比分别约为 $10.73\times$、$10.64\times$、$10.25\times$，到 $2048$ 下降至 $7.57\times$；同时 \texttt{-O3} 的 GFLOPS 由约 $6.13$ 降到 $4.30$，表明随着规模增大，计算过程中的存储层次开销占比上升。
+\end{itemize}
+
+\end{document}

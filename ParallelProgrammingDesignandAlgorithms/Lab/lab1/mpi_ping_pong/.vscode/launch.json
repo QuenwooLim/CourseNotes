@@ -1,0 +1,61 @@
+{ 
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to MPI Process 0",
+            "type": "cppdbg",
+            "request":"attach",
+            "processId": "${command:pickProcess}",
+            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "internalConsoleOptions": "neverOpen",
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build",
+        },
+        {
+            "name": "Attach to MPI Process 1",
+            "type": "cppdbg",
+            "request":"attach",
+            "processId": "${command:pickProcess}",
+            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "internalConsoleOptions": "neverOpen",
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build",
+        },
+		{
+			"name": "Debug Single MPI Process",
+			"type": "cppdbg",
+			"request": "launch",
+			"args": [],
+			"stopAtEntry": false,
+			"externalConsole": false,
+			"cwd": "${workspaceFolder}",
+			"program": "${fileDirname}/${fileBasenameNoExtension}",
+			"MIMode": "gdb",
+			"miDebuggerPath": "gdb",
+			"setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+			"preLaunchTask": "build"
+		}
+    ]
+}

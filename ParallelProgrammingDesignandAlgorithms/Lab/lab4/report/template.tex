@@ -1,0 +1,41 @@
+\section{实验目的}
+\begin{itemize}
+    \item 深入理解Pthreads同步机制：条件变量、互斥锁
+    \item 评估多线程加速性能
+\end{itemize}
+
+\section{实验内容}
+\begin{itemize}
+    \item 多线程一元二次方程求解
+    \item 多线程圆周率计算
+\end{itemize}
+
+\subsection{方程求解}
+\begin{itemize}
+   \item 使用Pthread多线程及求根公式实现并行一元二次方程求解。
+    \item 方程形式为 $x = \frac{-b\pm\sqrt{b^2-4ac}}{2a}$，其中判别式的计算、求根公式的中间值分别由不同的线程完成。
+    \item 通过条件变量识别何时线程完成了所需计算，并分析计算任务依赖关系及程序并行性能。
+    \end{itemize}
+\subsection{蒙特卡洛求圆周率$pi$的近似值}
+\begin{itemize}
+   \item 使用Pthread创建多线程，并行生成正方形内的$n$个随机点。
+    \item 统计落在正方形内切圆内点数，估算$\pi$的值。
+    \item 设置线程数量（1-16）及随机点数量（1024-65536），观察对近似精度及程序并行性能的影响。
+\end{itemize}
+
+
+
+\section{实验结果与分析}
+\subsection{方程求解}
+\begin{itemize}
+    \item 分析不同线程配置下的求解时间，评估并行化带来的性能提升。
+    \item 对比单线程与多线程方案在处理相同方程时的表现，讨论可能存在的瓶颈或优化空间。
+\end{itemize}
+\subsection{蒙特卡洛方法求圆周率}
+\begin{itemize}
+\item 比较不同线程数量和随机点数量下圆周率估计的准确性和计算速度。
+    \item 讨论增加线程数量是否总能提高计算效率，以及其对圆周率估计精度的影响。
+    \item 提供实验数据图表，展示随着线程数和随机点数的变化，计算效率和精度的趋势。
+    \item 分析实验过程中遇到的问题，如同步问题、负载不均等，并提出相应的解决策略。
+\end{itemize}
+\end{document}
