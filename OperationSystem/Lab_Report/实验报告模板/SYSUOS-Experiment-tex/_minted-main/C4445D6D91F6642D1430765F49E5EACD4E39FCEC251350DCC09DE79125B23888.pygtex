@@ -1,0 +1,25 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}figure\PYG{n+nb}{\PYGZcb{}}[!htp]
+  \PYG{k}{\PYGZbs{}centering}
+    \PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}annotationimage\PYG{n+nb}{\PYGZcb{}\PYGZob{}}width=0.8\PYG{k}{\PYGZbs{}textwidth}\PYG{n+nb}{\PYGZcb{}\PYGZob{}}figs/01reviewicons01\PYG{n+nb}{\PYGZcb{}}
+      \PYG{c}{\PYGZpc{} 绘制外观设置按钮分组示意下划线}
+      \PYG{k}{\PYGZbs{}draw}\PYG{n+na}{[thick,blue]} (0.86,0.26) \PYGZhy{}\PYGZhy{} (1.0,0.26);
+      \PYG{c}{\PYGZpc{} 添加各图标标注}
+      \PYG{k}{\PYGZbs{}foreach} \PYG{k}{\PYGZbs{}ann}/\PYG{k}{\PYGZbs{}xpos} in
+      \PYG{n+nb}{\PYGZob{}}
+        \PYG{n+nb}{\PYGZob{}}附\PYG{k}{\PYGZbs{}\PYGZbs{}}注\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.02, \PYG{n+nb}{\PYGZob{}}高\PYG{k}{\PYGZbs{}\PYGZbs{}}亮\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.07,
+        \PYG{n+nb}{\PYGZob{}}下\PYG{k}{\PYGZbs{}\PYGZbs{}}划\PYG{k}{\PYGZbs{}\PYGZbs{}}线\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.126, \PYG{n+nb}{\PYGZob{}}删\PYG{k}{\PYGZbs{}\PYGZbs{}}除\PYG{k}{\PYGZbs{}\PYGZbs{}}线\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.18,
+        \PYG{n+nb}{\PYGZob{}}删\PYG{k}{\PYGZbs{}\PYGZbs{}}除\PYG{k}{\PYGZbs{}\PYGZbs{}}线\PYG{k}{\PYGZbs{}\PYGZbs{}}并\PYG{k}{\PYGZbs{}\PYGZbs{}}插\PYG{k}{\PYGZbs{}\PYGZbs{}}入\PYG{k}{\PYGZbs{}\PYGZbs{}}附\PYG{k}{\PYGZbs{}\PYGZbs{}}注\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.229, \PYG{n+nb}{\PYGZob{}}插\PYG{k}{\PYGZbs{}\PYGZbs{}}入\PYG{k}{\PYGZbs{}\PYGZbs{}}文\PYG{k}{\PYGZbs{}\PYGZbs{}}本\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.283,
+        \PYG{n+nb}{\PYGZob{}}文\PYG{k}{\PYGZbs{}\PYGZbs{}}本\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.346, \PYG{n+nb}{\PYGZob{}}文\PYG{k}{\PYGZbs{}\PYGZbs{}}本\PYG{k}{\PYGZbs{}\PYGZbs{}}框\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.40,
+        \PYG{n+nb}{\PYGZob{}}铅\PYG{k}{\PYGZbs{}\PYGZbs{}}笔\PYG{k}{\PYGZbs{}\PYGZbs{}}绘\PYG{k}{\PYGZbs{}\PYGZbs{}}图\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.45, \PYG{n+nb}{\PYGZob{}}铅\PYG{k}{\PYGZbs{}\PYGZbs{}}笔\PYG{k}{\PYGZbs{}\PYGZbs{}}擦\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.51,
+        \PYG{n+nb}{\PYGZob{}}图\PYG{k}{\PYGZbs{}\PYGZbs{}}章\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.56, \PYG{n+nb}{\PYGZob{}}附\PYG{k}{\PYGZbs{}\PYGZbs{}}加\PYG{k}{\PYGZbs{}\PYGZbs{}}文\PYG{k}{\PYGZbs{}\PYGZbs{}}件\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.63,
+        \PYG{n+nb}{\PYGZob{}}绘\PYG{k}{\PYGZbs{}\PYGZbs{}}图\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.7, \PYG{n+nb}{\PYGZob{}}保\PYG{k}{\PYGZbs{}\PYGZbs{}}持\PYG{k}{\PYGZbs{}\PYGZbs{}}选\PYG{k}{\PYGZbs{}\PYGZbs{}}择\PYG{k}{\PYGZbs{}\PYGZbs{}}工\PYG{k}{\PYGZbs{}\PYGZbs{}}具\PYG{n+nb}{\PYGZcb{}}/0.79,
+        \PYG{n+nb}{\PYGZob{}}注\PYG{k}{\PYGZbs{}\PYGZbs{}}释\PYG{k}{\PYGZbs{}\PYGZbs{}}外\PYG{k}{\PYGZbs{}\PYGZbs{}}观\PYG{k}{\PYGZbs{}\PYGZbs{}}设\PYG{k}{\PYGZbs{}\PYGZbs{}}置\PYG{n+nb}{\PYGZcb{}}/0.93
+      \PYG{n+nb}{\PYGZcb{}}
+      \PYG{n+nb}{\PYGZob{}}
+        \PYG{k}{\PYGZbs{}draw}\PYG{n+na}{[annotation below = \PYGZob{}\PYGZob{}\PYGZbs{}ann\PYGZcb{} at \PYGZbs{}xpos\PYGZcb{}]} to (\PYG{k}{\PYGZbs{}xpos},0.48);
+      \PYG{n+nb}{\PYGZcb{}}
+    \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}annotationimage\PYG{n+nb}{\PYGZcb{}}
+    \PYG{k}{\PYGZbs{}caption}\PYG{n+nb}{\PYGZob{}}插图标注\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}label}\PYG{n+nb}{\PYGZob{}}fig:annot\PYG{n+nb}{\PYGZcb{}}
+  \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}figure\PYG{n+nb}{\PYGZcb{}}
+\end{Verbatim}

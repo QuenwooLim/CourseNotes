@@ -1,0 +1,6 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+    \PYG{c}{\PYGZpc{} 引用参考文献}
+    详见文献\PYG{k}{\PYGZbs{}cite}\PYG{n+nb}{\PYGZob{}}Peebles2001\PYGZhy{}100\PYGZhy{}100\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}parencite}\PYG{n+nb}{\PYGZob{}}Babu2014\PYGZhy{}\PYGZhy{}\PYG{n+nb}{\PYGZcb{}}
+    另见文献\PYG{k}{\PYGZbs{}cite}\PYG{n+na}{[49]}\PYG{n+nb}{\PYGZob{}}于潇2012\PYGZhy{}1518\PYGZhy{}1523\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}parencite}\PYG{n+na}{[106]}\PYG{n+nb}{\PYGZob{}}Babu2014\PYGZhy{}\PYGZhy{}\PYG{n+nb}{\PYGZcb{}}
+  
+\end{Verbatim}

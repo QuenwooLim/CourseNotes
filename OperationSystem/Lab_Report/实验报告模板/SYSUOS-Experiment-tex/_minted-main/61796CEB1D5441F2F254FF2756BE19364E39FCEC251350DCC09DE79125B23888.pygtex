@@ -1,0 +1,34 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+    \PYG{c}{\PYGZpc{} 横向排版两个表格}
+    \PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}table\PYG{n+nb}{\PYGZcb{}}[!htp]
+      \PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}floatrow\PYG{n+nb}{\PYGZcb{}}
+        \PYG{k}{\PYGZbs{}ttabbox}\PYG{n+na}{[\PYGZbs{}FBwidth]}
+        \PYG{n+nb}{\PYGZob{}}
+          \PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}tabular\PYG{n+nb}{\PYGZcb{}\PYGZob{}}ccl\PYG{n+nb}{\PYGZcb{}}
+            \PYG{k}{\PYGZbs{}toprule}
+            序号 \PYG{n+nb}{\PYGZam{}} 测试用例 \PYG{n+nb}{\PYGZam{}} \PYG{k}{\PYGZbs{}multicolumn}\PYG{n+nb}{\PYGZob{}}1\PYG{n+nb}{\PYGZcb{}\PYGZob{}}c\PYG{n+nb}{\PYGZcb{}\PYGZob{}}测试目的\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}\PYGZbs{}}
+            \PYG{k}{\PYGZbs{}midrule}
+            1 \PYG{n+nb}{\PYGZam{}} a \PYG{n+nb}{\PYGZam{}} 小写字母到大写字母转换\PYG{k}{\PYGZbs{}\PYGZbs{}}
+            2 \PYG{n+nb}{\PYGZam{}} A \PYG{n+nb}{\PYGZam{}} 大写字母到小写字母转换\PYG{k}{\PYGZbs{}\PYGZbs{}}
+            3 \PYG{n+nb}{\PYGZam{}} @ \PYG{n+nb}{\PYGZam{}} 非字母字符测试\PYG{k}{\PYGZbs{}\PYGZbs{}}
+            4 \PYG{n+nb}{\PYGZam{}} 2 \PYG{n+nb}{\PYGZam{}} 非字母其它字符\PYG{k}{\PYGZbs{}\PYGZbs{}}
+            \PYG{k}{\PYGZbs{}bottomrule}
+          \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}tabular\PYG{n+nb}{\PYGZcb{}}
+        \PYG{n+nb}{\PYGZcb{}\PYGZob{}}\PYG{k}{\PYGZbs{}caption}\PYG{n+nb}{\PYGZob{}}字母大小写转换测试用例表\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}label}\PYG{n+nb}{\PYGZob{}}tab:testsample\PYG{n+nb}{\PYGZcb{}\PYGZcb{}}
+        \PYG{k}{\PYGZbs{}ttabbox}\PYG{n+na}{[\PYGZbs{}FBwidth]}
+        \PYG{n+nb}{\PYGZob{}}
+          \PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}tabular\PYG{n+nb}{\PYGZcb{}\PYGZob{}}lr\PYG{n+nb}{\PYGZcb{}}
+            \PYG{k}{\PYGZbs{}toprule}
+            城市 \PYG{n+nb}{\PYGZam{}} 人口 \PYG{k}{\PYGZbs{}\PYGZbs{}}
+            \PYG{k}{\PYGZbs{}midrule}
+            Mexico City \PYG{n+nb}{\PYGZam{}} 20,116,842\PYG{k}{\PYGZbs{}\PYGZbs{}}
+            Shanghai \PYG{n+nb}{\PYGZam{}} 19,210,000\PYG{k}{\PYGZbs{}\PYGZbs{}}
+            Peking \PYG{n+nb}{\PYGZam{}} 15,796,450\PYG{k}{\PYGZbs{}\PYGZbs{}}
+            Istanbul \PYG{n+nb}{\PYGZam{}} 14,160,467\PYG{k}{\PYGZbs{}\PYGZbs{}}
+            \PYG{k}{\PYGZbs{}bottomrule}
+          \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}tabular\PYG{n+nb}{\PYGZcb{}}
+        \PYG{n+nb}{\PYGZcb{}\PYGZob{}}\PYG{k}{\PYGZbs{}caption}\PYG{n+nb}{\PYGZob{}}城市人口数量排名\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}label}\PYG{n+nb}{\PYGZob{}}tab:city2\PYG{n+nb}{\PYGZcb{}\PYGZcb{}}
+      \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}floatrow\PYG{n+nb}{\PYGZcb{}}
+    \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}table\PYG{n+nb}{\PYGZcb{}}
+  
+\end{Verbatim}

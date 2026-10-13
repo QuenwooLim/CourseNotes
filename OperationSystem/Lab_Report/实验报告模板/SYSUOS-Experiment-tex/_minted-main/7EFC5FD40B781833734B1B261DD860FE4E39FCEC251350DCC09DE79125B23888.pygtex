@@ -1,0 +1,9 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+  \PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}figure\PYG{n+nb}{\PYGZcb{}}[!htp]
+    \PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}floatrow\PYG{n+nb}{\PYGZcb{}}
+      \PYG{k}{\PYGZbs{}ffigbox}\PYG{n+na}{[\PYGZbs{}FBwidth]}\PYG{n+nb}{\PYGZob{}}
+        \PYG{k}{\PYGZbs{}includegraphics}\PYG{n+na}{[width=0.4\PYGZbs{}textwidth]}\PYG{n+nb}{\PYGZob{}}example\PYGZhy{}image\PYGZhy{}a\PYG{n+nb}{\PYGZcb{}}
+      \PYG{n+nb}{\PYGZcb{}\PYGZob{}}\PYG{k}{\PYGZbs{}caption}\PYG{n+nb}{\PYGZob{}}一个插图\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}label}\PYG{n+nb}{\PYGZob{}}sharefig:a\PYG{n+nb}{\PYGZcb{}\PYGZcb{}}
+    \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}floatrow\PYG{n+nb}{\PYGZcb{}}
+  \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}figure\PYG{n+nb}{\PYGZcb{}}
+\end{Verbatim}

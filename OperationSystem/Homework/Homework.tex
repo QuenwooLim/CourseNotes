@@ -1,0 +1,80 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{ctex}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{multirow,booktabs}
+\usepackage{subfigure}
+\usepackage{graphicx}
+\usepackage{bbding,enumerate}
+\usepackage{gensymb}
+\usepackage{bm}
+\usepackage{indentfirst} 
+\usepackage{float}
+\usepackage{fontspec}
+\usepackage[table,xcdraw]{xcolor}
+\setmainfont{Times New Roman}
+\usepackage[a4paper,left=2cm,right=2cm,top=2cm]{geometry}
+
+\ctexset{section = { format={\zihao{4} \bfseries } } }
+\title{操作系统原理第X章作业}
+\author{姓名: 叶文洁 \quad 学号：21307443 \quad 截止日期：2023年3月X日}
+
+\begin{document}
+\maketitle
+
+\noindent \textbf{Question 1:}\quad What are some advantages of peer-to-peer systems over client-server
+systems? \\
+\noindent \textbf{Answer 1：} Peer-to-peer is useful because services are distributed across a collection
+of peers, rather than having a single, centralized server. Peer-to-peer
+provides fault tolerance and redundancy. Also, because peers constantly
+migrate, they can provide a level of security over a server that always
+exists at a known location on the Internet. Peer-to-peer systems can
+also potentially provide higher network bandwidth because you can
+collectively use all the bandwidth of peers, rather than the single
+bandwidth that is available to a single server.\\
+
+\noindent \textbf{Question 2:}\quad Describe a mechanism for enforcing memory protection in order to prevent a program from modifying the memory associated with other programs. \\
+\noindent \textbf{Answer 2：} 处理器可以跟踪与每个进程相关联的位置，并限制对程序范围之外的位置的访问。关于程序内存范围的信息可以通过使用基本寄存器和限制寄存器以及通过对每个内存访问执行检查来进行维护。\\
+
+\noindent \textbf{Question 3:}\quad 哪种网络配置最适合以下环境？选择局域网(LAN)或广域网(WAN)。
+\begin{enumerate}[(a)]
+    \item 校园学生专用网络
+    \item 覆盖广州市内所有大学校园的网络
+    \item 一个社区
+\end{enumerate}
+\noindent \textbf{Answer 3：} 
+\begin{enumerate}[(a)]
+    \item LAN 
+    \item WAN
+    \item LAN or WAN
+\end{enumerate}
+
+\noindent \textbf{Question 4:}\quad 投掷10枚标准的六面体骰子，假定投掷每枚骰子是独立的。它们的点数之和能被6整除的概率是多少？\\
+\noindent \textbf{Answer 4：}由题意，不妨设投掷9枚骰子后，9枚骰子的总点数和为$S_{9}$, $S_{9}\in\{9,10,11,...,53,54\}$; \\
+记第10枚骰子的点数为$X_{10}$, $X_{10}\in\{1,2,3,4,5,6\}$，且有$P(X_{10}=k)=1/6,(k=1,2,...,6)$; \\
+记事件$A=\{$10枚骰子的点数和可被6整除$\}=\{S_{9}+X_{10}=6k,k\in\mathbb{N}_{+}\}$ \\
+由全概率公式，可得：
+\begin{equation}
+    \begin{split}
+    P(A) &= \sum\limits_{k = 1}^{6}P(A \cap X_{10}=k) \\
+    &=  \sum\limits_{k = 1}^{6}P(A|X_{10}=k)P(X_{10}=k)\\
+    &= \frac{1}{6}\sum\limits_{k = 1}^{6}P(A|X_{10}=k)
+    \end{split}
+    \label{eq:8}
+\end{equation}
+注意到$S_{9}$与事件$A$之间的关系，且$S_{9}$与$X_{10}$是相互独立的，式\ref{eq:8}可以改写为：
+\begin{equation}
+    \begin{split}
+    P(A) &= \frac{1}{6}\sum\limits_{k = 1}^{6}\sum\limits_{n = 2}^{10}P(S_{9}=6n-k|X_{10}=k) \\
+    &= \frac{1}{6}\sum\limits_{k = 1}^{6}\sum\limits_{n = 2}^{10}P(S_{9}=6n-k) 
+    \end{split}
+    \label{eq:9}
+\end{equation}
+由式\ref{eq:9}可知，$6n-k(n\in \{2,3,4,...,10\},k\in \{1,2,3,4,5,6\})$可以取完$\{9,10,11,...,53,54\}$中的所有值（即$S_{9}$样本空间中的所有结果），
+故$\sum\limits_{k = 1}^{6}\sum\limits_{n = 2}^{10}P(S_{9}=6n-k)=1(n\in {2,3,4,...,10})$。所以
+\begin{equation}
+    P(A) = \frac{1}{6}\sum\limits_{k = 1}^{6}\sum\limits_{n = 2}^{10}P(S_{9}=6n-k) = \frac{1}{6}
+    \label{eq:10} 
+\end{equation}
+
+\end{document}

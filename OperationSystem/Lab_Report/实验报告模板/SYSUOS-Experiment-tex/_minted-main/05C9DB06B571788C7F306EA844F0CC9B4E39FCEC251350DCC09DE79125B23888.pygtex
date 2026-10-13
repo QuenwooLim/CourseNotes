@@ -1,0 +1,23 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+\PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}figure\PYG{n+nb}{\PYGZcb{}}[!htp]
+  \PYG{k}{\PYGZbs{}ffigbox}\PYG{n+na}{[\PYGZbs{}textwidth]}\PYG{c}{\PYGZpc{}}
+  \PYG{n+nb}{\PYGZob{}}\PYG{c}{\PYGZpc{}}
+    \PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}subfloatrow\PYG{n+nb}{\PYGZcb{}}[2]\PYG{c}{\PYGZpc{}\PYGZbs{}useFCwidth}
+      \PYG{k}{\PYGZbs{}ffigbox}\PYG{n+na}{[\PYGZbs{}FBwidth]}\PYG{n+nb}{\PYGZob{}}
+        \PYG{k}{\PYGZbs{}includegraphics}\PYG{n+na}{[width=0.3\PYGZbs{}textwidth]}\PYG{n+nb}{\PYGZob{}}example\PYGZhy{}image\PYGZhy{}a\PYG{n+nb}{\PYGZcb{}}
+      \PYG{n+nb}{\PYGZcb{}\PYGZob{}}\PYG{k}{\PYGZbs{}caption}\PYG{n+nb}{\PYGZob{}}子题注1\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}label}\PYG{n+nb}{\PYGZob{}}trifig:a\PYG{n+nb}{\PYGZcb{}\PYGZcb{}}
+      \PYG{k}{\PYGZbs{}ffigbox}\PYG{n+na}{[\PYGZbs{}FBwidth]}\PYG{n+nb}{\PYGZob{}}
+        \PYG{k}{\PYGZbs{}includegraphics}\PYG{n+na}{[width=0.3\PYGZbs{}textwidth]}\PYG{n+nb}{\PYGZob{}}example\PYGZhy{}image\PYGZhy{}b\PYG{n+nb}{\PYGZcb{}}
+      \PYG{n+nb}{\PYGZcb{}\PYGZob{}}\PYG{k}{\PYGZbs{}caption}\PYG{n+nb}{\PYGZob{}}子题注2\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}label}\PYG{n+nb}{\PYGZob{}}trifig:b\PYG{n+nb}{\PYGZcb{}\PYGZcb{}}
+    \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}subfloatrow\PYG{n+nb}{\PYGZcb{}}
+    \PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}subfloatrow\PYG{n+nb}{\PYGZcb{}}[2]\PYG{c}{\PYGZpc{}\PYGZbs{}useFCwidth}
+      \PYG{k}{\PYGZbs{}ffigbox}\PYG{n+na}{[\PYGZbs{}FBwidth]}\PYG{n+nb}{\PYGZob{}}
+        \PYG{k}{\PYGZbs{}includegraphics}\PYG{n+na}{[width=0.3\PYGZbs{}textwidth]}\PYG{n+nb}{\PYGZob{}}example\PYGZhy{}image\PYGZhy{}c\PYG{n+nb}{\PYGZcb{}}
+      \PYG{n+nb}{\PYGZcb{}\PYGZob{}}\PYG{k}{\PYGZbs{}caption}\PYG{n+nb}{\PYGZob{}}子题注3\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}label}\PYG{n+nb}{\PYGZob{}}trifig:c\PYG{n+nb}{\PYGZcb{}\PYGZcb{}}
+      \PYG{k}{\PYGZbs{}ffigbox}\PYG{n+na}{[\PYGZbs{}FBwidth]}\PYG{n+nb}{\PYGZob{}}
+        \PYG{k}{\PYGZbs{}includegraphics}\PYG{n+na}{[width=0.3\PYGZbs{}textwidth]}\PYG{n+nb}{\PYGZob{}}example\PYGZhy{}image\PYG{n+nb}{\PYGZcb{}}
+      \PYG{n+nb}{\PYGZcb{}\PYGZob{}}\PYG{k}{\PYGZbs{}caption}\PYG{n+nb}{\PYGZob{}}子题注4\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}label}\PYG{n+nb}{\PYGZob{}}trifig:d\PYG{n+nb}{\PYGZcb{}\PYGZcb{}}
+    \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}subfloatrow\PYG{n+nb}{\PYGZcb{}}
+  \PYG{n+nb}{\PYGZcb{}\PYGZob{}}\PYG{k}{\PYGZbs{}caption}\PYG{n+nb}{\PYGZob{}}四个子图\PYG{n+nb}{\PYGZcb{}}\PYG{k}{\PYGZbs{}label}\PYG{n+nb}{\PYGZob{}}trifig\PYG{n+nb}{\PYGZcb{}\PYGZcb{}}
+\PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}figure\PYG{n+nb}{\PYGZcb{}}
+\end{Verbatim}

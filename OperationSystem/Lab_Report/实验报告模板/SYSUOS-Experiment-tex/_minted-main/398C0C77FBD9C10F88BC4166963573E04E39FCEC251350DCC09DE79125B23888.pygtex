@@ -1,0 +1,58 @@
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`\$=3\catcode`\^=7\catcode`\_=8}]
+    \PYG{c}{\PYGZpc{} 流程图绘制属性设置}
+    \PYG{k}{\PYGZbs{}flowchartset}\PYG{n+nb}{\PYGZob{}}
+      proc fill color = orange!10, \PYG{c}{\PYGZpc{} 顺序处理框填充颜色(默认取白色)}
+      test fill color = green!30, \PYG{c}{\PYGZpc{} 判断框填充颜色(默认取白色)}
+      io fill color = blue!30, \PYG{c}{\PYGZpc{} 输入/输出框填充颜色(默认取白色)}
+      term fill color = red!30, \PYG{c}{\PYGZpc{} 开始/结束框填充颜色(默认取白色)}
+    \PYG{n+nb}{\PYGZcb{}}
+    \PYG{c}{\PYGZpc{} 绘制流程图}
+    \PYG{k}{\PYGZbs{}begin}\PYG{n+nb}{\PYGZob{}}tikzpicture\PYG{n+nb}{\PYGZcb{}}[scale=0.53,transform shape,]
+      \PYG{c}{\PYGZpc{} 布置结点单元}
+      \PYG{k}{\PYGZbs{}node} [term] (st) \PYG{n+nb}{\PYGZob{}}开始\PYG{n+nb}{\PYGZcb{}};
+      \PYG{k}{\PYGZbs{}node} [proc, text width = 5em, join] (p1) \PYG{n+nb}{\PYGZob{}}int divisor\PYG{n+nb}{\PYGZcb{}};
+      \PYG{k}{\PYGZbs{}node} [test, join] (t1) \PYG{n+nb}{\PYGZob{}}n \PYGZlt{}= 1\PYG{n+nb}{\PYGZcb{}};
+      \PYG{k}{\PYGZbs{}node} [proc, text width = 5em] (p2) \PYG{n+nb}{\PYGZob{}}divisor = 2\PYG{n+nb}{\PYGZcb{}};
+      \PYG{k}{\PYGZbs{}node} [test, text width = 10em, join] (t2) \PYG{n+nb}{\PYGZob{}}divisor * divisor \PYGZlt{}= n\PYG{n+nb}{\PYGZcb{}};
+      \PYG{k}{\PYGZbs{}node} [test, text width = 8em] (t3) \PYG{n+nb}{\PYGZob{}}n \PYG{k}{\PYGZbs{}\PYGZpc{}} divisor == 0\PYG{n+nb}{\PYGZcb{}};
+      \PYG{k}{\PYGZbs{}node} [proc, text width = 5em] (p3) \PYG{n+nb}{\PYGZob{}}divisor++\PYG{n+nb}{\PYGZcb{}};
+      \PYG{k}{\PYGZbs{}node} [term, below = 1.6 of p3] (end) \PYG{n+nb}{\PYGZob{}}结束\PYG{n+nb}{\PYGZcb{}};
+      \PYG{k}{\PYGZbs{}node} [proc, text width = 4em, left = 4.8 of t2] (p4) \PYG{n+nb}{\PYGZob{}}return 0\PYG{n+nb}{\PYGZcb{}};
+      \PYG{k}{\PYGZbs{}node} [proc, text width = 4em, right = 3.5 of p3] (p5) \PYG{n+nb}{\PYGZob{}}return 0\PYG{n+nb}{\PYGZcb{}};
+      \PYG{k}{\PYGZbs{}node} [proc, text width = 4em, right = 5.8 of t3] (p6) \PYG{n+nb}{\PYGZob{}}return 1\PYG{n+nb}{\PYGZcb{}};
+
+      \PYG{c}{\PYGZpc{} 布置用于连接的坐标结点，同时为其布置调试标记点。}
+      \PYG{k}{\PYGZbs{}node} [coord] (c1) at (\PYG{l+s}{\PYGZdl{}}\PYG{o}{(}\PYG{n+nb}{p}\PYG{l+m}{2}\PYG{n+nb}{.south}\PYG{o}{)!}\PYG{l+m}{0}\PYG{n+nb}{.}\PYG{l+m}{5}\PYG{o}{!(}\PYG{n+nb}{t}\PYG{l+m}{2}\PYG{n+nb}{.north}\PYG{o}{)}\PYG{l+s}{\PYGZdl{}})  \PYG{n+nb}{\PYGZob{}\PYGZcb{}}; \PYG{k}{\PYGZbs{}cmark}\PYG{n+nb}{\PYGZob{}}1\PYG{n+nb}{\PYGZcb{}}
+      \PYG{k}{\PYGZbs{}node} [coord, below = 0.25 of p3] (c2)  \PYG{n+nb}{\PYGZob{}\PYGZcb{}}; \PYG{k}{\PYGZbs{}cmark}\PYG{n+nb}{\PYGZob{}}2\PYG{n+nb}{\PYGZcb{}}
+      \PYG{k}{\PYGZbs{}node} [coord, above = 0.5 of end] (c3) \PYG{n+nb}{\PYGZob{}\PYGZcb{}};  \PYG{k}{\PYGZbs{}cmark}\PYG{n+nb}{\PYGZob{}}3\PYG{n+nb}{\PYGZcb{}}
+      \PYG{k}{\PYGZbs{}node} [coord, left = 0.5 of t2] (ct) \PYG{n+nb}{\PYGZob{}\PYGZcb{}};  \PYG{k}{\PYGZbs{}cmark}\PYG{n+nb}{\PYGZob{}}t\PYG{n+nb}{\PYGZcb{}}
+      \PYG{k}{\PYGZbs{}node} [coord] (c4) at (c3 \PYGZhy{}| p5)  \PYG{n+nb}{\PYGZob{}\PYGZcb{}}; \PYG{k}{\PYGZbs{}cmark}\PYG{n+nb}{\PYGZob{}}4\PYG{n+nb}{\PYGZcb{}}
+      \PYG{k}{\PYGZbs{}node} [coord] (c5) at (c2 \PYGZhy{}| ct)  \PYG{n+nb}{\PYGZob{}\PYGZcb{}}; \PYG{k}{\PYGZbs{}cmark}\PYG{n+nb}{\PYGZob{}}5\PYG{n+nb}{\PYGZcb{}}
+
+      \PYG{c}{\PYGZpc{} 判断框连线，每次绘制时，先绘制一个带有一个固定}
+      \PYG{c}{\PYGZpc{} 位置标注的路径(path)，然后再绘制箭头本身(arrow)。}
+      \PYG{k}{\PYGZbs{}path} (t1.south) \PYGZhy{}\PYGZhy{} node [near start, right] \PYG{n+nb}{\PYGZob{}}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{N}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{\PYGZcb{}} (p2.north);
+      \PYG{k}{\PYGZbs{}draw} [norm] (t1.south) \PYGZhy{}\PYGZhy{} (p2.north);
+      \PYG{k}{\PYGZbs{}path} (t1.west) \PYGZhy{}| node [near start, above] \PYG{n+nb}{\PYGZob{}}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{Y}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{\PYGZcb{}} (p4.north);
+      \PYG{k}{\PYGZbs{}draw} [norm] (t1.west) \PYGZhy{}| (p4.north);
+
+      \PYG{k}{\PYGZbs{}path} (t2.south) \PYGZhy{}\PYGZhy{} node [near start, right] \PYG{n+nb}{\PYGZob{}}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{Y}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{\PYGZcb{}} (t3.north);
+      \PYG{k}{\PYGZbs{}draw} [norm] (t2.south) \PYGZhy{}\PYGZhy{} (t3.north);
+      \PYG{k}{\PYGZbs{}path} (t2.east) \PYGZhy{}| node [near start, above] \PYG{n+nb}{\PYGZob{}}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{N}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{\PYGZcb{}} (p6.north);
+      \PYG{k}{\PYGZbs{}draw} [norm] (t2.east) \PYGZhy{}| (p6.north);
+
+      \PYG{k}{\PYGZbs{}path} (t3.south) \PYGZhy{}\PYGZhy{} node [near start, right] \PYG{n+nb}{\PYGZob{}}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{N}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{\PYGZcb{}} (p3.north);
+      \PYG{k}{\PYGZbs{}draw} [norm] (t3.south) \PYGZhy{}\PYGZhy{} (p3.north);
+      \PYG{k}{\PYGZbs{}path} (t3.east) \PYGZhy{}| node [near start, above] \PYG{n+nb}{\PYGZob{}}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{Y}\PYG{l+s}{\PYGZdl{}}\PYG{n+nb}{\PYGZcb{}} (p5.north);
+      \PYG{k}{\PYGZbs{}draw} [norm] (t3.east) \PYGZhy{}| (p5.north);
+
+      \PYG{c}{\PYGZpc{} 其它连线}
+      \PYG{k}{\PYGZbs{}draw} [norm](p3.south) |\PYGZhy{} (c5) |\PYGZhy{} (c1);
+      \PYG{k}{\PYGZbs{}draw} [norm](p4.south) |\PYGZhy{} (c3);
+      \PYG{k}{\PYGZbs{}draw} [norm](p4.south) |\PYGZhy{} (c3) \PYGZhy{}\PYGZhy{} (end);
+      \PYG{k}{\PYGZbs{}draw} [norm](p5.south) \PYGZhy{}\PYGZhy{} (c4);
+      \PYG{k}{\PYGZbs{}draw} [norm](p6.south) |\PYGZhy{} (c3);
+      \PYG{k}{\PYGZbs{}draw} [norm](p6.south) |\PYGZhy{} (c3) \PYGZhy{}\PYGZhy{} (end);
+    \PYG{k}{\PYGZbs{}end}\PYG{n+nb}{\PYGZob{}}tikzpicture\PYG{n+nb}{\PYGZcb{}}
+  
+\end{Verbatim}

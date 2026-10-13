@@ -1,0 +1,37 @@
+% ====================================================================================
+% cquotes宏包的中文引号样式
+% ====================================================================================
+\DeclareQuoteStyle{zhquotestyle}% style name
+    {\symbol{"201C}}% opening outer mark
+    {\symbol{"201D}}% closing outer mark
+    {\symbol{"2018}}% opening inner mark
+    {\symbol{"2019}}% closing inner mark
+
+\setquotestyle{zhquotestyle}
+
+% ====================================================================================
+% 改变表格字体
+% ====================================================================================
+\BeforeBeginEnvironment{tabular}{\small}%
+
+% ====================================================================================
+% 设置floatrow浮动体属性
+% ====================================================================================
+\DeclareFloatVCode{beforefig}{\vspace{-4pt}}
+\DeclareFloatVCode{beforetab}{\vspace{-6pt}}
+\DeclareFloatVCode{afterfloat}{\vspace{4pt}}
+\floatsetup{postcode=afterfloat}
+\floatsetup[table]{capposition=TOP, captionskip=2pt, objectset=centering, margins=centering, precode=beforetab}
+\floatsetup[figure]{captionskip=4pt, objectset=centering, margins=centering, precode=beforefig}
+
+% ====================================================================================
+% 代码交叉引用命令\autoref的引用格式
+% ====================================================================================
+\def\cvcounterautorefname{代码}%
+\renewcommand{\thecvcounter}{\arabic{cvcounter}}
+\def\cvcounterautorefname~#1\null{代码#1\null}%
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master:"../main.tex"
+%%% End:

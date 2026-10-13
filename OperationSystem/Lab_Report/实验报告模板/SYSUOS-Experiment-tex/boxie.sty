@@ -1,0 +1,1843 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{boxie}[2018/08/25 v1.0, GENG Nan nangeng@qq.com with contributions ZHANG Chennan chennanzhang@gmail.com.]
+%--------------------------------------------------------------------------------
+% 使用fontawesome5符号字体
+% \RequirePackage{fontawesome}之前的两句是必须的，否则用ubuntu下用xelatex编译会出错。
+%--------------------------------------------------------------------------------
+%\RequirePackage{fontspec}
+%\defaultfontfeatures{Extension = .otf}
+%\RequirePackage{fontawesome}
+%--------------------------------------------------------------------------------
+% 使用fontawesome5符号字体，可以直接使用
+%--------------------------------------------------------------------------------
+\RequirePackage{fontawesome5}
+% 提高循环控制精度的宏包
+\RequirePackage{multido}
+% tcolorbox需要加载的库
+\RequirePackage{tcolorbox}
+\tcbuselibrary{skins, xparse, breakable}
+\RequirePackage{varwidth}
+\RequirePackage{amssymb}
+\RequirePackage{xcolor}%[dvipsnames]
+\usetikzlibrary{shapes.geometric}
+%------------------------------------------------------------------------------------
+% 定义颜色
+%------------------------------------------------------------------------------------
+\definecolor{mpurple}{RGB}{48,10,36}
+\definecolor{mgray}{RGB}{70,72,67}
+\definecolor{ogray}{RGB}{148,147,141}
+\definecolor{oorange}{RGB}{233,101,56}
+\definecolor{termimal}{RGB}{80,78,70}
+\definecolor{linux}{RGB}{0,39,51}
+\definecolor{windows}{HTML}{00B294}
+\definecolor{cvgrayc}{RGB}{247,247,247}
+\definecolor{cvgray}{RGB}{220,220,220}
+\definecolor{cvgrayb}{RGB}{153,153,153}
+\definecolor{cvblue}{RGB}{223,238,255}
+\definecolor{zhanqing}{RGB}{0,51,113}
+\definecolor{chengse}{RGB}{250,140,53}
+
+\definecolor{AppleRed}{RGB}{255,95,86}
+\definecolor{AppleYellow}{RGB}{255,189,46}
+\definecolor{AppleGreen}{RGB}{39,201,63}
+\definecolor{AppleGray}{HTML}{D8D6D9}
+
+\definecolor{WinGray}{HTML}{FFFFFF}
+\definecolor{WinBlue}{HTML}{1883D7}
+
+% success
+\definecolor{colorSuccess}{HTML}{28a745}
+\definecolor{colorSuccessBorder}{HTML}{c3e6cb}
+\definecolor{colorSuccessBackground}{HTML}{d4edda}
+\definecolor{colorSuccessText}{HTML}{155724}
+
+% info
+\definecolor{colorInfo}{HTML}{17a2b8}
+\definecolor{colorInfoBorder}{HTML}{bee5eb}
+\definecolor{colorInfoBackground}{HTML}{d1ecf1}
+\definecolor{colorInfoText}{HTML}{0c5460}
+
+% danger
+\definecolor{colorDanger}{HTML}{dc3545}
+\definecolor{colorDangerBorder}{HTML}{f5c6cb}
+\definecolor{colorDangerBackground}{HTML}{f8d7da}
+\definecolor{colorDangerText}{HTML}{721c24}
+
+% warning
+\definecolor{colorWarning}{HTML}{ffc107}
+\definecolor{colorWarningBorder}{HTML}{ffeeba}
+\definecolor{colorWarningBackground}{HTML}{fff3cd}
+\definecolor{colorWarningText}{HTML}{856404}
+
+%------------------------------------------------------------------------------------
+% 定义文本框盒子
+%------------------------------------------------------------------------------------
+%% 带标题的文本框
+\newtcolorbox{titledBox}[1]{%
+  tikznode boxed title,
+  enhanced,
+  arc=3pt,
+  interior style={white},
+  attach boxed title to top center = {yshift=-\tcboxedtitleheight/2},
+  fonttitle=\normalfont,
+  colbacktitle=white,coltitle=black,
+  boxed title style={size=normal,colframe=white,boxrule=0pt},
+  boxrule=.5pt,
+  left=5pt, right=5pt, top=5pt, bottom=0pt,
+  boxsep=5pt,
+  title={#1},
+  halign=left,
+  fontupper=\kaishu
+}
+
+%% Note
+\newtcolorbox{noteBox}{%
+  enhanced,
+  arc=2pt,
+  boxrule=.5pt,
+  left=5pt, right=5pt, top=0pt, bottom=0pt,
+  boxsep=5pt,
+  colframe=colorInfoBorder,
+  colback=colorInfoBackground,
+  colbacktitle=colorInfoBackground,
+  coltext=colorInfoText,
+  title={\textcolor{colorInfoText}{\faStickyNote[regular]\hspace{.5em}\bfseries{注意}}},
+  titlerule=0pt,
+  halign=left,
+  fontupper=\kaishu
+}
+
+%% Important
+\newtcolorbox{importantBox}{%
+  enhanced,
+  arc=2pt,
+  boxrule=.5pt,
+  left=5pt, right=5pt, top=0pt, bottom=0pt,
+  boxsep=5pt,
+  colframe=colorWarningBorder,
+  colback=colorWarningBackground,
+  colbacktitle=colorWarningBackground,
+  coltext=colorWarningText,
+  title={\textcolor{colorWarningText}{\faExclamationCircle\hspace{.5em}\bfseries{重要}}},
+  titlerule=0pt,
+  halign=left,
+  fontupper=\kaishu
+}
+
+%% Tip
+\newtcolorbox{tipBox}{%
+  enhanced,
+  arc=2pt,
+  boxrule=.5pt,
+  left=5pt, right=5pt, top=0pt, bottom=0pt,
+  boxsep=5pt,
+  colframe=colorSuccessBorder,
+  colback=colorSuccessBackground,
+  colbacktitle=colorSuccessBackground,
+  coltext=colorSuccessText,
+  title={\textcolor{colorSuccessText}{\faCheckCircle\hspace{.5em}\bfseries{技巧}}},
+  titlerule=0pt,
+  halign=left,
+  fontupper=\kaishu
+}
+
+%% Warning
+\newtcolorbox{warningBox}{%
+  enhanced,
+  arc=2pt,
+  boxrule=.5pt,
+  left=5pt, right=5pt, top=0pt, bottom=0pt,
+  boxsep=5pt,
+  colframe=colorDangerBorder,
+  colback=colorDangerBackground,
+  colbacktitle=colorDangerBackground,
+  coltext=colorDangerText,
+  title={\textcolor{colorDangerText}{\faExclamationTriangle\hspace{.5em}\bfseries{警告}}},
+  titlerule=0pt,
+  halign=left,
+  fontupper=\kaishu
+}
+
+%------------------------------------------------------------------------------------
+% Ubuntu终端盒子的最小化、关闭和最大化图标
+%------------------------------------------------------------------------------------
+\newcommand{\UbuntuMin}{%
+  \begin{tikzpicture}[x=2.4ex,y=2.4ex,line width=0.15ex,scale=1]
+    \shade[shading=ball,left color=ogray,right color=ogray!50!white] (0,0) circle (0.5);
+    \draw[termimal](-0.3,0)--(0.3,0);
+  \end{tikzpicture}
+}
+\newcommand{\UbuntuClose}{%
+  \begin{tikzpicture}[x=2.4ex,y=2.4ex,line width=0.15ex,scale=1]
+    \shade[shading=ball,left color=oorange,right color=oorange!70!white] (0,0) circle (0.5);
+    \draw[termimal](-0.25,-0.25)--(0.25,0.25);
+    \draw[termimal](-0.25,0.25)--(0.25,-0.25);
+  \end{tikzpicture}
+}
+\newcommand{\UbuntuMax}{%
+  \begin{tikzpicture}[x=2.4ex,y=2.4ex,line width=0.15ex,scale=1]
+    \shade [shading=ball,left color=ogray,right color=ogray!50!white] (0,0) circle (0.5);
+    \draw[termimal](-0.25,-0.2)rectangle(0.25,0.2);
+  \end{tikzpicture}
+}
+
+\newcommand{\WindowsLogo}{%
+  \begin{tikzpicture}[square/.style={regular polygon,regular polygon sides=4},scale=0.5, every node/.style={scale=0.5}]
+    \node[square,draw,thick,fill=black,text=white] at (0, 0) (a) {\small \faTerminal};
+  \end{tikzpicture}
+}
+
+%------------------------------------------------------------------------------------
+% tcolorbox终端盒子apple、win10和Ubuntu样式定义
+%------------------------------------------------------------------------------------
+\tcbset{%
+  skin=enhanced,%
+  % apple terminal base style
+  apple/.style={%
+    halign title=center,%
+    skin=bicolor,%
+    right=0pt,top=0pt,bottom=0pt,
+    left=0pt,
+    boxrule=0.5mm,%
+    breakable,%     
+    frame style={%
+      draw=AppleGray,%
+      left color=AppleGray,%
+      right color=AppleGray%
+    },%
+    overlay unbroken = {%
+      \node[inner sep=0pt,anchor=north west,yshift=-2pt,xshift=10pt,text=white]
+      at (frame.north west) {\textcolor{AppleRed}{\faCircle}
+        \textcolor{AppleYellow}{\faCircle}
+        \textcolor{AppleGreen}{\faCircle}};
+    },%
+    overlay first = {%
+      \node[inner sep=0pt,anchor=north west,yshift=-2pt,xshift=10pt,text=white]
+      at (frame.north west) {\textcolor{AppleRed}{\faCircle}
+        \textcolor{AppleYellow}{\faCircle}
+        \textcolor{AppleGreen}{\faCircle}};
+    },%    
+    fonttitle=\small \sffamily,%\bfseries,%
+    fontupper=\small\sffamily,%
+    fontlower=\small\sffamily%
+  },
+  % apple terminal dark style
+  appledark/.style={%
+    apple,%    
+    colback=black,%
+    colupper=white,%
+    colbacktitle=AppleGray,%
+    colframe=AppleGray,%
+    coltitle=black%
+    %coltext=MyLightGray
+  },
+  % apple terminal light style
+  applelight/.style={%
+    apple,%    
+    colback=cvgrayc,%
+    colupper=black,%
+    colbacktitle=AppleGray,%
+    colframe=AppleGray,%
+    coltitle=black%
+  },%
+  % win10 terminal base style
+  win10/.style={%
+    skin=bicolor,%
+    right=0pt,top=0pt,bottom=0pt,
+    left=0pt,
+    boxrule=0.1mm,%
+    %toptitle=1ex,
+    sharp corners,
+    breakable,%    
+    colbacktitle=WinGray,%
+    colframe=WinGray,%
+    coltitle=black,%
+    fonttitle=\hspace{15pt}\small \sffamily,%\bfseries,
+    fontupper=\small\sffamily,
+    fontlower=\small\sffamily,
+    frame style={%
+      draw=WinBlue,%
+      left color=WinBlue,%
+      right color=WinBlue,%
+      %right = 10pt,
+    },%
+    overlay unbroken = {%
+      \node[inner sep=0pt,anchor=north west,yshift=-2pt,xshift=1.2pt,text=black]
+      at (frame.north west){~\WindowsLogo};% \fbox{\faTerminal}     
+      \node[inner sep=0pt,anchor=north east,yshift=-3pt,xshift=-8pt,text=black] at (frame.north
+      east){\rule{0.8em}{0.6pt}\quad$\square$\quad{\Large$\times$}};    
+    },%
+    overlay first = {%
+      \node[inner sep=0pt,anchor=north west,yshift=-2pt,xshift=1.0pt,text=black]
+      at (frame.north west){~\WindowsLogo};%\small ~\faWindows
+      \node[inner sep=0pt,anchor=north east,yshift=-3pt,xshift=-8pt,text=black] at (frame.north
+      east){\rule{0.8em}{0.6pt}\quad$\square$\quad{\Large$\times$}};      
+    }%
+  },
+  % win10 terminal light style
+  win10light/.style={
+    win10,%
+    colback=white,%
+    colupper=black,%
+    %coltext=black%
+  },
+  % win10 terminal dark style
+  win10dark/.style={
+    win10,%
+    colback=black,%
+    colupper=white,%
+    %coltext=white%
+  },
+  % Ubuntu terminal styles
+  ubuntu/.style={%
+    halign title=center,%
+    skin=bicolor,%
+    right=0pt,top=0pt,bottom=0pt,
+    left=0pt,
+    boxrule=0.5mm,%
+    breakable,% 
+    overlay unbroken = {%
+      \node[inner sep=0pt,anchor=north
+      east,yshift=-1pt,xshift=-5pt,text=white] at (frame.north
+      east){\UbuntuMin\UbuntuMax\UbuntuClose};%      
+    },%
+    overlay first = {%
+      \node[inner sep=0pt,anchor=north
+      east,yshift=-1pt,xshift=-5pt,text=white] at (frame.north
+      east){\UbuntuMin\UbuntuMax\UbuntuClose};%      
+    },%    
+    fonttitle=\small \sffamily,%\bfseries,%
+    fontupper=\small\sffamily,%
+    fontlower=\small\sffamily%
+  },
+  % apple terminal dark style
+  udark/.style={%
+    ubuntu,%
+    frame style={%
+      draw=mgray,%
+      left color=mgray,%
+      right color=mgray%
+    },%
+    colback=mpurple,%
+    colupper=white,%
+    colbacktitle=mgray,%
+    colframe=mgray,%
+    coltitle=white%
+    %coltext=MyLightGray
+  },
+  % apple terminal light style
+  ulight/.style={%
+    ubuntu,%
+    frame style={%
+      draw=cvgrayb,%
+      left color=cvgrayb,%
+      right color=cvgrayb%
+    },%
+    colback=cvgrayc,%
+    colupper=black,%
+    colbacktitle=cvgrayb,%
+    colframe=cvgrayb,%
+    coltitle=black%
+  },%
+  %
+  % ubuntu terminal dark style  
+  gitexample/.style={%
+    halign title=center,%
+    skin=bicolor,%
+    boxrule=1mm,%
+    fonttitle=\bfseries,%
+    coltitle=black,%
+    frame style={%
+      draw=mgray,%
+      left color=mgray,%
+      right color=mgray%
+    },%
+    colback=mpurple,%
+    colupper=white,%
+    breakable,%
+    colframe=mgray,%
+    colbacktitle=mgray,%
+    overlay unbroken={%
+      \node[inner sep=0pt,anchor=north west,yshift=-5pt,xshift=10pt,text=white] at (frame.north west){\UbuntuClose~\UbuntuMin~\UbuntuMax};%
+    },
+    overlay first={%
+      \node[inner sep=0pt,anchor=north west,yshift=-5pt,xshift=10pt,text=white] at (frame.north west){\UbuntuClose~\UbuntuMin~\UbuntuMax};%
+    }%    
+  }%
+}% end terminal style
+
+%------------------------------------------------------------------------------------
+% tcolorbox lang代码样式定义
+%------------------------------------------------------------------------------------
+\tcbset{%
+  skin=enhanced,
+  pad after break=0mm,
+  lang/.style={%
+    breakable,%
+    drop shadow,%
+    colframe=blue!75!black,%
+    right=0pt,top=0pt,bottom=0pt,
+    left=0pt,
+    enhanced,%
+    colframe=tcbcolback!60!black,%
+    colback=tcbcolback!30!white,%
+    colbacktitle=tcbcolback!5!yellow!10!white,%
+    fonttitle=\small\bfseries,%
+    coltitle=black,%
+    attach boxed title to top center={%
+      yshift=-0.25mm-\tcboxedtitleheight/2,%
+      yshifttext=2mm-\tcboxedtitleheight/2%
+    },%
+    attach boxed title to top left={%
+      xshift=1cm,%
+      yshift*=1mm-\tcboxedtitleheight%
+    },%
+    varwidth boxed title*=-3cm,%
+    boxed title style={%
+      frame code={%
+        \path[fill=tcbcolback!30!black]([yshift=-1mm,xshift=-1mm]frame.north west)%
+        arc[start angle=0,end
+        angle=180,radius=1mm]([yshift=-1mm,xshift=1mm]frame.north east)%
+        arc[start angle=180,end angle=0,radius=1mm];%
+        \path[left color=tcbcolback!60!black,right
+        color=tcbcolback!60!black,middle
+        color=tcbcolback!80!black]([xshift=-2mm]frame.north west)%
+        --([xshift=2mm]frame.north east)[rounded corners=1mm]%
+        --([xshift=1mm,yshift=-1mm]frame.north east)%
+        --(frame.south east)%
+        --(frame.south west)%
+        --([xshift=-1mm,yshift=-1mm]frame.north west)[sharp corners]%
+        --cycle;%
+      },%
+      interior engine=empty%
+    },%
+  }% 
+}% end tcolorbox lang style
+
+%------------------------------------------------------------------------------------
+% tcolorbox cv代码样式定义
+%------------------------------------------------------------------------------------
+\tcbset{
+  skin=enhanced,
+  cv/.style={
+    boxrule=0.4mm,
+    pad after break=-1.5ex,
+    breakable,
+    top=0mm,
+    boxsep=1mm,
+    drop shadow,
+    attach boxed title to top,
+    colframe=blue!75!black,
+    left=4.5mm,
+    right=0mm,
+    enhanced,
+    colframe=tcbcolback!60!black,
+    colback=white,
+    colbacktitle=cvgray,
+    fonttitle=\small\ttfamily,
+    coltitle=black,
+    overlay broken = {
+      \begin{tcbclipinterior}
+        \fill[cvblue] (frame.south west) rectangle ([xshift=5.9mm]frame.north west);
+      \end{tcbclipinterior}
+    },
+    underlay boxed title = {
+      \begin{tcbclipinterior}
+        \fill[cvblue] (frame.south west) rectangle ([xshift=5.9mm,yshift=0mm]frame.north west);
+      \end{tcbclipinterior}
+    }
+  }
+}% end tcolorbox lang style
+
+%------ 这段代码借用林前辈的, --shell-escape 时调用 minted 不然就用 listings-----------
+\ifnum\shellescape=1
+  \tcbuselibrary{minted}% 用minted排版代码
+%------------------------------------------------------------------------------------
+% minted part
+%------------------------------------------------------------------------------------
+\makeatletter
+\minted@def@optfv{highlightlinenumbercolor}%需要fvextra.sty包放在当前路径，暂不明白为什么
+\minted@def@optfv{linenumberwidth}
+\makeatother
+
+% redefine the minted line number font
+\renewcommand{\theFancyVerbLine}{%
+  \sffamily\textcolor[rgb]{0.5,0.5,1.0}{%
+    \small\oldstylenums{%
+      \arabic{FancyVerbLine}%
+    }%
+  }%
+}
+
+%===================================
+% Mac 终端窗口环境定义
+% ===================================
+% macDarkc environment with comment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{macdarkc}{ m m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  appledark,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bash%
+}% end macdarkc
+
+% maclightc environment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{maclightc}{ m m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  applelight,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bash%
+}% end maclightc
+
+% macdark environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{macdark}{ m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  appledark,%
+  title={#1},%
+  minted language=bash%
+}% end macdark
+
+% maclight environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{maclight}{ m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  applelight,%
+  title={#1},%
+  minted language=bash%
+}% end maclight
+
+% 将文件做为窗口内容的Mac终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\macdarkcfile}[3]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  appledark,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bash%
+}% end macdarkcfile
+
+% 将文件做为窗口内容的Mac终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\maclightcfile}[3]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  applelight,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bash%
+}% end maclightcfile
+
+% 将文件做为窗口内容的Mac终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\macdarkfile}[2]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  appledark,%
+  listing file={#2},
+  title={#1},%
+  minted language=bash%
+}% end macdarkfile
+
+% 将文件做为窗口内容的Mac终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\maclightfile}[2]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  applelight,%
+  listing file={#2},
+  title={#1},%
+  minted language=bash%
+}% end maclightfile 
+
+%===================================
+% Windows 终端窗口环境定义
+% ===================================
+% windarkc environment with comment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{windarkc}{ m m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%    
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  win10dark,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bat%
+}% end windarkc
+
+% winlightc environment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{winlightc}{ m m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  win10light,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bat%
+}% end winlightc
+
+% windark environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{windark}{ m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  win10dark,%
+  title={#1},%
+  minted language=bat%
+}% end windark
+
+% winlight environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{winlight}{ m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  win10light,%
+  title={#1},%
+  minted language=bat%
+}% end winlight
+
+% 将文件做为窗口内容的Windows终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\windarkcfile}[3]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  win10dark,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bat%
+}% end windarkcfile
+
+% 将文件做为窗口内容的Windows终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\winlightcfile}[3]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  win10light,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bat%
+}% end winlightcfile
+
+% 将文件做为窗口内容的Windows终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\windarkfile}[2]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  win10dark,%
+  listing file={#2},
+  title={#1},%
+  minted language=bat%
+}% end windarkfile
+
+% 将文件做为窗口内容的Windows终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\winlightfile}[2]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  win10light,%
+  listing file={#2},
+  title={#1},%
+  minted language=bat%
+}% end winlightfile 
+
+
+%===================================
+% Ubuntu 终端窗口环境定义
+% ===================================
+% ubtdarkc environment with comment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{ubtdarkc}{ m m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  udark,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bash%
+}% end ubtdarkc
+
+% ubtlightc environment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{ubtlightc}{ m m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  ulight,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bash%
+}% end ubtlightc
+
+% ubtdark environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{ubtdark}{ m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  udark,%
+  title={#1},%
+  minted language=bash%
+}% end ubtdark
+
+% ubtlight environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{ubtlight}{ m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  ulight,%
+  title={#1},%
+  minted language=bash%
+}% end ubtlight
+
+% 将文件做为窗口内容的Ubuntu终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\ubtdarkcfile}[3]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  udark,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bash%
+}% end ubtdarkcfile
+
+% 将文件做为窗口内容的Ubuntu终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\ubtlightcfile}[3]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  ulight,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  minted language=bash%
+}% end ubtlightcfile
+
+% 将文件做为窗口内容的Ubuntu终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\ubtdarkfile}[2]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    %autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    %numbersep=3mm%
+  },%
+  listing only,%
+  udark,%
+  listing file={#2},
+  title={#1},%
+  minted language=bash%
+}% end ubtdarkfile
+
+% 将文件做为窗口内容的Ubuntu终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\ubtlightfile}[2]{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    baselinestretch=0.6,%
+    breaksymbolleft={},%
+    numbersep=3mm%
+  },%
+  listing only,%
+  ulight,%
+  listing file={#2},
+  title={#1},%
+  minted language=bash%
+}% end ubtlightfile 
+
+%===================================
+% GitExample environment definition 
+%=================================== 
+\DeclareTCBListing{GitExample}{ O{bash} m m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    numbersep=3mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  gitexample,%
+  title={#3},%
+  comment={\small\sffamily#2},%
+  minted language=#1%
+}% end GitExample
+
+%===================================
+% GitExamplea environment definition 
+%===================================
+\DeclareTCBListing{GitExampla}{ O{bash} m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    numbersep=3mm%
+  },%
+  listing only,%
+  gitexample,%
+  title={#2},%
+  minted language=#1%
+}% end GitExamplea
+
+%===================================
+% langPyTwo environment definition 
+%===================================
+\DeclareTCBListing{langPyTwo}{ O{cpp} m m }{%
+  overlay={%
+    \begin{tcbclipinterior}
+      \fill[tcbcolback!80!black] (frame.south west) rectangle
+      ([xshift=6mm]frame.north west);
+    \end{tcbclipinterior}%
+  },%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    highlightcolor={
+      tcbcolback!30!white,
+      tcbcolback!30!white
+    },
+    highlightlinenumbercolor={
+      tcbcolback!80!black,
+      tcbcolback!80!black
+    },
+    breaklines,%
+    fontsize=\small,%
+    linenos,%
+    numbersep=1mm%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=tcbcolback!60!black,%
+  title={#3},%
+  lang,%
+  comment={\small\sffamily#2},%
+  minted language=#1%
+}% end langPyTwo
+
+%===================================
+% langPyOne environment definition 
+%===================================
+\DeclareTCBListing{langPyOne}{ O{cpp} m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    breaklines,%
+    fontsize=\small,%
+    %linenos,%
+    %numbersep=1mm%
+  },%
+  listing only,%
+  lang,%
+  title={#2},%
+  minted language=#1%
+}% end langPyOne
+
+% 定义代码编号计数器
+\newcounter{cvcounter}%[chapter]%按章重置
+%===================================
+% langCVOne environment definition 
+%===================================
+\DeclareTCBListing[use counter=cvcounter]{langCVOne}{ O{cpp} o o m}{%
+  listing engine=minted,
+  minted style=default,
+  minted options={
+    highlightcolor={
+      cvgray!50!white,
+      white
+    },
+    highlightlinenumbercolor={
+      cvblue,
+      cvblue!70
+    },
+    mathescape,
+    breaklines,
+    fontsize=\small,
+    linenos,
+    numbersep=1mm%
+  },
+  listing only,
+  cv,
+  minted language=#1,
+  title={代码清单\thecvcounter:~#4},%\thetcbcounter
+  label = #2,
+  overlay unbroken and first ={
+    \begin{tcbclipinterior}
+      \node[inner sep=0pt,anchor=north east,yshift=-3pt,xshift=-5pt,text=cvgrayb] at (frame.north east){\ttfamily\small\faFile*\ \faCode\ \faCodeBranch\ \faCopy\ \faExternalLink*\ \IfNoValueTF{#3}{\MakeUppercase#1}{#3}};
+    \end{tcbclipinterior}
+  }
+}% end langCVOne
+
+%=======================================================
+% \langCVfile command definition(from file inputListing)
+%=======================================================
+\DeclareTCBInputListing[use counter=cvcounter]{\langCVfile}{ O{cpp} o o m m}{%
+  listing engine=minted,
+  minted style=default,
+  minted options={
+    highlightcolor={
+      cvgray!50!white,
+      white
+    },
+    highlightlinenumbercolor={
+      cvblue,
+      cvblue!70
+    },
+    mathescape,
+    breaklines,
+    fontsize=\small,
+    linenos,
+    numbersep=1mm
+  },
+  listing only,
+  cv,
+  listing file={#5},
+  minted language=#1,
+  title={代码清单\thecvcounter:~#4},%\thetcbcounter
+  label = #2,
+  overlay unbroken and first ={
+    \begin{tcbclipinterior}
+      \node[inner sep=0pt,anchor=north east,yshift=-3pt,xshift=-5pt,text=cvgrayb] at (frame.north east){\ttfamily\small\faFile*\ \faCode\ \faCodeBranch\ \faCopy\ \faExternalLink*\ \IfNoValueTF{#3}{\MakeUppercase#1}{#3}};
+    \end{tcbclipinterior}
+  }
+}% end \langCVfile
+
+%=======================================================
+% \langPyfile command definition(from file inputListing)
+%=======================================================
+\DeclareTCBInputListing{\langPyfile}{ O{cpp} m m }{%
+  %overlay={%
+  %  \begin{tcbclipinterior}
+  %    \fill[tcbcolback!80!black] (frame.south west) rectangle
+  %    ([xshift=6mm]frame.north west);
+  %  \end{tcbclipinterior}%
+  %},%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    highlightcolor={
+      tcbcolback!30!white,
+      tcbcolback!30!white
+    },
+    highlightlinenumbercolor={
+      tcbcolback!80!black,
+      tcbcolback!80!black
+    },
+    breaklines,%
+    fontsize=\small,%
+    %linenos,%
+    numbersep=1mm%
+  },%
+  listing only,%
+  lang,%
+  listing file={#3},
+  title={#2},%
+  minted language=#1%
+}% end \langPyfile
+
+%=======================================================
+% \gitfile command definition(from file inputListing)
+%=======================================================
+\DeclareTCBInputListing{\gitfile}{ O{bash} m m }{%
+  listing engine=minted,%
+  minted style=default,%
+  minted options={%
+    autogobble,%
+    breaklines,%
+    fontsize=\small,%
+    numbersep=3mm%
+  },%
+  listing only,%
+  gitexample,%
+  listing file={#3},%
+  title={#2},%
+  minted language=#1%
+}% end \gitfile
+
+\else
+\tcbuselibrary{listings}% 用listings排版代码
+%------------------------------------------------------------------------------------
+% listings part
+%------------------------------------------------------------------------------------
+% 修复错误
+\let\old@lstKV@SwitchCases\lstKV@SwitchCases
+\def\lstKV@SwitchCases#1#2#3{}
+\RequirePackage{lstlinebgrd} %% listings中cv盒子的行背景色
+\let\lstKV@SwitchCases\old@lstKV@SwitchCases
+
+\lst@Key{numbers}{none}{%
+	\def\lst@PlaceNumber{\lst@linebgrd}%
+	\lstKV@SwitchCases{#1}%
+	{none:\\%
+		left:\def\lst@PlaceNumber{\llap{\normalfont
+				\lst@numberstyle{\thelstnumber}\kern\lst@numbersep}\lst@linebgrd}\\%
+		right:\def\lst@PlaceNumber{\rlap{\normalfont
+				\kern\linewidth \kern\lst@numbersep
+				\lst@numberstyle{\thelstnumber}}\lst@linebgrd}%
+	}{\PackageError{Listings}{Numbers #1 unknown}\@ehc}}
+% 定义代码编号计数器
+\newcounter{cvcounter}%[chapter]%按章重置
+% redefine the listings line number font
+\renewcommand{\thelstnumber}{\oldstylenums{%
+    \arabic{lstnumber}%
+  }%
+}% end listings line number font
+
+\lstset{% general command to set parameter(s)
+  basicstyle=\ttfamily\small, % print whole listing small
+  keywordstyle=\color{chengse}\bfseries,%
+  % \underbar underlined bold black keywords
+  identifierstyle=, % nothing happens
+  breaklines=true,
+  commentstyle=\itshape\color{gray},
+  stringstyle=\ttfamily, % typewriter type for strings
+  % showstringspaces=false, % no special string spaces
+  numbers=left,%
+  numberstyle=\small\sffamily\color[rgb]{0.5,0.5,1.0},%
+  % numbersep=3pt
+}% end lstset
+
+%===================================
+% Mac 终端窗口环境定义
+% ===================================
+% macDarkc environment with comment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{macdarkc}{ m m }{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  appledark,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end macdarkc
+
+% maclightc environment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{maclightc}{ m m }{%  
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  applelight,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end maclightc
+
+% macdark environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{macdark}{ m }{%  
+  listing only,%
+  appledark,%
+  title={#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%  
+}% end macdark
+
+% maclight environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{maclight}{ m }{%  
+  listing only,%
+  applelight,%
+  title={#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end maclight
+
+% 将文件做为窗口内容的Mac终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\macdarkcfile}[3]{%  
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  appledark,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end macdarkcfile
+
+% 将文件做为窗口内容的Mac终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\maclightcfile}[3]{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  applelight,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end maclightcfile
+
+% 将文件做为窗口内容的Mac终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\macdarkfile}[2]{%
+  listing only,%
+  appledark,%
+  listing file={#2},
+  title={#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end macdarkfile
+
+% 将文件做为窗口内容的Mac终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\maclightfile}[2]{%
+  listing only,%
+  applelight,%
+  listing file={#2},
+  title={#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end maclightfile 
+
+%===================================
+% Windows 终端窗口环境定义
+% ===================================
+% windarkc environment with comment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{windarkc}{ m m }{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  win10dark,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bat,
+    numbers=none
+  },%
+}% end windarkc
+
+% winlightc environment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{winlightc}{ m m }{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  win10light,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bat,
+    numbers=none
+  },%
+}% end winlightc
+
+% windark environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{windark}{ m }{%
+  listing only,%
+  win10dark,%
+  title={#1},%
+  listing options={
+    language=bat,
+    numbers=none
+  },%
+}% end windark
+
+% winlight environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{winlight}{ m }{%
+  listing only,%
+  win10light,%
+  title={#1},%
+  listing options={
+    language=bat,
+    numbers=none
+  },%  
+}% end winlight
+
+% 将文件做为窗口内容的Windows终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\windarkcfile}[3]{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  win10dark,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bat,
+    numbers=none
+  },%
+}% end windarkcfile
+
+% 将文件做为窗口内容的Windows终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\winlightcfile}[3]{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  win10light,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bat,
+    numbers=none
+  },%
+}% end winlightcfile
+
+% 将文件做为窗口内容的Windows终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\windarkfile}[2]{%
+  listing only,%
+  win10dark,%
+  listing file={#2},
+  title={#1},%
+  listing options={
+    language=bat,
+    numbers=none
+  },%
+}% end windarkfile
+
+% 将文件做为窗口内容的Windows终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\winlightfile}[2]{%
+  listing only,%
+  win10light,%
+  listing file={#2},
+  title={#1},%
+  listing options={
+    language=bat,
+    numbers=none
+  },%
+}% end winlightfile 
+
+
+%===================================
+% Ubuntu 终端窗口环境定义
+% ===================================
+% ubtdarkc environment with comment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{ubtdarkc}{ m m }{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  udark,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end ubtdarkc
+
+% ubtlightc environment definition
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+\DeclareTCBListing{ubtlightc}{ m m }{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  ulight,%
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end ubtlightc
+
+% ubtdark environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{ubtdark}{ m }{%
+  listing only,%
+  udark,%
+  title={#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end ubtdark
+
+% ubtlight environment without comment definition
+% 参数为窗口标题
+\DeclareTCBListing{ubtlight}{ m }{%
+  listing only,%
+  ulight,%
+  title={#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end ubtlight
+
+% 将文件做为窗口内容的Ubuntu终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\ubtdarkcfile}[3]{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  udark,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end ubtdarkcfile
+
+% 将文件做为窗口内容的Ubuntu终端窗口样式命令
+% 第1个参数是窗口底端提示信息
+% 第2个参数是窗口标题
+% 第3个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\ubtlightcfile}[3]{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  ulight,%
+  listing file={#3},
+  title={#2},%
+  comment={\small\sffamily#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end ubtlightcfile
+
+% 将文件做为窗口内容的Ubuntu终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\ubtdarkfile}[2]{%
+  listing only,%
+  udark,%
+  listing file={#2},
+  title={#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end ubtdarkfile
+
+% 将文件做为窗口内容的Ubuntu终端窗口样式命令
+% 第1个参数是窗口标题
+% 第2个参数是包含窗口内容的文件全路径名称(可以是相对路径)
+\newtcbinputlisting{\ubtlightfile}[2]{%
+  listing only,%
+  ulight,%
+  listing file={#2},
+  title={#1},%
+  listing options={
+    language=bash,
+    numbers=none
+  },%
+}% end ubtlightfile 
+
+
+%===================================
+% GitExample environment definition 
+%=================================== 
+\DeclareTCBListing{GitExample}{ O{bash} m m }{%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=linux,%
+  gitexample,%
+  title={#3},%
+  comment={\small\sffamily#2},%
+  listing options={
+    language=#1,
+    numbers=none
+  },%
+}% end GitExample
+
+%===================================
+% GitExamplea environment definition 
+%===================================
+\DeclareTCBListing{GitExampla}{ O{bash} m }{%
+  listing only,%
+  gitexample,%
+  title={#2},%
+  listing options={
+    language=#1,
+    numbers=none
+  },%
+}% end GitExamplea
+
+%===================================
+% langPyTwo environment definition 
+%===================================
+\DeclareTCBListing{langPyTwo}{ O{c++} m m }{%
+  overlay={%
+    \begin{tcbclipinterior}
+      \fill[tcbcolback!80!black] (frame.south west) rectangle
+      ([xshift=5mm]frame.north west);
+    \end{tcbclipinterior}%
+  },%
+  listing and comment,%
+  colbacklower=tcbcolback!5!yellow!10!white,%
+  collower=tcbcolback!60!black,%
+  title={#3},%
+  lang,%
+  comment={\small\sffamily#2},%
+  listing options={
+    language={#1},
+    numbersep=4pt
+  },%
+}% end langPyTwo
+
+%===================================
+% langPyOne environment definition 
+%===================================
+\DeclareTCBListing{langPyOne}{ O{c++} m }{%
+  %overlay={%
+  %  \begin{tcbclipinterior}
+  %    \fill[tcbcolback!80!black] (frame.south west) rectangle
+  %    ([xshift=5mm]frame.north west);
+  %  \end{tcbclipinterior}%
+  %},%
+  listing only,%
+  lang,%
+  title={#2},%
+  listing options={
+    language={#1},
+    %numbersep=4pt,
+    numbers=none
+  },%
+}% end langPyOne
+
+%===================================
+% langCVOne environment definition 
+%===================================
+\DeclareTCBListing[use counter=cvcounter]{langCVOne}{ O{c++} o o m}{%
+  listing only,%
+  cv,%
+  listing options={
+    language={#1},
+    numbersep=3pt,
+    linebackgroundcolor={\ifodd\value{lstnumber}\color{cvgray}\fi}
+  },%
+  title={代码清单\thecvcounter:~#4},%\thetcbcounter
+  label = #2,
+  overlay unbroken and first ={
+    \begin{tcbclipinterior}
+      \node[inner sep=0pt,anchor=north east,yshift=-3pt,xshift=-5pt,text=cvgrayb] at (frame.north east){\ttfamily\small\faFile*\ \faCode\ \faCodeBranch\ \faCopy\ \faExternalLink*\ \IfNoValueTF{#3}{\MakeUppercase#1}{#3}};
+    \end{tcbclipinterior}
+  }
+}% end langCVOne
+
+%=======================================================
+% \langPyfile command definition(from file inputListing)
+%=======================================================
+\DeclareTCBInputListing{\langPyfile}{ O{c++} m m }{%
+  %overlay={%
+  %  \begin{tcbclipinterior}
+  %    \fill[tcbcolback!80!black] (frame.south west) rectangle
+  %    ([xshift=5mm]frame.north west);
+  %  \end{tcbclipinterior}%
+  %},%
+  listing only,%
+  lang,%
+  listing file={#3},
+  title={#2},%
+  listing options={
+    language={#1},
+    %numbersep=4pt,
+    numbers=none
+  },%
+}% end \langPyfile
+
+% =======================================================
+% \gitfile command definition(from file inputListing)
+% =======================================================
+\DeclareTCBInputListing{\gitfile}{ O{bash} m m }{%
+  listing only,%
+  gitexample,%
+  listing file={#3},%
+  title={#2},%
+  listing options={
+    language=#1,
+    numbers=none},%
+}% end \gitfile
+
+
+% redefine the listings line number font
+\renewcommand{\thelstnumber}{\oldstylenums{%
+    \arabic{lstnumber}%
+  }%
+}
+
+%=======================================================
+% \langCVfile command definition(from file inputListing)
+%=======================================================
+\DeclareTCBInputListing[use counter=cvcounter]{\langCVfile}{ O{c++} o o m m}{%
+  listing only,
+  cv,
+  listing file={#5},
+  listing options={
+    language={#1},
+    numbersep=3pt,
+    linebackgroundcolor={\ifodd\value{lstnumber}\color{cvgray}\fi}
+  },
+  title={代码清单\thecvcounter:~#4},%\thetcbcounter
+  label = #2,
+  overlay unbroken and first ={
+    \begin{tcbclipinterior}
+      \node[inner sep=0pt,anchor=north east,yshift=-3pt,xshift=-5pt,text=cvgrayb] at (frame.north east){\ttfamily\small\faFile*\ \faCode\ \faCodeBranch\ \faCopy\ \faExternalLink*\ \IfNoValueTF{#3}{\MakeUppercase#1}{#3}};      
+    \end{tcbclipinterior}
+  }
+}% end \langCVfile  
+
+
+\fi
+
+%-----------------------------------------------------------------------
+% 命令行盒子
+%-----------------------------------------------------------------------
+%% 白底黑字命令行
+\newenvironment{shellbox}
+{%
+  \VerbatimEnvironment
+  \begin{tcolorbox}[
+    enhanced,
+    arc=2pt,
+    boxrule=.5pt,
+    left=5pt, right=5pt, top=0pt, bottom=0pt,
+    boxsep=5pt,
+    colframe=black,
+    colback=white,
+    coltext=black,
+    title={},
+    fontupper=\linespread{1.2}
+  ]%
+    \begin{Verbatim}
+}
+{%
+    \end{Verbatim}
+  \end{tcolorbox}
+}
+
+%% 黑底白字命令行
+\newenvironment{invertedshellbox}
+{%
+  \VerbatimEnvironment
+  \begin{tcolorbox}[
+    enhanced,
+    arc=2pt,
+    boxrule=.5pt,
+    left=5pt, right=5pt, top=0pt, bottom=0pt,
+    boxsep=5pt,
+    colframe=black!70!white,
+    colback=black!70!white,
+    coltext=white,
+    title={},
+    fontupper=\linespread{1.2}
+  ]%
+    \begin{Verbatim}
+}
+{%
+    \end{Verbatim}
+  \end{tcolorbox}
+}%
+
+\endinput
+%% End of file `boxie.sty'.

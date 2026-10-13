@@ -1,0 +1,1584 @@
+%%
+%% This is file `fvextra.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% fvextra.dtx  (with options: `package')
+%% 
+%% This is a generated file.
+%% 
+%% Copyright (C) 2016-2017 by Geoffrey M. Poore <gpoore@gmail.com>
+%% --------------------------------------------------------------------------
+%% This work may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either version 1.3
+%% of this license or (at your option) any later version.
+%% The latest version of this license is in
+%%   http://www.latex-project.org/lppl.txt
+%% and version 1.3 or later is part of all distributions of LaTeX
+%% version 2005/12/01 or later.
+%% 
+\NeedsTeXFormat{LaTeX2e}[1999/12/01]
+\ProvidesPackage{fvextra}
+    [2018/08/08 v1.4dev fvextra - extensions and patches for fancyvrb]
+\RequirePackage{ifthen}
+\RequirePackage{etoolbox}
+\RequirePackage{fancyvrb}
+\RequirePackage{upquote}
+\AtEndPreamble{%
+  \ifx\encodingdefault\upquote@OTone
+    \ifx\ttdefault\upquote@cmtt\else\RequirePackage{textcomp}\fi
+  \else
+    \RequirePackage{textcomp}
+  \fi}
+\RequirePackage{lineno}
+\@ifpackageloaded{csquotes}%
+ {\PackageWarning{fvextra}{csquotes should be loaded after fvextra, %
+  to avoid a warning from the lineno package}}{}
+\def\FV@Space@ifx{\FV@Space}
+\def\FV@Tab@ifx{\FV@Tab}
+\let\FV@FormattingPrep@PreHook\@empty
+\let\FV@FormattingPrep@PostHook\@empty
+\expandafter\def\expandafter\FV@FormattingPrep\expandafter{%
+  \expandafter\FV@FormattingPrep@PreHook\FV@FormattingPrep\FV@FormattingPrep@PostHook}
+\let\FV@PygmentsHook\relax
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@PygmentsHook}
+\edef\FV@hashchar{\string#}
+\edef\FV@dollarchar{\string$}
+\edef\FV@ampchar{\string&}
+\edef\FV@underscorechar{\string_}
+\edef\FV@tildechar{\string~}
+\edef\FV@leftsquarebracket{\string[}
+\edef\FV@rightsquarebracket{\string]}
+\newcommand{\FV@EscChars}{%
+  \let\#\FV@hashchar
+  \let\%\@percentchar
+  \let\{\@charlb
+  \let\}\@charrb
+  \let\$\FV@dollarchar
+  \let\&\FV@ampchar
+  \let\_\FV@underscorechar
+  \let\\\@backslashchar
+  \let~\FV@tildechar
+  \let\~\FV@tildechar
+  \let\[\FV@leftsquarebracket
+  \let\]\FV@rightsquarebracket
+} %$ <- highlighting
+\def\FancyVerbSpace{\textvisiblespace}
+\newcounter{FV@TrueTabGroupLevel}
+\def\FV@@ObeyTabs#1{%
+  \let\FV@Space@Orig\FV@Space
+  \let\FV@Space\FV@Space@ObeyTabs
+  \setcounter{FV@TrueTabGroupLevel}{\the\currentgrouplevel}%
+  \addtocounter{FV@TrueTabGroupLevel}{1}%
+  \setbox\FV@TabBox=\hbox{#1}\box\FV@TabBox
+  \let\FV@Space\FV@Space@Orig}
+\def\FV@TrueTab{%
+  \ifnum\value{FV@TrueTabGroupLevel}=\the\currentgrouplevel\relax
+    \expandafter\FV@TrueTab@NoGroup
+  \else
+    \expandafter\FV@TrueTab@Group
+  \fi}
+\let\FV@TrueTabSaveWidth\relax
+\newcounter{FV@TrueTabCounter}
+\def\FV@TrueTabSaveWidth@Save{%
+  \expandafter\xdef\csname FV@TrueTab:Width\arabic{FV@TrueTabCounter}\endcsname{%
+    \number\@tempdima}%
+  \stepcounter{FV@TrueTabCounter}}
+\def\FV@TrueTab@NoGroup{%
+  \egroup
+  \@tempdima=\FV@ObeyTabSize sp\relax
+  \@tempcnta=\wd\FV@TabBox
+  \advance\@tempcnta\FV@@ObeyTabSize\relax
+  \divide\@tempcnta\@tempdima
+  \multiply\@tempdima\@tempcnta
+  \advance\@tempdima-\wd\FV@TabBox
+  \FV@TrueTabSaveWidth
+  \setbox\FV@TabBox=\hbox\bgroup
+    \unhbox\FV@TabBox\hbox to\@tempdima{\hss\FV@TabChar}}
+\newboolean{FV@ObeyTabs@Whitespace@Tab}
+\def\FV@TrueTab@Group{%
+  \booltrue{FV@ObeyTabs@Whitespace@Tab}%
+  \gdef\FV@TmpWhitespace{\FV@Tab@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+\def\FV@Space@ObeyTabs{%
+  \ifnum\value{FV@TrueTabGroupLevel}=\the\currentgrouplevel\relax
+    \expandafter\FV@Space@ObeyTabs@NoGroup
+  \else
+    \expandafter\FV@Space@ObeyTabs@Group
+  \fi}
+\def\FV@Space@ObeyTabs@NoGroup{\FV@Space@Orig}
+\def\FV@Space@ObeyTabs@Group{%
+  \boolfalse{FV@ObeyTabs@Whitespace@Tab}%
+  \gdef\FV@TmpWhitespace{\FV@Space@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+\def\FV@ObeyTabs@ScanWhitespace{%
+  \@ifnextchar\FV@Space@ifx%
+   {\FV@TrueTab@CaptureWhitespace@Space}%
+   {\ifx\@let@token\FV@Tab@ifx
+      \expandafter\FV@TrueTab@CaptureWhitespace@Tab
+    \else
+      \expandafter\FV@ObeyTabs@ResolveWhitespace
+    \fi}}
+\def\FV@TrueTab@CaptureWhitespace@Space#1{%
+  \g@addto@macro\FV@TmpWhitespace{\FV@Space@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+\def\FV@TrueTab@CaptureWhitespace@Tab#1{%
+  \booltrue{FV@ObeyTabs@Whitespace@Tab}%
+  \g@addto@macro\FV@TmpWhitespace{\FV@Tab@ifx}%
+  \FV@ObeyTabs@ScanWhitespace}
+\newbox\FV@TabBox@Group
+\def\FV@TrueTab@Group@Expand{%
+  \egroup
+  \@tempdima=\FV@ObeyTabSize sp\relax
+  \@tempcnta=\wd\FV@TabBox@Group
+  \advance\@tempcnta\FV@@ObeyTabSize\relax
+  \divide\@tempcnta\@tempdima
+  \multiply\@tempdima\@tempcnta
+  \advance\@tempdima-\wd\FV@TabBox@Group
+  \FV@TrueTabSaveWidth
+  \setbox\FV@TabBox@Group=\hbox\bgroup
+    \unhbox\FV@TabBox@Group\hbox to\@tempdima{\hss\FV@TabChar}}
+\def\FV@ObeyTabs@ResolveWhitespace{%
+  \let\FV@Space\FV@Space@Orig
+  \let\FV@Tab\FV@TrueTab@Group@Expand
+  \expandafter\FV@ObeyTabs@ResolveWhitespace@i\expandafter{\FV@TmpWhitespace}%
+  \let\FV@Space\FV@Space@ObeyTabs
+  \let\FV@Tab\FV@TrueTab}
+\def\FV@ObeyTabs@ResolveWhitespace@i#1{%
+  \ifbool{FV@ObeyTabs@Whitespace@Tab}%
+   {\setbox\FV@TabBox@Group=\hbox{#1}\box\FV@TabBox@Group}%
+   {#1}}
+\def\FancyVerbMathSpace{ }
+\def\FV@SetupMathSpace{%
+  \everymath\expandafter{\the\everymath\let\FV@Space\FancyVerbMathSpace}}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathSpace}
+\begingroup
+\catcode`\'=\active
+\catcode`\^=7
+\gdef\FV@pr@m@s{%
+  \ifx'\@let@token
+    \expandafter\pr@@@s
+  \else
+    \ifx^\@let@token
+      \expandafter\expandafter\expandafter\pr@@@t
+    \else
+      \egroup
+    \fi
+  \fi}
+\endgroup
+\def\FV@SetupMathFont{%
+  \everymath\expandafter{\the\everymath\fontfamily{\familydefault}\selectfont}}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathFont}
+\def\FV@SetupMathLigs{%
+  \everymath\expandafter{%
+    \the\everymath
+    \let\pr@m@s\FV@pr@m@s
+    \begingroup\lccode`\~=`\'\lowercase{\endgroup\def~}{%
+      \ifmmode\expandafter\active@math@prime\else'\fi}%
+    \begingroup\lccode`\~=`\`\lowercase{\endgroup\def~}{`}%
+    \begingroup\lccode`\~=`\<\lowercase{\endgroup\def~}{<}%
+    \begingroup\lccode`\~=`\>\lowercase{\endgroup\def~}{>}%
+    \begingroup\lccode`\~=`\,\lowercase{\endgroup\def~}{,}%
+    \begingroup\lccode`\~=`\-\lowercase{\endgroup\def~}{-}%
+  }%
+}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@SetupMathLigs}
+\def\FV@BeginListFrame@Lines{%
+  \begingroup
+  \lineskip\z@skip
+  \FV@SingleFrameLine{\z@}%
+  \kern-0.5\baselineskip\relax
+  \baselineskip\z@skip
+  \kern\FV@FrameSep\relax
+  \penalty\@M
+  \endgroup}
+\define@key{FV}{rulecolor}{%
+  \ifstrempty{#1}%
+   {\let\FancyVerbRuleColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FancyVerbRuleColor\relax}%
+     {\def\@tempa{#1}%
+      \FV@KVProcess@RuleColor#1\FV@Undefined}}}
+\def\FV@KVProcess@RuleColor#1#2\FV@Undefined{%
+  \ifx#1\color
+  \else
+    \expandafter\def\expandafter\@tempa\expandafter{%
+      \expandafter\color\expandafter{\@tempa}}%
+  \fi
+  \let\FancyVerbRuleColor\@tempa}
+\fvset{rulecolor=none}
+\define@key{FV}{fillcolor}{%
+  \ifstrempty{#1}%
+   {\let\FancyVerbFillColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FancyVerbFillColor\relax}%
+     {\def\@tempa{#1}%
+      \FV@KVProcess@FillColor#1\FV@Undefined}}}
+\def\FV@KVProcess@FillColor#1#2\FV@Undefined{%
+  \ifx#1\color
+  \else
+    \expandafter\def\expandafter\@tempa\expandafter{%
+      \expandafter\color\expandafter{\@tempa}}%
+  \fi
+  \let\FancyVerbFillColor\@tempa}
+\fvset{fillcolor=none}
+\define@booleankey{FV}{linenos}%
+  {\@nameuse{FV@Numbers@left}}{\@nameuse{FV@Numbers@none}}
+\define@key{FV}{tab}{\def\FancyVerbTab{#1}}
+\define@key{FV}{tabcolor}%
+ {\ifstrempty{#1}%
+   {\let\FV@TabColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FV@TabColor\relax}%
+     {\def\FV@TabColor{\textcolor{#1}}}}}
+\define@booleankey{FV}{showtabs}%
+ {\def\FV@TabChar{\FV@TabColor{\FancyVerbTab}}}%
+ {\let\FV@TabChar\relax}
+\fvset{tabcolor=none, showtabs=false}
+\define@key{FV}{space}{\def\FancyVerbSpace{#1}}
+\define@key{FV}{spacecolor}%
+ {\ifstrempty{#1}%
+   {\let\FV@SpaceColor\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FV@SpaceColor\relax}%
+     {\def\FV@SpaceColor{\textcolor{#1}}}}}
+\define@booleankey{FV}{showspaces}%
+ {\def\FV@Space{\FV@SpaceColor{\FancyVerbSpace}}}%
+ {\def\FV@Space{\ }}
+\fvset{spacecolor=none, showspaces=false}
+\define@booleankey{FV}{mathescape}%
+ {\let\FancyVerbMathEscape\FV@MathEscape}%
+ {\let\FancyVerbMathEscape\relax}
+\def\FV@MathEscape{\catcode`\$=3\catcode`\^=7\catcode`\_=8\relax}
+\FV@AddToHook\FV@CatCodesHook\FancyVerbMathEscape
+\fvset{mathescape=false}
+\define@booleankey{FV}{beameroverlays}%
+ {\let\FancyVerbBeamerOverlays\FV@BeamerOverlays}%
+ {\let\FancyVerbBeamerOverlays\relax}
+\def\FV@BeamerOverlays{%
+  \expandafter\def\expandafter\@noligs\expandafter{\@noligs
+    \catcode`\<=12\catcode`\>=12\relax}}
+\FV@AddToHook\FV@FormattingPrep@PreHook\FancyVerbBeamerOverlays
+\fvset{beameroverlays=false}
+\newbool{FV@CurlyQuotes}
+\define@booleankey{FV}{curlyquotes}%
+ {\booltrue{FV@CurlyQuotes}}%
+ {\boolfalse{FV@CurlyQuotes}}
+\def\FancyVerbCurlyQuotes{%
+  \ifbool{FV@CurlyQuotes}%
+   {\expandafter\def\expandafter\@noligs\expandafter{\@noligs
+      \begingroup\lccode`\~=`\`\lowercase{\endgroup\def~}{`}%
+      \begingroup\lccode`\~=`\'\lowercase{\endgroup\def~}{'}}}%
+   {}}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FancyVerbCurlyQuotes}
+\fvset{curlyquotes=false}
+\define@key{FV}{fontencoding}%
+ {\ifstrempty{#1}%
+   {\let\FV@FontEncoding\relax}%
+   {\ifstrequal{#1}{none}%
+     {\let\FV@FontEncoding\relax}%
+     {\def\FV@FontEncoding{\fontencoding{#1}}}}}
+\expandafter\def\expandafter\FV@SetupFont\expandafter{%
+  \expandafter\FV@FontEncoding\FV@SetupFont}
+\fvset{fontencoding=none}
+\def\FancyVerbFormatLine#1{#1}
+\def\FancyVerbFormatText#1{#1}
+\def\FV@ListProcessLine@NoBreak#1{%
+  \hbox to \hsize{%
+    \kern\leftmargin
+    \hbox to \linewidth{%
+      %\FV@LeftListNumber % invoked by \FV@LineNumberBackground
+      \FV@LeftListFrame
+      \FancyVerbFormatLine{%
+        \FancyVerbHighlightLine{%
+          \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}\hss
+      \FV@RightListFrame
+      \FV@LineNumberBackground
+      \FV@RightListNumber}%
+    \hss}}
+\def\FV@BProcessLine#1{%
+  \hbox{\FancyVerbFormatLine{%
+    \FancyVerbHighlightLine{%
+      \FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}}
+\newbool{FV@NumberFirstLine}
+\define@booleankey{FV}{numberfirstline}%
+ {\booltrue{FV@NumberFirstLine}}%
+ {\boolfalse{FV@NumberFirstLine}}
+\fvset{numberfirstline=false}
+\newbool{FV@StepNumberFromFirst}
+\define@booleankey{FV}{stepnumberfromfirst}%
+ {\booltrue{FV@StepNumberFromFirst}}%
+ {\boolfalse{FV@StepNumberFromFirst}}
+\fvset{stepnumberfromfirst=false}
+\newbool{FV@StepNumberOffsetValues}
+\define@booleankey{FV}{stepnumberoffsetvalues}%
+ {\booltrue{FV@StepNumberOffsetValues}}%
+ {\boolfalse{FV@StepNumberOffsetValues}}
+\fvset{stepnumberoffsetvalues=false}
+\def\FV@Numbers@left{%
+  \let\FV@RightListNumber\relax
+  \def\FV@LeftListNumber{%
+    \ifx\FancyVerbStartNum\z@
+      \let\FancyVerbStartNum\@ne
+    \fi
+    \ifbool{FV@StepNumberFromFirst}%
+     {\@tempcnta=\FV@CodeLineNo
+      \@tempcntb=\FancyVerbStartNum
+      \advance\@tempcntb\FV@StepNumber
+      \divide\@tempcntb\FV@StepNumber
+      \multiply\@tempcntb\FV@StepNumber
+      \advance\@tempcnta\@tempcntb
+      \advance\@tempcnta-\FancyVerbStartNum
+      \@tempcntb=\@tempcnta}%
+     {\ifbool{FV@StepNumberOffsetValues}%
+       {\@tempcnta=\FV@CodeLineNo
+        \@tempcntb=\FV@CodeLineNo}%
+       {\@tempcnta=\c@FancyVerbLine
+        \@tempcntb=\c@FancyVerbLine}}%
+    \divide\@tempcntb\FV@StepNumber
+    \multiply\@tempcntb\FV@StepNumber
+    \ifnum\@tempcnta=\@tempcntb
+      \if@FV@NumberBlankLines
+        \hbox to\z@{\hss\theFancyVerbLine\kern\FV@NumberSep}%
+      \else
+        \ifx\FV@Line\empty
+        \else
+          \hbox to\z@{\hss\theFancyVerbLine\kern\FV@NumberSep}%
+        \fi
+      \fi
+    \else
+      \ifbool{FV@NumberFirstLine}{%
+        \ifnum\FV@CodeLineNo=\FancyVerbStartNum
+          \hbox to\z@{\hss\theFancyVerbLine\kern\FV@NumberSep}%
+        \fi}{}%
+    \fi}%
+  \let\FV@LineNumberBackground\FV@LeftListBackground
+}
+\def\FV@Numbers@right{%
+  \let\FV@LeftListNumber\relax
+  \def\FV@RightListNumber{%
+    \ifx\FancyVerbStartNum\z@
+      \let\FancyVerbStartNum\@ne
+    \fi
+    \ifbool{FV@StepNumberFromFirst}%
+     {\@tempcnta=\FV@CodeLineNo
+      \@tempcntb=\FancyVerbStartNum
+      \advance\@tempcntb\FV@StepNumber
+      \divide\@tempcntb\FV@StepNumber
+      \multiply\@tempcntb\FV@StepNumber
+      \advance\@tempcnta\@tempcntb
+      \advance\@tempcnta-\FancyVerbStartNum
+      \@tempcntb=\@tempcnta}%
+     {\ifbool{FV@StepNumberOffsetValues}%
+       {\@tempcnta=\FV@CodeLineNo
+        \@tempcntb=\FV@CodeLineNo}%
+       {\@tempcnta=\c@FancyVerbLine
+        \@tempcntb=\c@FancyVerbLine}}%
+    \divide\@tempcntb\FV@StepNumber
+    \multiply\@tempcntb\FV@StepNumber
+    \ifnum\@tempcnta=\@tempcntb
+      \if@FV@NumberBlankLines
+        \hbox to\z@{\kern\FV@NumberSep\theFancyVerbLine\hss}%
+      \else
+        \ifx\FV@Line\empty
+        \else
+          \hbox to\z@{\kern\FV@NumberSep\theFancyVerbLine\hss}%
+        \fi
+      \fi
+    \else
+      \ifbool{FV@NumberFirstLine}{%
+        \ifnum\FV@CodeLineNo=\FancyVerbStartNum
+          \hbox to\z@{\hss\theFancyVerbLine\kern\FV@NumberSep}%
+        \fi}{}%
+    \fi}%
+  \let\FV@LineNumberBackground\FV@RightListBackground
+}
+\def\FV@Numbers@both{%
+  \def\FV@LeftListNumber{%
+    \ifx\FancyVerbStartNum\z@
+      \let\FancyVerbStartNum\@ne
+    \fi
+    \ifbool{FV@StepNumberFromFirst}%
+     {\@tempcnta=\FV@CodeLineNo
+      \@tempcntb=\FancyVerbStartNum
+      \advance\@tempcntb\FV@StepNumber
+      \divide\@tempcntb\FV@StepNumber
+      \multiply\@tempcntb\FV@StepNumber
+      \advance\@tempcnta\@tempcntb
+      \advance\@tempcnta-\FancyVerbStartNum
+      \@tempcntb=\@tempcnta}%
+     {\ifbool{FV@StepNumberOffsetValues}%
+       {\@tempcnta=\FV@CodeLineNo
+        \@tempcntb=\FV@CodeLineNo}%
+       {\@tempcnta=\c@FancyVerbLine
+        \@tempcntb=\c@FancyVerbLine}}%
+    \divide\@tempcntb\FV@StepNumber
+    \multiply\@tempcntb\FV@StepNumber
+    \ifnum\@tempcnta=\@tempcntb
+      \if@FV@NumberBlankLines
+        \hbox to\z@{\hss\theFancyVerbLine\kern\FV@NumberSep}%
+      \else
+        \ifx\FV@Line\empty
+        \else
+          \hbox to\z@{\hss\theFancyVerbLine\kern\FV@NumberSep}%
+        \fi
+      \fi
+    \else
+      \ifbool{FV@NumberFirstLine}{%
+        \ifnum\FV@CodeLineNo=\FancyVerbStartNum
+          \hbox to\z@{\hss\theFancyVerbLine\kern\FV@NumberSep}%
+        \fi}{}%
+    \fi}%
+  \def\FV@RightListNumber{%
+    \ifx\FancyVerbStartNum\z@
+      \let\FancyVerbStartNum\@ne
+    \fi
+    \ifbool{FV@StepNumberFromFirst}%
+     {\@tempcnta=\FV@CodeLineNo
+      \@tempcntb=\FancyVerbStartNum
+      \advance\@tempcntb\FV@StepNumber
+      \divide\@tempcntb\FV@StepNumber
+      \multiply\@tempcntb\FV@StepNumber
+      \advance\@tempcnta\@tempcntb
+      \advance\@tempcnta-\FancyVerbStartNum
+      \@tempcntb=\@tempcnta}%
+     {\ifbool{FV@StepNumberOffsetValues}%
+       {\@tempcnta=\FV@CodeLineNo
+        \@tempcntb=\FV@CodeLineNo}%
+       {\@tempcnta=\c@FancyVerbLine
+        \@tempcntb=\c@FancyVerbLine}}%
+    \divide\@tempcntb\FV@StepNumber
+    \multiply\@tempcntb\FV@StepNumber
+    \ifnum\@tempcnta=\@tempcntb
+      \if@FV@NumberBlankLines
+        \hbox to\z@{\kern\FV@NumberSep\theFancyVerbLine\hss}%
+      \else
+        \ifx\FV@Line\empty
+        \else
+          \hbox to\z@{\kern\FV@NumberSep\theFancyVerbLine\hss}%
+        \fi
+      \fi
+    \else
+      \ifbool{FV@NumberFirstLine}{%
+        \ifnum\FV@CodeLineNo=\FancyVerbStartNum
+          \hbox to\z@{\hss\theFancyVerbLine\kern\FV@NumberSep}%
+        \fi}{}%
+    \fi}%
+  \def\FV@LineNumberBackground{\FV@LeftListBackground\FV@RightListBackground}
+}
+\define@key{FV}{highlightlines}{\def\FV@HighlightLinesList{#1}}%
+\fvset{highlightlines=}
+\define@key{FV}{highlightcolor}{%
+  \in@{,}{#1}%
+  \ifin@
+    \def\pickTwo##1,##2,{%
+      \def\FancyVerbHighlightOddLineColor{##1}%
+      \def\FancyVerbHighlightEvenLineColor{##2}}%
+    \pickTwo#1,
+  \else
+    \def\FancyVerbHighlightColor{#1}%
+  \fi}
+\let\FancyVerbHighlightOddLineColor\@empty
+\let\FancyVerbHighlightEvenLineColor\@empty
+\let\FancyVerbHighlightColor\@empty
+\ifcsname definecolor\endcsname
+\ifx\definecolor\relax
+\else
+  \definecolor{FancyVerbHighlightColor}{rgb}{0.878, 1, 1}
+  \fvset{highlightcolor=FancyVerbHighlightColor}
+\fi\fi
+\AtBeginDocument{%
+  \ifx\FancyVerbHighlightColor\@empty
+    \ifcsname definecolor\endcsname
+    \ifx\definecolor\relax
+    \else
+    \definecolor{FancyVerbHighlightColor}{rgb}{0.878, 1, 1}
+    \fvset{highlightcolor=FancyVerbHighlightColor}
+    \fi\fi
+  \fi}
+\def\FancyVerbHighlightLine#1{#1}
+\def\FV@HighlightLine#1{%
+  \ifx\FancyVerbHighlightOddLineColor\@empty
+    \@tempcnta=\c@FancyVerbLine
+    \@tempcntb=\c@FancyVerbLine
+    \ifcsname FV@HighlightLine:\number\@tempcnta\endcsname
+      \advance\@tempcntb\m@ne
+      \ifcsname FV@HighlightLine:\number\@tempcntb\endcsname
+        \advance\@tempcntb\tw@
+        \ifcsname FV@HighlightLine:\number\@tempcntb\endcsname
+          \let\FV@HighlightLine@Next\FancyVerbHighlightLineMiddle
+        \else
+          \let\FV@HighlightLine@Next\FancyVerbHighlightLineLast
+        \fi
+      \else
+        \advance\@tempcntb\tw@
+        \ifcsname FV@HighlightLine:\number\@tempcntb\endcsname
+          \let\FV@HighlightLine@Next\FancyVerbHighlightLineFirst
+        \else
+          \let\FV@HighlightLine@Next\FancyVerbHighlightLineSingle
+        \fi
+      \fi
+    \else
+      \let\FV@HighlightLine@Next\FancyVerbHighlightLineNormal
+    \fi
+  \else
+    \ifodd\c@FancyVerbLine
+      \let\FV@HighlightLine@Next\FancyVerbHighlightOddLine
+    \else%
+      \let\FV@HighlightLine@Next\FancyVerbHighlightEvenLine
+    \fi
+  \fi
+  \FV@HighlightLine@Next{#1}%
+}
+\def\FancyVerbHighlightLineNormal#1{#1}
+\newlength{\FV@TmpLength}
+\def\FancyVerbHighlightLineBase#1#2{%
+  \setlength{\FV@TmpLength}{\fboxsep}%
+  \setlength{\fboxsep}{0pt}%
+  \colorbox{#1}{%
+    \setlength{\fboxsep}{\FV@TmpLength}%
+    \rlap{\strut#2}%
+    \hspace{\linewidth}%
+    \ifx\FV@RightListFrame\relax\else
+      \hspace{-\FV@FrameSep}%
+      \hspace{-\FV@FrameRule}%
+    \fi
+    \ifx\FV@LeftListFrame\relax\else
+      \hspace{-\FV@FrameSep}%
+      \hspace{-\FV@FrameRule}%
+    \fi
+  }%
+  \hss
+}
+\def\FancyVerbHighlightLineFirst#1{%
+  \FancyVerbHighlightLineBase{\FancyVerbHighlightColor}}
+\def\FancyVerbHighlightOddLine{%
+  \FancyVerbHighlightLineBase{\FancyVerbHighlightOddLineColor}}
+\def\FancyVerbHighlightEvenLine{%
+  \FancyVerbHighlightLineBase{\FancyVerbHighlightEvenLineColor}}
+\let\FancyVerbHighlightLineMiddle\FancyVerbHighlightLineFirst
+\let\FancyVerbHighlightLineLast\FancyVerbHighlightLineFirst
+\let\FancyVerbHighlightLineSingle\FancyVerbHighlightLineFirst
+\def\FV@HighlightLinesPrep{%
+  \ifx\FV@HighlightLinesList\@empty
+    \ifx\FancyVerbHighlightOddLineColor\@empty
+    \else
+      \let\FancyVerbHighlightLine\FV@HighlightLine
+      \expandafter\FV@HighlightLinesPrep@i
+    \fi
+  \else
+    \let\FancyVerbHighlightLine\FV@HighlightLine
+    \expandafter\FV@HighlightLinesPrep@i
+  \fi}
+\def\FV@HighlightLinesPrep@i{%
+  \renewcommand{\do}[1]{%
+    \ifstrempty{##1}{}{\FV@HighlightLinesParse##1-\FV@Undefined}}%
+  \expandafter\docsvlist\expandafter{\FV@HighlightLinesList}}
+\def\FV@HighlightLinesParse#1-#2\FV@Undefined{%
+  \ifstrempty{#2}%
+   {\FV@HighlightLinesParse@Single{#1}}%
+   {\FV@HighlightLinesParse@Range{#1}#2\relax}}
+\def\FV@HighlightLinesParse@Single#1{%
+  \expandafter\let\csname FV@HighlightLine:\detokenize{#1}\endcsname\relax}
+\newcounter{FV@HighlightLinesStart}
+\newcounter{FV@HighlightLinesStop}
+\def\FV@HighlightLinesParse@Range#1#2-{%
+  \setcounter{FV@HighlightLinesStart}{#1}%
+  \setcounter{FV@HighlightLinesStop}{#2}%
+  \stepcounter{FV@HighlightLinesStop}%
+  \FV@HighlightLinesParse@Range@Loop}
+\def\FV@HighlightLinesParse@Range@Loop{%
+  \ifnum\value{FV@HighlightLinesStart}<\value{FV@HighlightLinesStop}\relax
+    \expandafter\let\csname FV@HighlightLine:\arabic{FV@HighlightLinesStart}\endcsname\relax
+    \stepcounter{FV@HighlightLinesStart}%
+    \expandafter\FV@HighlightLinesParse@Range@Loop
+  \fi}
+\g@addto@macro\FV@FormattingPrep@PreHook{\FV@HighlightLinesPrep}
+\define@key{FV}{highlightlinenumbercolor}{%
+  \in@{,}{#1}%
+    \ifin@
+    \def\pickTwo##1,##2,{%
+      \def\FancyVerbHighlightOddLineNumberColor{##1}%
+      \def\FancyVerbHighlightEvenLineNumberColor{##2}}%
+    \pickTwo#1,
+  \else
+    \def\FancyVerbHighlightLineNumberColor{#1}%
+  \fi}
+\newdimen\FV@LineNumberWidth
+\define@key{FV}{linenumberwidth}{%
+  \@tempdima=#1\relax
+  \edef\FV@LineNumberWidth{\number\@tempdima sp\relax}}
+\fvset{linenumberwidth=1em}
+\def\FV@NumberBackground{%
+  \ifx\FancyVerbHighlightOddLineNumberColor\@empty
+  \else
+    \def\ruleContent{%
+      \strut%
+      \ifFV@BreakLines
+        \rule[-\dimen@]{0pt}{\dimen@}%
+      \fi
+      \@tempdima=\FV@NumberSep
+      \advance\@tempdima\FV@LineNumberWidth
+      \hspace*{\@tempdima}}%
+    {\fboxsep=0pt
+      \ifodd\c@FancyVerbLine
+        \colorbox{\FancyVerbHighlightOddLineNumberColor}{\ruleContent}%
+      \else
+        \colorbox{\FancyVerbHighlightEvenLineNumberColor}{\ruleContent}%
+      \fi}%
+  \fi
+}
+\def\FV@LeftListBackground{%
+  \llap{%
+    \FV@NumberBackground
+    % invoke \FV@LeftListNumber after \FV@NumberBackground
+    \rlap{\FV@LeftListNumber\hspace*{\FV@NumberSep}}%
+    \hspace*{\linewidth}}%
+}
+\def\FV@RightListBackground{%
+  \rlap{\FV@NumberBackground}%
+}
+% TODO: causes error if \def to \@empty or \relax
+\def\FV@LineNumberBackground{}
+\let\FancyVerbHighlightOddLineNumberColor\@empty
+\let\FancyVerbHighlightEvenLineNumberColor\@empty
+\let\FancyVerbHighlightLineNumberColor\@empty
+\newcount\FV@LoopCount
+\newbox\FV@NCharsBox
+\def\FV@SetToWidthNChars#1#2{%
+  \FV@LoopCount=#2\relax
+  \ifnum\FV@LoopCount>0
+    \def\FV@NChars{}%
+    \loop
+    \ifnum\FV@LoopCount>0
+      \expandafter\def\expandafter\FV@NChars\expandafter{\FV@NChars x}%
+    \fi
+    \advance\FV@LoopCount by -1
+    \ifnum\FV@LoopCount>0
+    \repeat
+    \setbox\FV@NCharsBox\hbox{\FV@NChars}%
+    #1=\wd\FV@NCharsBox
+  \else
+    #1=0pt\relax
+  \fi
+}
+\newboolean{FV@BreakLines}
+\define@booleankey{FV}{breaklines}%
+  {\FV@BreakLinestrue
+    \let\FV@ListProcessLine\FV@ListProcessLine@Break}%
+  {\FV@BreakLinesfalse
+    \let\FV@ListProcessLine\FV@ListProcessLine@NoBreak}
+\AtEndOfPackage{\fvset{breaklines=false}}
+\def\FV@BreakLinesIndentationHook{}
+\g@addto@macro\FV@FormattingPrep@PostHook{%
+  \ifFV@BreakLines
+    \FV@BreakLinesIndentationHook
+  \fi}
+\newdimen\FV@BreakIndent
+\newcount\FV@BreakIndentNChars
+\define@key{FV}{breakindent}{%
+  \FV@BreakIndent=#1\relax
+  \FV@BreakIndentNChars=0\relax}
+\define@key{FV}{breakindentnchars}{\FV@BreakIndentNChars=#1\relax}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakIndentNChars>0
+    \FV@SetToWidthNChars{\FV@BreakIndent}{\FV@BreakIndentNChars}%
+  \fi}
+\fvset{breakindentnchars=0}
+\newboolean{FV@BreakAutoIndent}
+\define@booleankey{FV}{breakautoindent}%
+  {\FV@BreakAutoIndenttrue}{\FV@BreakAutoIndentfalse}
+\fvset{breakautoindent=true}
+\define@key{FV}{breaksymbolleft}{\def\FancyVerbBreakSymbolLeft{#1}}
+\define@key{FV}{breaksymbol}{\fvset{breaksymbolleft=#1}}
+\fvset{breaksymbolleft=\tiny\ensuremath{\hookrightarrow}}
+\define@key{FV}{breaksymbolright}{\def\FancyVerbBreakSymbolRight{#1}}
+\fvset{breaksymbolright={}}
+\newdimen\FV@BreakSymbolSepLeft
+\newcount\FV@BreakSymbolSepLeftNChars
+\define@key{FV}{breaksymbolsepleft}{%
+  \FV@BreakSymbolSepLeft=#1\relax
+  \FV@BreakSymbolSepLeftNChars=0\relax}
+\define@key{FV}{breaksymbolsep}{\fvset{breaksymbolsepleft=#1}}
+\define@key{FV}{breaksymbolsepleftnchars}{\FV@BreakSymbolSepLeftNChars=#1\relax}
+\define@key{FV}{breaksymbolsepnchars}{\fvset{breaksymbolsepleftnchars=#1}}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolSepLeftNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolSepLeft}{\FV@BreakSymbolSepLeftNChars}%
+  \fi}
+\fvset{breaksymbolsepleftnchars=2}
+\newdimen\FV@BreakSymbolSepRight
+\newcount\FV@BreakSymbolSepRightNChars
+\define@key{FV}{breaksymbolsepright}{%
+  \FV@BreakSymbolSepRight=#1\relax
+  \FV@BreakSymbolSepRightNChars=0\relax}
+\define@key{FV}{breaksymbolseprightnchars}{\FV@BreakSymbolSepRightNChars=#1\relax}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolSepRightNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolSepRight}{\FV@BreakSymbolSepRightNChars}%
+  \fi}
+\fvset{breaksymbolseprightnchars=2}
+\newdimen\FV@BreakSymbolIndentLeft
+\newcount\FV@BreakSymbolIndentLeftNChars
+\define@key{FV}{breaksymbolindentleft}{%
+  \FV@BreakSymbolIndentLeft=#1\relax
+  \FV@BreakSymbolIndentLeftNChars=0\relax}
+\define@key{FV}{breaksymbolindent}{\fvset{breaksymbolindentleft=#1}}
+\define@key{FV}{breaksymbolindentleftnchars}{\FV@BreakSymbolIndentLeftNChars=#1\relax}
+\define@key{FV}{breaksymbolindentnchars}{\fvset{breaksymbolindentleftnchars=#1}}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolIndentLeftNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolIndentLeft}{\FV@BreakSymbolIndentLeftNChars}%
+  \fi}
+\fvset{breaksymbolindentleftnchars=4}
+\newdimen\FV@BreakSymbolIndentRight
+\newcount\FV@BreakSymbolIndentRightNChars
+\define@key{FV}{breaksymbolindentright}{%
+  \FV@BreakSymbolIndentRight=#1\relax
+  \FV@BreakSymbolIndentRightNChars=0\relax}
+\define@key{FV}{breaksymbolindentrightnchars}{\FV@BreakSymbolIndentRightNChars=#1\relax}
+\g@addto@macro\FV@BreakLinesIndentationHook{%
+  \ifnum\FV@BreakSymbolIndentRightNChars>0
+    \FV@SetToWidthNChars{\FV@BreakSymbolIndentRight}{\FV@BreakSymbolIndentRightNChars}%
+  \fi}
+\fvset{breaksymbolindentrightnchars=4}
+\newcommand{\FancyVerbBreakSymbolLeftLogic}[1]{%
+  \ifnum\value{linenumber}=1\relax\else{#1}\fi}
+\newcounter{FancyVerbLineBreakLast}
+\newcommand{\FV@SetLineBreakLast}{%
+  \setcounter{FancyVerbLineBreakLast}{\value{linenumber}}}
+\newcommand{\FancyVerbBreakSymbolRightLogic}[1]{%
+  \ifnum\value{linenumber}=\value{FancyVerbLineBreakLast}\relax\else{#1}\fi}
+\let\FancyVerbBreakStart\relax
+\let\FancyVerbBreakStop\relax
+\let\FV@Break@Token\relax
+\newboolean{FV@BreakAnywhere}
+\define@booleankey{FV}{breakanywhere}%
+  {\FV@BreakAnywheretrue
+    \let\FancyVerbBreakStart\FV@Break
+    \let\FancyVerbBreakStop\FV@EndBreak
+    \let\FV@Break@Token\FV@Break@AnyToken}%
+  {\FV@BreakAnywherefalse
+    \let\FancyVerbBreakStart\relax
+    \let\FancyVerbBreakStop\relax}
+\fvset{breakanywhere=false}
+\define@key{FV}{breakbefore}{%
+  \ifstrempty{#1}%
+   {\let\FV@BreakBefore\@empty
+    \let\FancyVerbBreakStart\relax
+    \let\FancyVerbBreakStop\relax}%
+   {\def\FV@BreakBefore{#1}%
+    \let\FancyVerbBreakStart\FV@Break
+    \let\FancyVerbBreakStop\FV@EndBreak
+    \let\FV@Break@Token\FV@Break@BeforeAfterToken}%
+}
+\fvset{breakbefore={}}
+\newboolean{FV@BreakBeforeGroup}
+\define@booleankey{FV}{breakbeforegroup}%
+ {\FV@BreakBeforeGrouptrue}%
+ {\FV@BreakBeforeGroupfalse}%
+\fvset{breakbeforegroup=true}
+\def\FV@BreakBeforePrep{%
+  \ifx\FV@BreakBefore\@empty\relax
+  \else
+    \gdef\FV@BreakBefore@Def{}%
+    \begingroup
+    \def\FV@BreakBefore@Process##1##2\FV@Undefined{%
+      \expandafter\FV@BreakBefore@Process@i\expandafter{##1}%
+      \expandafter\ifx\expandafter\relax\detokenize{##2}\relax
+      \else
+        \FV@BreakBefore@Process##2\FV@Undefined
+      \fi
+    }%
+    \def\FV@BreakBefore@Process@i##1{%
+      \g@addto@macro\FV@BreakBefore@Def{%
+        \@namedef{FV@BreakBefore@Token\detokenize{##1}}{}}%
+    }%
+    \FV@EscChars
+    \expandafter\FV@BreakBefore@Process\FV@BreakBefore\FV@Undefined
+    \endgroup
+    \FV@BreakBefore@Def
+    \FV@BreakBeforePrep@PygmentsHook
+  \fi
+}
+\let\FV@BreakBeforePrep@PygmentsHook\relax
+\define@key{FV}{breakafter}{%
+  \ifstrempty{#1}%
+   {\let\FV@BreakAfter\@empty
+    \let\FancyVerbBreakStart\relax
+    \let\FancyVerbBreakStop\relax}%
+   {\def\FV@BreakAfter{#1}%
+    \let\FancyVerbBreakStart\FV@Break
+    \let\FancyVerbBreakStop\FV@EndBreak
+    \let\FV@Break@Token\FV@Break@BeforeAfterToken}%
+}
+\fvset{breakafter={}}
+\newboolean{FV@BreakAfterGroup}
+\define@booleankey{FV}{breakaftergroup}%
+ {\FV@BreakAfterGrouptrue}%
+ {\FV@BreakAfterGroupfalse}%
+\fvset{breakaftergroup=true}
+\def\FV@BreakAfterPrep{%
+  \ifx\FV@BreakAfter\@empty\relax
+  \else
+    \gdef\FV@BreakAfter@Def{}%
+    \begingroup
+    \def\FV@BreakAfter@Process##1##2\FV@Undefined{%
+      \expandafter\FV@BreakAfter@Process@i\expandafter{##1}%
+      \expandafter\ifx\expandafter\relax\detokenize{##2}\relax
+      \else
+        \FV@BreakAfter@Process##2\FV@Undefined
+      \fi
+    }%
+    \def\FV@BreakAfter@Process@i##1{%
+      \ifcsname FV@BreakBefore@Token\detokenize{##1}\endcsname
+        \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
+         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+           {}%
+           {\PackageError{fvextra}%
+            {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
+            {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}}%
+         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+           {\PackageError{fvextra}%
+             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
+             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}%
+           {}}%
+      \fi
+      \g@addto@macro\FV@BreakAfter@Def{%
+        \@namedef{FV@BreakAfter@Token\detokenize{##1}}{}}%
+    }%
+    \FV@EscChars
+    \expandafter\FV@BreakAfter@Process\FV@BreakAfter\FV@Undefined
+    \endgroup
+    \FV@BreakAfter@Def
+    \FV@BreakAfterPrep@PygmentsHook
+  \fi
+}
+\let\FV@BreakAfterPrep@PygmentsHook\relax
+\g@addto@macro\FV@FormattingPrep@PreHook{%
+  \ifcsname pdfmatch\endcsname
+  \ifx\pdfmatch\relax
+  \else
+    \ifcsname inputencodingname\endcsname
+    \ifx\inputencodingname\relax
+    \else
+      \ifdefstring{\inputencodingname}{utf8}%
+       {\let\FV@BreakBeforePrep\FV@BreakBeforePrep@UTF
+        \let\FV@BreakAfterPrep\FV@BreakAfterPrep@UTF}%
+       {}%
+    \fi\fi
+  \fi\fi
+  \FV@BreakBeforePrep\FV@BreakAfterPrep}
+\define@key{FV}{breakanywheresymbolpre}{%
+  \ifstrempty{#1}%
+    {\def\FancyVerbBreakAnywhereSymbolPre{}}%
+    {\def\FancyVerbBreakAnywhereSymbolPre{\hbox{#1}}}}
+\fvset{breakanywheresymbolpre={\,\footnotesize\ensuremath{_\rfloor}}}
+\define@key{FV}{breakanywheresymbolpost}{%
+  \ifstrempty{#1}%
+    {\def\FancyVerbBreakAnywhereSymbolPost{}}%
+    {\def\FancyVerbBreakAnywhereSymbolPost{\hbox{#1}}}}
+\fvset{breakanywheresymbolpost={}}
+\define@key{FV}{breakbeforesymbolpre}{%
+  \ifstrempty{#1}%
+    {\def\FancyVerbBreakBeforeSymbolPre{}}%
+    {\def\FancyVerbBreakBeforeSymbolPre{\hbox{#1}}}}
+\fvset{breakbeforesymbolpre={\,\footnotesize\ensuremath{_\rfloor}}}
+\define@key{FV}{breakbeforesymbolpost}{%
+  \ifstrempty{#1}%
+    {\def\FancyVerbBreakBeforeSymbolPost{}}%
+    {\def\FancyVerbBreakBeforeSymbolPost{\hbox{#1}}}}
+\fvset{breakbeforesymbolpost={}}
+\define@key{FV}{breakaftersymbolpre}{%
+  \ifstrempty{#1}%
+    {\def\FancyVerbBreakAfterSymbolPre{}}%
+    {\def\FancyVerbBreakAfterSymbolPre{\hbox{#1}}}}
+\fvset{breakaftersymbolpre={\,\footnotesize\ensuremath{_\rfloor}}}
+\define@key{FV}{breakaftersymbolpost}{%
+  \ifstrempty{#1}%
+    {\def\FancyVerbBreakAfterSymbolPost{}}%
+    {\def\FancyVerbBreakAfterSymbolPost{\hbox{#1}}}}
+\fvset{breakaftersymbolpost={}}
+\newcommand{\FancyVerbBreakAnywhereBreak}{%
+  \discretionary{\FancyVerbBreakAnywhereSymbolPre}%
+   {\FancyVerbBreakAnywhereSymbolPost}{}}
+\newcommand{\FancyVerbBreakBeforeBreak}{%
+  \discretionary{\FancyVerbBreakBeforeSymbolPre}%
+   {\FancyVerbBreakBeforeSymbolPost}{}}
+\newcommand{\FancyVerbBreakAfterBreak}{%
+  \discretionary{\FancyVerbBreakAfterSymbolPre}%
+   {\FancyVerbBreakAfterSymbolPost}{}}
+\newsavebox{\FV@LineBox}
+\newsavebox{\FV@LineIndentBox}
+\let\FV@LineIndentChars\@empty
+\def\FV@CleanRemainingChars#1\FV@Undefined{}
+\def\FV@GetLineIndent{\afterassignment\FV@CheckIndentChar\let\FV@NextChar=}
+\def\FV@CheckIndentChar{%
+  \ifx\FV@NextChar\FV@Undefined\relax
+    \let\FV@Next=\relax
+  \else
+    \ifx\FV@NextChar\FV@Space@ifx\relax
+      \g@addto@macro{\FV@LineIndentChars}{\FV@Space@ifx}%
+      \let\FV@Next=\FV@GetLineIndent
+    \else
+      \ifx\FV@NextChar\FV@Tab@ifx\relax
+        \g@addto@macro{\FV@LineIndentChars}{\FV@Tab@ifx}%
+        \let\FV@Next=\FV@GetLineIndent
+      \else
+        \let\FV@Next=\FV@CleanRemainingChars
+      \fi
+    \fi
+  \fi
+  \FV@Next
+}
+\def\FV@TrueTab@UseWidth{%
+  \@tempdima=\csname FV@TrueTab:Width\arabic{FV@TrueTabCounter}\endcsname sp\relax
+  \stepcounter{FV@TrueTabCounter}%
+  \hbox to\@tempdima{\hss\FV@TabChar}}
+\def\FV@Break{%
+  \def\FV@TmpLine{}%
+  \let\FV@LastToken=\FV@Undefined
+  \ifcsname pdfmatch\endcsname
+  \ifx\pdfmatch\relax
+  \else
+    \ifcsname inputencodingname\endcsname
+    \ifx\inputencodingname\relax
+    \else
+      \ifdefstring{\inputencodingname}{utf8}%
+       {\ifx\FV@Break@Token\FV@Break@AnyToken
+          \let\FV@Break@Token\FV@Break@AnyToken@UTF
+        \else
+          \ifx\FV@Break@Token\FV@Break@BeforeAfterToken
+            \let\FV@Break@Token\FV@Break@BeforeAfterToken@UTF
+          \fi
+        \fi}%
+       {}%
+    \fi\fi
+  \fi\fi
+  \FV@Break@Scan
+}
+\def\FV@EndBreak{\FV@TmpLine}
+\begingroup
+\catcode`\$=3%
+\gdef\FV@Break@Scan{%
+  \@ifnextchar\FV@EndBreak%
+   {}%
+   {\ifx\@let@token$\relax
+      \let\FV@Break@Next\FV@Break@Math
+    \else
+      \ifx\@let@token\bgroup\relax
+        \let\FV@Break@Next\FV@Break@Group
+      \else
+        \let\FV@Break@Next\FV@Break@Token
+      \fi
+    \fi
+    \FV@Break@Next}%
+}
+\endgroup
+\begingroup
+\catcode`\$=3%
+\gdef\FV@Break@Math$#1${%
+  \g@addto@macro{\FV@TmpLine}{$#1$}%
+  \let\FV@LastToken=\FV@Undefined
+  \FV@Break@Scan}
+\endgroup
+\def\FV@Break@Group#1{%
+  \g@addto@macro{\FV@TmpLine}{{#1}}%
+  \ifstrempty{#1}{}{\let\FV@LastToken=\FV@Undefined}%
+  \FV@Break@Scan}
+\def\FV@Break@AnyToken#1{%
+  \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAnywhereBreak#1}%
+  \FV@Break@Scan}
+\def\FV@Break@BeforeAfterToken#1{%
+  \ifcsname FV@BreakBefore@Token\detokenize{#1}\endcsname
+    \let\FV@Break@Next\FV@Break@BeforeTokenBreak
+  \else
+    \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
+      \let\FV@Break@Next\FV@Break@AfterTokenBreak
+    \else
+      \let\FV@Break@Next\FV@Break@BeforeAfterTokenNoBreak
+    \fi
+  \fi
+  \FV@Break@Next{#1}%
+}
+\def\FV@Break@BeforeAfterTokenNoBreak#1{%
+  \g@addto@macro{\FV@TmpLine}{#1}%
+  \let\FV@LastToken=#1%
+  \FV@Break@Scan}
+\def\FV@Break@BeforeTokenBreak#1{%
+  \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
+   {\ifx#1\FV@LastToken\relax
+      \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
+        \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
+        \def\FV@RescanToken{#1}%
+      \else
+        \g@addto@macro{\FV@TmpLine}{#1}%
+        \let\FV@Break@Next\FV@Break@Scan
+        \let\FV@LastToken=#1%
+      \fi
+    \else
+      \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
+        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+        \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
+        \def\FV@RescanToken{#1}%
+      \else
+        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+        \let\FV@Break@Next\FV@Break@Scan
+        \let\FV@LastToken=#1%
+      \fi
+    \fi}%
+   {\ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
+      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+      \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan
+      \def\FV@RescanToken{#1}%
+    \else
+      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+      \let\FV@Break@Next\FV@Break@Scan
+      \let\FV@LastToken=#1%
+    \fi}%
+  \FV@Break@Next}
+\def\FV@Break@BeforeTokenBreak@AfterRescan{%
+  \expandafter\FV@Break@AfterTokenBreak\FV@RescanToken}
+\def\FV@Break@AfterTokenBreak#1{%
+  \let\FV@LastToken=#1%
+  \@ifnextchar\FV@Space@ifx%
+   {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
+   {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+     {\ifx\@let@token#1\relax
+        \g@addto@macro{\FV@TmpLine}{#1}%
+        \let\FV@Break@Next\FV@Break@Scan
+      \else
+        \ifx\@let@token\bgroup\relax
+          \g@addto@macro{\FV@TmpLine}{#1}%
+          \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group
+        \else
+          \g@addto@macro{\FV@TmpLine}{#1\FancyVerbBreakAfterBreak}%
+          \let\FV@Break@Next\FV@Break@Scan
+        \fi
+      \fi}%
+     {\g@addto@macro{\FV@TmpLine}{#1\FancyVerbBreakAfterBreak}%
+      \let\FV@Break@Next\FV@Break@Scan}%
+    \FV@Break@Next}%
+}
+\def\FV@Break@AfterTokenBreak@Group#1{%
+  \g@addto@macro{\FV@TmpLine}{{#1}}%
+  \ifstrempty{#1}%
+   {\let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@i}%
+   {\let\FV@Break@Next\FV@Break@Scan\let\FV@LastToken=\FV@Undefined}%
+  \FV@Break@Next}
+\def\FV@Break@AfterTokenBreak@Group@i{%
+  \@ifnextchar\FV@LastToken%
+   {\FV@Break@Scan}%
+   {\g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAfterBreak}%
+    \FV@Break@Scan}}
+\ifcsname pdfmatch\endcsname
+\ifx\pdfmatch\relax
+\else
+\def\FV@UTF@two@octets#1#2{%
+  \ifcsname u8:\detokenize{#1#2}\endcsname
+  \else
+    #1#2%
+  \fi
+  \FV@Break@NextNext{#1#2}}
+\def\FV@UTF@three@octets#1#2#3{%
+  \ifcsname u8:\detokenize{#1#2#3}\endcsname
+  \else
+    #1#2#3%
+  \fi
+  \FV@Break@NextNext{#1#2#3}}
+\def\FV@UTF@four@octets#1#2#3#4{%
+  \ifcsname u8:\detokenize{#1#2#3#4}\endcsname
+  \else
+    #1#2#3#4%
+  \fi
+  \FV@Break@NextNext{#1#2#3#4}}
+\begingroup
+\catcode`\~=13
+\catcode`\"=12
+\def\FV@UTFviii@loop{%
+  \uccode`\~\count@
+  \uppercase\expandafter{\FV@UTFviii@Tmp}%
+  \advance\count@\@ne
+  \ifnum\count@<\@tempcnta
+  \expandafter\FV@UTFviii@loop
+  \fi}
+\count@"C2
+\@tempcnta"E0
+\def\FV@UTFviii@Tmp{\expandafter\gdef\csname FV@U8:\string~\endcsname{%
+  \FV@UTF@two@octets}}
+\FV@UTFviii@loop
+\count@"E0
+\@tempcnta"F0
+\def\FV@UTFviii@Tmp{\expandafter\gdef\csname FV@U8:\string~\endcsname{%
+  \FV@UTF@three@octets}}
+\FV@UTFviii@loop
+\count@"F0
+\@tempcnta"F4
+\def\FV@UTFviii@Tmp{\expandafter\gdef\csname FV@U8:\string~\endcsname{%
+  \FV@UTF@four@octets}}
+\FV@UTFviii@loop
+\endgroup
+\def\FV@BreakBeforePrep@UTF{%
+  \ifx\FV@BreakBefore\@empty\relax
+  \else
+    \gdef\FV@BreakBefore@Def{}%
+    \begingroup
+    \def\FV@BreakBefore@Process##1{%
+      \ifcsname FV@U8:\detokenize{##1}\endcsname
+        \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{##1}\endcsname
+        \let\FV@Break@NextNext\FV@BreakBefore@Process@ii
+      \else
+        \ifx##1\FV@Undefined
+          \let\FV@Break@Next\@gobble
+        \else
+          \let\FV@Break@Next\FV@BreakBefore@Process@i
+        \fi
+      \fi
+      \FV@Break@Next##1%
+    }%
+    \def\FV@BreakBefore@Process@i##1{%
+      \expandafter\FV@BreakBefore@Process@ii\expandafter{##1}}%
+    \def\FV@BreakBefore@Process@ii##1{%
+      \g@addto@macro\FV@BreakBefore@Def{%
+        \@namedef{FV@BreakBefore@Token\detokenize{##1}}{}}%
+      \FV@BreakBefore@Process
+    }%
+    \FV@EscChars
+    \expandafter\FV@BreakBefore@Process\FV@BreakBefore\FV@Undefined
+    \endgroup
+    \FV@BreakBefore@Def
+    \FV@BreakBeforePrep@PygmentsHook
+  \fi
+}
+\def\FV@BreakAfterPrep@UTF{%
+  \ifx\FV@BreakAfter\@empty\relax
+  \else
+    \gdef\FV@BreakAfter@Def{}%
+    \begingroup
+    \def\FV@BreakAfter@Process##1{%
+      \ifcsname FV@U8:\detokenize{##1}\endcsname
+        \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{##1}\endcsname
+        \let\FV@Break@NextNext\FV@BreakAfter@Process@ii
+      \else
+        \ifx##1\FV@Undefined
+          \let\FV@Break@Next\@gobble
+        \else
+          \let\FV@Break@Next\FV@BreakAfter@Process@i
+        \fi
+      \fi
+      \FV@Break@Next##1%
+    }%
+    \def\FV@BreakAfter@Process@i##1{%
+      \expandafter\FV@BreakAfter@Process@ii\expandafter{##1}}%
+    \def\FV@BreakAfter@Process@ii##1{%
+      \ifcsname FV@BreakBefore@Token\detokenize{##1}\endcsname
+        \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
+         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+           {}%
+           {\PackageError{fvextra}%
+            {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
+            {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}}%
+         {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+           {\PackageError{fvextra}%
+             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}%
+             {Conflicting breakbeforegroup and breakaftergroup for "\detokenize{##1}"}}%
+           {}}%
+      \fi
+      \g@addto@macro\FV@BreakAfter@Def{%
+        \@namedef{FV@BreakAfter@Token\detokenize{##1}}{}}%
+      \FV@BreakAfter@Process
+    }%
+    \FV@EscChars
+    \expandafter\FV@BreakAfter@Process\FV@BreakAfter\FV@Undefined
+    \endgroup
+    \FV@BreakAfter@Def
+    \FV@BreakAfterPrep@PygmentsHook
+  \fi
+}
+\def\FV@Break@AnyToken@UTF#1{%
+  \ifcsname FV@U8:\detokenize{#1}\endcsname
+    \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
+    \let\FV@Break@NextNext\FV@Break@AnyToken@UTF@i
+  \else
+    \let\FV@Break@Next\FV@Break@AnyToken@UTF@i
+  \fi
+  \FV@Break@Next{#1}%
+}
+\def\FV@Break@AnyToken@UTF@i#1{%
+  \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAnywhereBreak#1}%
+  \FV@Break@Scan}
+\def\FV@Break@BeforeAfterToken@UTF#1{%
+  \ifcsname FV@U8:\detokenize{#1}\endcsname
+    \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
+    \let\FV@Break@NextNext\FV@Break@BeforeAfterToken@UTF@i
+  \else
+    \let\FV@Break@Next\FV@Break@BeforeAfterToken@UTF@i
+  \fi
+  \FV@Break@Next{#1}%
+}
+\def\FV@Break@BeforeAfterToken@UTF@i#1{%
+  \ifcsname FV@BreakBefore@Token\detokenize{#1}\endcsname
+    \let\FV@Break@Next\FV@Break@BeforeTokenBreak@UTF
+  \else
+    \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
+      \let\FV@Break@Next\FV@Break@AfterTokenBreak@UTF
+    \else
+      \let\FV@Break@Next\FV@Break@BeforeAfterTokenNoBreak@UTF
+    \fi
+  \fi
+  \FV@Break@Next{#1}%
+}
+\def\FV@Break@BeforeAfterTokenNoBreak@UTF#1{%
+  \g@addto@macro{\FV@TmpLine}{#1}%
+  \def\FV@LastToken{#1}%
+  \FV@Break@Scan}
+\def\FV@Break@BeforeTokenBreak@UTF#1{%
+  \def\FV@CurrentToken{#1}%
+  \ifthenelse{\boolean{FV@BreakBeforeGroup}}%
+   {\ifx\FV@CurrentToken\FV@LastToken\relax
+      \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
+        \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
+        \def\FV@RescanToken{#1}%
+      \else
+        \g@addto@macro{\FV@TmpLine}{#1}%
+        \let\FV@Break@Next\FV@Break@Scan
+        \def\FV@LastToken{#1}%
+      \fi
+    \else
+      \ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
+        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+        \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
+        \def\FV@RescanToken{#1}%
+      \else
+        \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+        \let\FV@Break@Next\FV@Break@Scan
+        \def\FV@LastToken{#1}%
+      \fi
+    \fi}%
+   {\ifcsname FV@BreakAfter@Token\detokenize{#1}\endcsname
+      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak}%
+      \let\FV@Break@Next\FV@Break@BeforeTokenBreak@AfterRescan@UTF
+      \def\FV@RescanToken{#1}%
+    \else
+      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakBeforeBreak#1}%
+      \let\FV@Break@Next\FV@Break@Scan
+      \def\FV@LastToken{#1}%
+    \fi}%
+  \FV@Break@Next}
+\def\FV@Break@BeforeTokenBreak@AfterRescan@UTF{%
+  \expandafter\FV@Break@AfterTokenBreak@UTF\expandafter{\FV@RescanToken}}
+\def\FV@Break@AfterTokenBreak@UTF#1{%
+  \def\FV@LastToken{#1}%
+  \@ifnextchar\FV@Space@ifx%
+   {\g@addto@macro{\FV@TmpLine}{#1}\FV@Break@Scan}%
+   {\ifthenelse{\boolean{FV@BreakAfterGroup}}%
+     {\g@addto@macro{\FV@TmpLine}{#1}%
+      \ifx\@let@token\bgroup\relax
+        \let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF
+      \else
+        \let\FV@Break@Next\FV@Break@AfterTokenBreak@UTF@i
+      \fi}%
+     {\g@addto@macro{\FV@TmpLine}{#1\FancyVerbBreakAfterBreak}%
+      \let\FV@Break@Next\FV@Break@Scan}%
+    \FV@Break@Next}%
+}
+\def\FV@Break@AfterTokenBreak@UTF@i#1{%
+  \ifcsname FV@U8:\detokenize{#1}\endcsname
+    \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
+    \let\FV@Break@NextNext\FV@Break@AfterTokenBreak@UTF@i
+  \else
+    \def\FV@NextToken{#1}%
+    \ifx\FV@LastToken\FV@NextToken
+    \else
+      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAfterBreak}%
+    \fi
+    \let\FV@Break@Next\FV@Break@Scan
+  \fi
+  \FV@Break@Next#1}
+\def\FV@Break@AfterTokenBreak@Group@UTF#1{%
+  \g@addto@macro{\FV@TmpLine}{{#1}}%
+  \ifstrempty{#1}%
+   {\let\FV@Break@Next\FV@Break@AfterTokenBreak@Group@UTF@i}%
+   {\let\FV@Break@Next\FV@Break@Scan\let\FV@LastToken=\FV@Undefined}%
+  \FV@Break@Next}
+\def\FV@Break@AfterTokenBreak@Group@UTF@i{%
+  \@ifnextchar\bgroup%
+   {\FV@Break@Scan}%
+   {\FV@Break@AfterTokenBreak@Group@UTF@ii}}
+\def\FV@Break@AfterTokenBreak@Group@UTF@ii#1{%
+  \ifcsname FV@U8:\detokenize{#1}\endcsname
+    \expandafter\let\expandafter\FV@Break@Next\csname FV@U8:\detokenize{#1}\endcsname
+    \let\FV@Break@NextNext\FV@Break@AfterTokenBreak@Group@UTF@ii
+  \else
+    \def\FV@NextToken{#1}%
+    \ifx\FV@LastToken\FV@NextToken
+    \else
+      \g@addto@macro{\FV@TmpLine}{\FancyVerbBreakAfterBreak}%
+    \fi
+    \let\FV@Break@Next\FV@Break@Scan
+  \fi
+  \FV@Break@Next#1}
+\fi\fi
+\def\FV@makeLineNumber{%
+  \hss
+  \FancyVerbBreakSymbolLeftLogic{\FancyVerbBreakSymbolLeft}%
+  \hbox to \FV@BreakSymbolSepLeft{\hfill}%
+  \rlap{\hskip\linewidth
+    \hbox to \FV@BreakSymbolSepRight{\hfill}%
+    \FancyVerbBreakSymbolRightLogic{\FancyVerbBreakSymbolRight}%
+    \FV@SetLineBreakLast
+  }%
+}
+\def\FV@RaggedRight{%
+  \let\\\@centercr
+  \@rightskip\@flushglue\rightskip\@rightskip\leftskip\z@skip\parindent\z@}
+\newdimen\FV@LineWidth
+\def\FV@SaveLineBox#1{%
+  \savebox{\FV@LineBox}{%
+    \advance\FV@LineWidth by -\FV@BreakIndent
+    \hbox to \FV@BreakIndent{\hfill}%
+    \ifthenelse{\boolean{FV@BreakAutoIndent}}%
+     {\let\FV@LineIndentChars\@empty
+      \FV@GetLineIndent#1\FV@Undefined
+      \savebox{\FV@LineIndentBox}{\FV@LineIndentChars}%
+      \hbox to \wd\FV@LineIndentBox{\hfill}%
+      \advance\FV@LineWidth by -\wd\FV@LineIndentBox
+      \setcounter{FV@TrueTabCounter}{0}}%
+     {}%
+    \ifdefempty{\FancyVerbBreakSymbolLeft}{}%
+     {\hbox to \FV@BreakSymbolIndentLeft{\hfill}%
+      \advance\FV@LineWidth by -\FV@BreakSymbolIndentLeft}%
+    \ifdefempty{\FancyVerbBreakSymbolRight}{}%
+     {\advance\FV@LineWidth by -\FV@BreakSymbolIndentRight}%
+    \parbox[t]{\FV@LineWidth}{%
+      \FV@RaggedRight
+      \leftlinenumbers*
+      \begin{internallinenumbers*}%
+      \let\makeLineNumber\FV@makeLineNumber
+      \noindent\hspace*{-\FV@BreakIndent}%
+      \ifdefempty{\FancyVerbBreakSymbolLeft}{}{%
+        \hspace*{-\FV@BreakSymbolIndentLeft}}%
+      \ifthenelse{\boolean{FV@BreakAutoIndent}}%
+       {\hspace*{-\wd\FV@LineIndentBox}}%
+       {}%
+      \FV@BreakByTokenAnywhereHook
+      \strut\FancyVerbFormatText{%
+        \FancyVerbBreakStart #1\FancyVerbBreakStop}\nobreak\strut
+      \end{internallinenumbers*}
+    }%
+    \ifdefempty{\FancyVerbBreakSymbolRight}{}%
+     {\hbox to \FV@BreakSymbolIndentRight{\hfill}}%
+  }%
+}
+\let\FV@BreakByTokenAnywhereHook\relax
+\def\FV@ListProcessLine@Break#1{%
+  \hbox to \hsize{%
+  \kern\leftmargin
+  \hbox to \linewidth{%
+  \FV@LineWidth\linewidth
+  \ifx\FV@RightListFrame\relax\else
+    \advance\FV@LineWidth by -\FV@FrameSep
+    \advance\FV@LineWidth by -\FV@FrameRule
+  \fi
+  \ifx\FV@LeftListFrame\relax\else
+    \advance\FV@LineWidth by -\FV@FrameSep
+    \advance\FV@LineWidth by -\FV@FrameRule
+  \fi
+  \ifx\FV@Tab\FV@TrueTab
+    \let\FV@TrueTabSaveWidth\FV@TrueTabSaveWidth@Save
+    \setcounter{FV@TrueTabCounter}{0}%
+  \fi
+  \sbox{\FV@LineBox}{%
+    \FancyVerbFormatLine{%
+      %\FancyVerbHighlightLine  %<-- Default definition using \rlap breaks breaking
+       {\FV@ObeyTabs{\FancyVerbFormatText{#1}}}}}%
+  \ifx\FV@Tab\FV@TrueTab
+    \let\FV@TrueTabSaveWidth\relax
+  \fi
+  \ifdim\wd\FV@LineBox>\FV@LineWidth
+    \setcounter{FancyVerbLineBreakLast}{0}%
+    \ifx\FV@Tab\FV@TrueTab
+      \let\FV@Tab\FV@TrueTab@UseWidth
+      \setcounter{FV@TrueTabCounter}{0}%
+    \fi
+    \FV@SaveLineBox{#1}%
+    \ifdefempty{\FancyVerbBreakSymbolRight}{}{%
+      \let\FV@SetLineBreakLast\relax
+      \setcounter{FV@TrueTabCounter}{0}%
+      \FV@SaveLineBox{#1}}%
+    %\FV@LeftListNumber % invoked by \FV@LineNumberBackground
+    \FV@LeftListFrame
+    \FancyVerbFormatLine{%
+      \FancyVerbHighlightLine{\dimen@=\dp\FV@LineBox\usebox{\FV@LineBox}}}%
+    \FV@RightListFrame
+    \FV@LineNumberBackground
+    \FV@RightListNumber
+    \ifx\FV@Tab\FV@TrueTab@UseWidth
+      \let\FV@Tab\FV@TrueTab
+    \fi
+  \else
+    %\FV@LeftListNumber % invoked by \FV@LineNumberBackground
+    \FV@LeftListFrame
+    \FancyVerbFormatLine{%
+      \FancyVerbHighlightLine{%
+        \parbox[t]{\FV@LineWidth}{%
+          \noindent\strut\FV@ObeyTabs{\FancyVerbFormatText{#1}}\strut}}}%
+    \FV@RightListFrame
+    \FV@LineNumberBackground
+    \FV@RightListNumber
+  \fi}%
+  \hss}\baselineskip\z@\lineskip\z@}
+\def\FV@BreakBeforePrep@Pygments#1{%
+  \ifcsname FV@BreakBefore@Token\@backslashchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zbs }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@underscorechar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zus }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\@charlb\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zob }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\@charrb\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zcb }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{^}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zca }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@ampchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zam }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{<}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zlt }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{>}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zgt }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@hashchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zsh }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\@percentchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zpc }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@dollarchar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zdl }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{-}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zhy }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{'}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zsq }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{"}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zdq }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\FV@tildechar\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zti }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{@}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zat }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{[}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zlb }{}%
+  \fi
+  \ifcsname FV@BreakBefore@Token\detokenize{]}\endcsname
+    \@namedef{FV@BreakBefore@Token#1Zrb }{}%
+  \fi
+}
+\def\FV@BreakAfterPrep@Pygments#1{%
+  \ifcsname FV@BreakAfter@Token\@backslashchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zbs }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@underscorechar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zus }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\@charlb\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zob }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\@charrb\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zcb }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{^}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zca }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@ampchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zam }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{<}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zlt }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{>}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zgt }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@hashchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zsh }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\@percentchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zpc }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@dollarchar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zdl }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{-}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zhy }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{'}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zsq }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{"}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zdq }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\FV@tildechar\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zti }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{@}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zat }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{[}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zlb }{}%
+  \fi
+  \ifcsname FV@BreakAfter@Token\detokenize{]}\endcsname
+    \@namedef{FV@BreakAfter@Token#1Zrb }{}%
+  \fi
+}
+\newbool{FV@breakbytoken}
+\define@booleankey{FV}{breakbytoken}%
+ {\booltrue{FV@breakbytoken}}%
+ {\boolfalse{FV@breakbytoken}\boolfalse{FV@breakbytokenanywhere}}
+\newbool{FV@breakbytokenanywhere}
+\define@booleankey{FV}{breakbytokenanywhere}%
+ {\booltrue{FV@breakbytokenanywhere}\booltrue{FV@breakbytoken}}%
+ {\boolfalse{FV@breakbytokenanywhere}\boolfalse{FV@breakbytoken}}
+\def\FancyVerbBreakByTokenAnywhereBreak{\allowbreak{}}
+\def\VerbatimPygments#1#2{%
+  \def\FV@PygmentsHook{\FV@VerbatimPygments{#1}{#2}}}
+\def\FV@VerbatimPygments#1#2{%
+  \edef\FV@PYG@Literal{\expandafter\FV@DetokMacro@StripSpace\detokenize{#1}}%
+  \def\FV@BreakBeforePrep@PygmentsHook{%
+    \expandafter\FV@BreakBeforePrep@Pygments\expandafter{\FV@PYG@Literal}}%
+  \def\FV@BreakAfterPrep@PygmentsHook{%
+    \expandafter\FV@BreakAfterPrep@Pygments\expandafter{\FV@PYG@Literal}}%
+  \ifx#2\relax
+    \let\FV@PYG#1%
+  \else
+    \let\FV@PYG#2%
+  \fi
+  \ifbool{FV@breakbytoken}%
+   {\ifbool{FV@breakbytokenanywhere}%
+     {\def\FV@BreakByTokenAnywhereHook{%
+        \def\FV@BreakByTokenAnywhereBreak{%
+          \let\FV@BreakByTokenAnywhereBreak\FancyVerbBreakByTokenAnywhereBreak}}%
+      \def#1##1##2{%
+        \FV@BreakByTokenAnywhereBreak
+        \leavevmode\hbox{\FV@PYG{##1}{##2}}}}%
+     {\def#1##1##2{%
+        \leavevmode\hbox{\FV@PYG{##1}{##2}}}}}%
+   {\def#1##1##2{%
+     \FV@PYG{##1}{\FancyVerbBreakStart##2\FancyVerbBreakStop}}}%
+}
+\let\FV@BreakByTokenAnywhereBreak\relax
+\def\FV@DetokMacro@StripSpace#1 {#1}
+%% \Finale
+\endinput
+%%
+%% End of file `fvextra.sty'.
