@@ -1,0 +1,96 @@
+<navigation-bar title="{{isEdit ? '编辑任务' : '发布任务'}}" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="header">
+    <text class="title">{{isEdit ? '编辑任务' : '发布任务'}}</text>
+  </view>
+
+  <!-- 滑动区域 -->
+  <scroll-view 
+    scroll-y="true" 
+    class="form-scroll" 
+    enable-flex="true"
+    enhanced="true"
+    show-scrollbar="true"
+    fast-deceleration="true"
+    scroll-anchoring="true"
+    refresher-enabled="{{false}}"
+    bounces="true"
+    scroll-top="{{scrollTop}}"
+    bindscroll="onScroll"
+    bindscrolltoupper="onScrollToUpper"
+    bindscrolltolower="onReachBottom">
+    
+    <view class="task-form">
+      <view class="form">
+        <view class="form-item">
+          <text class="label">任务标题 <text class="required">*</text></text>
+          <input class="input" placeholder="请输入任务标题" value="{{form.title}}" bindinput="onTitleInput" />
+        </view>
+        
+        <view class="form-item">
+          <text class="label">任务描述 <text class="required">*</text></text>
+          <textarea class="textarea" placeholder="请输入任务描述" value="{{form.description}}" bindinput="onDescriptionInput" />
+        </view>
+        
+        <view class="form-item">
+          <text class="label">时间周期 <text class="required">*</text></text>
+          <picker bindchange="onTimePeriodChange" value="{{timePeriodIndex}}" range="{{timePeriodOptions}}">
+            <view class="picker {{form.timePeriod ? '' : 'placeholder'}}">
+              {{form.timePeriod || '请选择时间周期'}}
+            </view>
+          </picker>
+        </view>
+        
+        <view class="form-item">
+          <text class="label">打卡类型 <text class="required">*</text></text>
+          <picker bindchange="onCheckinTypeChange" value="{{checkinTypeIndex}}" range="{{checkinTypes}}">
+            <view class="picker {{form.checkinType ? '' : 'placeholder'}}">
+              {{form.checkinType || '请选择打卡类型'}}
+            </view>
+          </picker>
+        </view>
+        
+        <view class="form-item">
+          <text class="label">打卡起始时间 <text class="required">*</text></text>
+          <picker mode="multiSelector" bindchange="onStartDateTimeChange" bindcolumnchange="onStartColumnChange" value="{{startDateTimeArray.indexs}}" range="{{startDateTimeArray.data}}">
+            <view class="picker {{form.startDateTime ? '' : 'placeholder'}}">
+              {{form.startDateTime || '请选择打卡起始时间'}}
+            </view>
+          </picker>
+          <text class="tips">选择打卡开始的年月日时分</text>
+        </view>
+        
+        <view class="form-item">
+          <text class="label">打卡截止时间 <text class="required">*</text></text>
+          <picker mode="multiSelector" bindchange="onEndDateTimeChange" bindcolumnchange="onEndColumnChange" value="{{endDateTimeArray.indexs}}" range="{{endDateTimeArray.data}}">
+            <view class="picker {{form.endDateTime ? '' : 'placeholder'}}">
+              {{form.endDateTime || '请选择打卡截止时间'}}
+            </view>
+          </picker>
+          <text class="tips">选择打卡结束的年月日时分</text>
+        </view>
+        
+        <view class="form-item">
+          <text class="label">打卡要求</text>
+          <textarea class="textarea" placeholder="请输入打卡要求" value="{{form.requirements}}" bindinput="onRequirementInput" />
+        </view>
+        
+        <view class="form-item">
+          <text class="label">备注</text>
+          <textarea class="textarea" placeholder="请输入备注信息" value="{{form.remark}}" bindinput="onRemarkInput" />
+        </view>
+      </view>
+    </view>
+    
+    <!-- 底部安全区域 -->
+    <view class="safe-area-bottom"></view>
+  </scroll-view>
+
+  <!-- 底部按钮 -->
+  <view class="submit-container">
+    <button class="submit-btn" bindtap="handleSubmit" loading="{{loading}}">
+      {{isEdit ? '保存修改' : '发布任务'}}
+    </button>
+  </view>
+</view> 

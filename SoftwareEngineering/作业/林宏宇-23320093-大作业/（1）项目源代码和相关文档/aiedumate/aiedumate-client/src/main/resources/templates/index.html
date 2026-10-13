@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-EduMate</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- 引入Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <!-- 引入Google Fonts - Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#FF7D00',
+            tertiary: '#36D399',
+            dark: '#1E293B',
+            light: '#F8FAFC',
+            neutral: '#94A3B8'
+          },
+          fontFamily: {
+            inter: ['Inter', 'sans-serif'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.8s ease-in-out',
+            'slide-up': 'slideUp 0.8s ease-out',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(20px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            }
+          }
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .gradient-text {
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        background-image: linear-gradient(135deg, #165DFF, #36D399);
+      }
+      .bg-blur {
+        backdrop-filter: blur(8px);
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-light text-dark antialiased">
+  <!-- 导航栏 -->
+  <header id="navbar" class="fixed w-full z-50 transition-all duration-300">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="#" class="flex items-center space-x-2">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-primary to-tertiary flex items-center justify-center">
+          <i class="fa fa-graduation-cap text-white text-xl"></i>
+        </div>
+        <span class="text-xl font-bold">AI-EduMate</span>
+      </a>
+      
+      <!-- 桌面导航 -->
+      <nav class="hidden md:flex space-x-8">
+        <a href="#features" class="font-medium hover:text-primary transition-colors">功能</a>
+        <a href="#tech" class="font-medium hover:text-primary transition-colors">技术</a>
+        <a href="#advantage" class="font-medium hover:text-primary transition-colors">优势</a>
+        <a href="#users" class="font-medium hover:text-primary transition-colors">适用人群</a>
+        <a href="#vision" class="font-medium hover:text-primary transition-colors">愿景</a>
+      </nav>
+      
+      <div class="flex items-center space-x-4">
+        <a href="http://127.0.0.1:8081/login" class="hidden md:block font-medium hover:text-primary transition-colors">登录</a>
+        <!--        <a href="#" class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-lg font-medium transition-all transform hover:scale-105">免费试用</a>-->
+        
+        <!-- 移动端菜单按钮 -->
+        <button id="menu-toggle" class="md:hidden text-2xl">
+          <i class="fa fa-bars"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg absolute w-full">
+      <div class="container mx-auto px-4 py-4 flex flex-col space-y-4">
+        <a href="#features" class="font-medium py-2 hover:text-primary transition-colors">功能</a>
+        <a href="#tech" class="font-medium py-2 hover:text-primary transition-colors">技术</a>
+        <a href="#advantage" class="font-medium py-2 hover:text-primary transition-colors">优势</a>
+        <a href="#users" class="font-medium py-2 hover:text-primary transition-colors">适用人群</a>
+        <a href="#vision" class="font-medium py-2 hover:text-primary transition-colors">愿景</a>
+        <a href="#" class="font-medium py-2 hover:text-primary transition-colors">登录</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 英雄区 -->
+  <section class="pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden relative">
+    <!-- 背景装饰 -->
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-tertiary/10 rounded-full blur-3xl"></div>
+    
+    <div class="container mx-auto px-4 relative">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div class="animate-fade-in">
+          <div class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-6">
+            重新定义AI时代的学习方式
+          </div>
+          <h1 class="text-[clamp(2.5rem,5vw,4rem)] font-bold leading-tight mb-6">
+            智能学习助手<br>
+            <span class="gradient-text">让学习更高效</span>
+          </h1>
+          <p class="text-lg text-gray-600 mb-8 max-w-lg">
+            AI-EduMate深度融合AI技术，提供"计划-学习-整理-复习"全流程闭环支持，帮助你实现智能化、个性化、无缝化的学习体验。
+          </p>
+          <div class="flex flex-wrap gap-4">
+            <a href="/chat" class="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center">
+              <span>免费开始</span>
+              <i class="fa fa-arrow-right ml-2"></i>
+            </a>
+            <a href="/video" class="border border-gray-300 hover:border-primary hover:text-primary px-8 py-3 rounded-lg font-medium transition-all flex items-center">
+              <i class="fa fa-play-circle mr-2"></i>
+              <span>观看演示</span>
+            </a>
+          </div>
+          
+          <!-- 信任标识 -->
+          <div class="mt-12">
+            <p class="text-sm text-gray-500 mb-4">受到全球用户的信任</p>
+            <div class="flex flex-wrap items-center gap-8 opacity-70">
+              <img src="https://picsum.photos/id/1/80/30" alt="合作高校1" class="h-6">
+              <img src="https://picsum.photos/id/2/80/30" alt="合作高校2" class="h-6">
+              <img src="https://picsum.photos/id/3/80/30" alt="合作高校3" class="h-6">
+              <img src="https://picsum.photos/id/4/80/30" alt="合作高校4" class="h-6">
+            </div>
+          </div>
+        </div>
+        
+        <div class="relative animate-slide-up">
+          <div class="relative z-10 bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <img src="https://picsum.photos/id/20/800/600" alt="AI-EduMate界面预览" class="w-full h-auto rounded-2xl">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end p-8">
+              <div class="text-white">
+                <h3 class="text-xl font-bold mb-2">智能学习计划</h3>
+                <p class="text-sm opacity-90">根据您的学习习惯自动生成个性化学习方案</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 装饰元素 -->
+          <div class="absolute -top-6 -right-6 w-32 h-32 bg-secondary rounded-full opacity-20"></div>
+          <div class="absolute -bottom-8 -left-8 w-24 h-24 bg-tertiary rounded-full opacity-20"></div>
+          <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-primary rounded-full opacity-10"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 统计数据 -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div class="text-center">
+          <div class="text-4xl font-bold text-primary mb-2">500K+</div>
+          <div class="text-gray-600">活跃用户</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-primary mb-2">98%</div>
+          <div class="text-gray-600">学习效率提升</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-primary mb-2">24/7</div>
+          <div class="text-gray-600">智能支持</div>
+        </div>
+        <div class="text-center">
+          <div class="text-4xl font-bold text-primary mb-2">100+</div>
+          <div class="text-gray-600">合作高校</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 功能特性 -->
+  <section id="features" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <div class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4">
+          核心功能
+        </div>
+        <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold mb-6">
+          智能化学习全流程解决方案
+        </h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">
+          AI-EduMate深度融合AI技术，提供"计划-学习-整理-复习"全流程闭环支持，让学习更加高效、智能。
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- 功能卡片1 -->
+        <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+          <div class="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
+            <i class="fa fa-calendar-check-o text-primary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4">智能日程编排</h3>
+          <p class="text-gray-600 mb-6">
+            AI解析自然语言指令，自动生成可视化时间轴和日程表，学习进度动态追踪，根据完成情况推荐优化方案。
+          </p>
+          <ul class="space-y-2 mb-6">
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>自然语言理解，轻松创建学习计划</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>考试倒计时智能提醒</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>课程表同步导入</span>
+            </li>
+          </ul>
+          <a href="#" class="text-primary font-medium flex items-center">
+            <span>了解更多</span>
+            <i class="fa fa-long-arrow-right ml-2"></i>
+          </a>
+        </div>
+        
+        <!-- 功能卡片2 -->
+        <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+          <div class="w-14 h-14 rounded-lg bg-secondary/10 flex items-center justify-center mb-6">
+            <i class="fa fa-book text-secondary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4">多模态知识管理</h3>
+          <p class="text-gray-600 mb-6">
+            语音笔记实时转文字，自动提取关键词构建知识图谱，手写文字识别，实现手写笔记数字存储。
+          </p>
+          <ul class="space-y-2 mb-6">
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>语音笔记实时转文字</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>自动构建知识图谱</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>手写笔记数字化存储</span>
+            </li>
+          </ul>
+          <a href="#" class="text-primary font-medium flex items-center">
+            <span>了解更多</span>
+            <i class="fa fa-long-arrow-right ml-2"></i>
+          </a>
+        </div>
+        
+        <!-- 功能卡片3 -->
+        <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+          <div class="w-14 h-14 rounded-lg bg-tertiary/10 flex items-center justify-center mb-6">
+            <i class="fa fa-language text-tertiary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4">沉浸式学习支持</h3>
+          <p class="text-gray-600 mb-6">
+            实时多语言翻译，支持文本/图片/语音三模输入，屏幕取词翻译+学术术语库联动。
+          </p>
+          <ul class="space-y-2 mb-6">
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>三模态多语言实时翻译</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>屏幕取词+学术术语库</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>个性化语言学习路径</span>
+            </li>
+          </ul>
+          <a href="#" class="text-primary font-medium flex items-center">
+            <span>了解更多</span>
+            <i class="fa fa-long-arrow-right ml-2"></i>
+          </a>
+        </div>
+        
+        <!-- 功能卡片4 -->
+        <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+          <div class="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
+            <i class="fa fa-line-chart text-primary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4">AI增强服务</h3>
+          <p class="text-gray-600 mb-6">
+            学习数据可视化报告，智能笔记整理，提高学习效率，告别总结的烦恼。
+          </p>
+          <ul class="space-y-2 mb-6">
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>学习数据可视化分析</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>智能笔记自动整理</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>知识掌握度热力图</span>
+            </li>
+          </ul>
+          <a href="#" class="text-primary font-medium flex items-center">
+            <span>了解更多</span>
+            <i class="fa fa-long-arrow-right ml-2"></i>
+          </a>
+        </div>
+        
+        <!-- 功能卡片5 -->
+        <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+          <div class="w-14 h-14 rounded-lg bg-secondary/10 flex items-center justify-center mb-6">
+            <i class="fa fa-users text-secondary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4">协作学习空间</h3>
+          <p class="text-gray-600 mb-6">
+            支持团队学习和讨论，实时共享笔记和资料，小组任务分配和进度追踪。
+          </p>
+          <ul class="space-y-2 mb-6">
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>实时团队协作与讨论</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>学习资料共享与管理</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>小组任务分配与追踪</span>
+            </li>
+          </ul>
+          <a href="#" class="text-primary font-medium flex items-center">
+            <span>了解更多</span>
+            <i class="fa fa-long-arrow-right ml-2"></i>
+          </a>
+        </div>
+        
+        <!-- 功能卡片6 -->
+        <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+          <div class="w-14 h-14 rounded-lg bg-tertiary/10 flex items-center justify-center mb-6">
+            <i class="fa fa-rocket text-tertiary text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4">个性化学习路径</h3>
+          <p class="text-gray-600 mb-6">
+            基于认知特征动态调整学习策略，为用户个性化指定学习计划，智能推荐学习资源。
+          </p>
+          <ul class="space-y-2 mb-6">
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>基于记忆曲线的学习计划</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>智能学习资源推荐</span>
+            </li>
+            <li class="flex items-start">
+              <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+              <span>学习进度智能评估</span>
+            </li>
+          </ul>
+          <a href="#" class="text-primary font-medium flex items-center">
+            <span>了解更多</span>
+            <i class="fa fa-long-arrow-right ml-2"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 功能演示 -->
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4">
+            智能学习体验
+          </div>
+          <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold mb-6">
+            AI驱动的智能日程编排
+          </h2>
+          <p class="text-gray-600 mb-8">
+            AI-EduMate能够理解自然语言指令，自动生成可视化时间轴和日程表，并根据您的学习进度和习惯进行动态调整。
+          </p>
+          
+          <div class="space-y-6 mb-8">
+            <div class="flex">
+              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                <i class="fa fa-magic text-primary text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold mb-2">自然语言理解</h3>
+                <p class="text-gray-600">
+                  只需简单输入"每周三晚7点刷题1小时"，系统就能自动理解并创建学习计划。
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex">
+              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                <i class="fa fa-calendar text-primary text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold mb-2">智能日程优化</h3>
+                <p class="text-gray-600">
+                  根据您的学习效率和习惯，自动调整学习时间和内容，避免学习疲劳。
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex">
+              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                <i class="fa fa-bell text-primary text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold mb-2">智能提醒</h3>
+                <p class="text-gray-600">
+                  自动为重要学习任务和考试设置提醒，确保您不会错过任何重要安排。
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <a href="#" class="inline-flex items-center px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-all transform hover:scale-105">
+            <span>查看演示视频</span>
+            <i class="fa fa-play-circle ml-2"></i>
+          </a>
+        </div>
+        
+        <div class="relative">
+          <div class="relative z-10 bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <img src="https://picsum.photos/id/25/800/600" alt="智能日程编排界面" class="w-full h-auto rounded-2xl">
+          </div>
+          
+          <!-- 装饰元素 -->
+          <div class="absolute -top-4 -right-4 w-20 h-20 bg-secondary rounded-full opacity-20"></div>
+          <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-tertiary rounded-full opacity-20"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 数据可视化 -->
+  <section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <div class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4">
+          学习数据洞察
+        </div>
+        <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold mb-6">
+          智能分析您的学习数据
+        </h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">
+          AI-EduMate提供直观的数据可视化报告，帮助您了解自己的学习习惯和进度，找出改进空间。
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 h-80">
+          <h3 class="text-xl font-bold mb-6">每周学习时间分布</h3>
+          <canvas id="studyTimeChart"></canvas>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 h-80">
+          <h3 class="text-xl font-bold mb-6">知识掌握度热力图</h3>
+          <canvas id="knowledgeHeatmap"></canvas>
+        </div>
+      </div>
+      
+      <div class="mt-12 text-center">
+        <p class="text-gray-600 mb-6">基于您的学习数据，AI-EduMate会生成个性化的学习建议</p>
+        <a href="#" class="inline-flex items-center px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-all transform hover:scale-105">
+          <span>查看完整报告</span>
+          <i class="fa fa-arrow-right ml-2"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 技术特色 -->
+  <section id="tech" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <div class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4">
+          技术架构
+        </div>
+        <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold mb-6">
+          先进的AI技术架构
+        </h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">
+          AI-EduMate采用多引擎AI架构，集成多种先进AI模型，为您提供全方位的智能学习支持。
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- 技术卡片1 -->
+        <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 card-hover">
+          <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 mx-auto">
+            <i class="fa fa-brain text-primary text-3xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4 text-center">多引擎AI架构</h3>
+          <p class="text-gray-600 text-center">
+            集成GPT-4o（对话理解）、CLIP（图文分析）、Whisper（语音处理）三大模型，提供全方位的智能支持。
+          </p>
+        </div>
+        
+        <!-- 技术卡片2 -->
+        <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 card-hover">
+          <div class="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mb-6 mx-auto">
+            <i class="fa fa-cloud text-secondary text-3xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4 text-center">混合推理模式</h3>
+          <p class="text-gray-600 text-center">
+            云端大模型与端侧轻量化模型协同计算，无网络时仍可使用核心功能，确保学习连续性。
+          </p>
+        </div>
+        
+        <!-- 技术卡片3 -->
+        <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 card-hover">
+          <div class="w-16 h-16 rounded-full bg-tertiary/10 flex items-center justify-center mb-6 mx-auto">
+            <i class="fa fa-shield text-tertiary text-3xl"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-4 text-center">隐私保护设计</h3>
+          <p class="text-gray-600 text-center">
+            采用端到端加密技术，确保您的学习数据和隐私安全，所有敏感数据均在本地处理。
+          </p>
+        </div>
+      </div>
+      
+      <!-- 技术架构图 -->
+      <div class="mt-20 relative">
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="w-80 h-80 rounded-full border-4 border-primary/20 animate-pulse-slow"></div>
+        </div>
+        
+        <div class="relative bg-white rounded-2xl shadow-xl p-8 md:p-12">
+          <h3 class="text-2xl font-bold mb-8 text-center">AI-EduMate技术架构</h3>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12">
+            <div class="text-center">
+              <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
+                <i class="fa fa-microphone text-primary text-2xl"></i>
+              </div>
+              <h4 class="font-bold mb-2">语音处理</h4>
+              <p class="text-sm text-gray-600">
+                Whisper模型实现高精度语音识别和转写
+              </p>
+            </div>
+            
+            <div class="text-center">
+              <div class="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mb-4 mx-auto">
+                <i class="fa fa-image text-secondary text-2xl"></i>
+              </div>
+              <h4 class="font-bold mb-2">图像处理</h4>
+              <p class="text-sm text-gray-600">
+                CLIP模型支持图像理解和内容分析
+              </p>
+            </div>
+            
+            <div class="text-center">
+              <div class="w-16 h-16 rounded-full bg-tertiary/10 flex items-center justify-center mb-4 mx-auto">
+                <i class="fa fa-comment text-tertiary text-2xl"></i>
+              </div>
+              <h4 class="font-bold mb-2">自然语言处理</h4>
+              <p class="text-sm text-gray-600">
+                GPT-4o提供智能对话和内容生成能力
+              </p>
+            </div>
+            
+            <div class="text-center">
+              <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
+                <i class="fa fa-database text-primary text-2xl"></i>
+              </div>
+              <h4 class="font-bold mb-2">认知计算引擎</h4>
+              <p class="text-sm text-gray-600">
+                基于认知科学的学习算法和推荐系统
+              </p>
+            </div>
+          </div>
+          
+          <div class="mt-12 text-center">
+            <div class="w-24 h-12 mx-auto flex items-center justify-center">
+              <i class="fa fa-arrow-down text-primary text-2xl"></i>
+            </div>
+            
+            <div class="mt-4">
+              <div class="w-32 h-32 rounded-full bg-white shadow-lg flex items-center justify-center mx-auto border-4 border-primary/20">
+                <i class="fa fa-brain text-primary text-4xl"></i>
+              </div>
+            </div>
+            
+            <div class="mt-12">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12">
+                <div class="text-center">
+                  <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
+                    <i class="fa fa-calendar-check-o text-primary text-2xl"></i>
+                  </div>
+                  <h4 class="font-bold mb-2">智能日程</h4>
+                </div>
+                
+                <div class="text-center">
+                  <div class="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mb-4 mx-auto">
+                    <i class="fa fa-book text-secondary text-2xl"></i>
+                  </div>
+                  <h4 class="font-bold mb-2">知识管理</h4>
+                </div>
+                
+                <div class="text-center">
+                  <div class="w-16 h-16 rounded-full bg-tertiary/10 flex items-center justify-center mb-4 mx-auto">
+                    <i class="fa fa-language text-tertiary text-2xl"></i>
+                  </div>
+                  <h4 class="font-bold mb-2">多语言学习</h4>
+                </div>
+                
+                <div class="text-center">
+                  <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
+                    <i class="fa fa-line-chart text-primary text-2xl"></i>
+                  </div>
+                  <h4 class="font-bold mb-2">数据分析</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 竞争优势 -->
+  <section id="advantage" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <div class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4">
+          产品优势
+        </div>
+        <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold mb-6">
+          为什么选择AI-EduMate
+        </h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">
+          AI-EduMate集成了多种先进功能，为您提供全面的学习支持，让学习更加高效、智能。
+        </p>
+      </div>
+      
+      <div class="relative">
+        <!-- 背景装饰 -->
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-tertiary/5 rounded-full blur-3xl"></div>
+        
+        <div class="grid md:grid-cols-3 gap-8 relative">
+          <!-- 优势卡片1 -->
+          <div class="bg-white rounded-xl shadow-lg p-8 border-l-4 border-primary card-hover">
+            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <i class="fa fa-lightbulb-o text-primary text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">更智能</h3>
+            <p class="text-gray-600 mb-6">
+              告别手动排程，AI主动理解学习需求，基于认知科学算法，动态调整学习计划和内容。
+            </p>
+            <ul class="space-y-2">
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>自然语言理解，智能规划学习时间</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>基于记忆曲线的智能复习提醒</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>智能分析学习效率，提供改进建议</span>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- 优势卡片2 -->
+          <div class="bg-white rounded-xl shadow-lg p-8 border-l-4 border-secondary card-hover">
+            <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mb-6">
+              <i class="fa fa-puzzle-piece text-secondary text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">更全面</h3>
+            <p class="text-gray-600 mb-6">
+              整合Anki + Notion + Forest的核心功能，聚合AI大模型助力高效学习，一站式解决学习全流程问题。
+            </p>
+            <ul class="space-y-2">
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>智能笔记整理与知识图谱构建</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>多模态学习支持（文本/语音/图像）</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>学习数据可视化与进度追踪</span>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- 优势卡片3 -->
+          <div class="bg-white rounded-xl shadow-lg p-8 border-l-4 border-tertiary card-hover">
+            <div class="w-12 h-12 rounded-full bg-tertiary/10 flex items-center justify-center mb-6">
+              <i class="fa fa-graduation-cap text-tertiary text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-4">更专业</h3>
+            <p class="text-gray-600 mb-6">
+              垂直优化教育场景，内置教育学认知科学算法模型，为学生和科研工作者提供专业的学习支持。
+            </p>
+            <ul class="space-y-2">
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>专为学习场景优化的AI模型</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>学术资源智能推荐与整理</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>科研工作流程智能支持</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 用户案例 -->
+  <section id="users" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <div class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-4">
+          用户案例
+        </div>
+        <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold mb-6">
+          适合各类学习人群
+        </h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">
+          AI-EduMate为不同学习阶段和需求的用户提供定制化学习支持，帮助他们实现学习目标。
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-4 gap-8">
+        <!-- 用户类型1 -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+          <div class="h-48 bg-primary/10 flex items-center justify-center">
+            <i class="fa fa-user-graduate text-primary text-5xl"></i>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">在校学生</h3>
+            <p class="text-gray-600 mb-4">
+              管理多门课程，智能排程，提高学习效率，轻松应对考试和作业。
+            </p>
+            <ul class="space-y-2 mb-4">
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>多课程管理与智能排程</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>笔记整理与复习计划</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>考试准备与压力管理</span>
+              </li>
+            </ul>
+            <a href="#" class="text-primary font-medium flex items-center">
+              <span>了解更多</span>
+              <i class="fa fa-long-arrow-right ml-2"></i>
+            </a>
+          </div>
+        </div>
+        
+        <!-- 用户类型2 -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+          <div class="h-48 bg-secondary/10 flex items-center justify-center">
+            <i class="fa fa-book text-secondary text-5xl"></i>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">备考群体</h3>
+            <p class="text-gray-600 mb-4">
+              制定科学备考计划，智能复习，提高记忆效率，轻松应对各类考试。
+            </p>
+            <ul class="space-y-2 mb-4">
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>备考计划制定与跟踪</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>智能复习与记忆强化</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>模拟考试与错题分析</span>
+              </li>
+            </ul>
+            <a href="#" class="text-primary font-medium flex items-center">
+              <span>了解更多</span>
+              <i class="fa fa-long-arrow-right ml-2"></i>
+            </a>
+          </div>
+        </div>
+        
+        <!-- 用户类型3 -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+          <div class="h-48 bg-tertiary/10 flex items-center justify-center">
+            <i class="fa fa-graduation-cap text-tertiary text-5xl"></i>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">终身学习者</h3>
+            <p class="text-gray-600 mb-4">
+              管理个人学习项目，建立知识体系，智能推荐学习资源，持续提升自我。
+            </p>
+            <ul class="space-y-2 mb-4">
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>个人学习项目管理</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>知识体系构建与管理</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>个性化学习资源推荐</span>
+              </li>
+            </ul>
+            <a href="#" class="text-primary font-medium flex items-center">
+              <span>了解更多</span>
+              <i class="fa fa-long-arrow-right ml-2"></i>
+            </a>
+          </div>
+        </div>
+        
+        <!-- 用户类型4 -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+          <div class="h-48 bg-primary/10 flex items-center justify-center">
+            <i class="fa fa-flask text-primary text-5xl"></i>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">科研工作者</h3>
+            <p class="text-gray-600 mb-4">
+              管理科研项目，整理文献资料，智能分析数据，提高科研效率。
+            </p>
+            <ul class="space-y-2 mb-4">
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>科研项目管理与进度跟踪</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>文献资料整理与分析</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa fa-check text-tertiary mt-1 mr-2"></i>
+                <span>实验数据管理与可视化</span>
+              </li>
+            </ul>
+            <a href="#" class="text-primary font-medium flex items-center">
+              <span>了解更多</span>
+              <i class="fa fa-long-arrow-right ml-2"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 用户评价 -->
+      <div class="mt-20">
+        <div class="text-center mb-12">
+          <h3 class="text-2xl font-bold mb-4">用户怎么说</h3>
+          <p class="text-gray-600 max-w-2xl mx-auto">
+            听听我们的用户对AI-EduMate的真实评价
+          </p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- 评价1 -->
+          <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+            <div class="flex items-center mb-6">
+              <img src="https://picsum.photos/id/1001/60/60" alt="用户头像" class="w-12 h-12 rounded-full mr-4">
+              <div>
+                <h4 class="font-bold">李明</h4>
+                <p class="text-sm text-gray-500">大学生</p>
+              </div>
+            </div>
+            <div class="text-yellow-400 mb-4">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+            </div>
+            <p class="text-gray-600">
+              "AI-EduMate帮我解决了多课程管理的难题，智能排程功能让我能够高效利用时间，学习效率提高了不少。"
+            </p>
+          </div>
+          
+          <!-- 评价2 -->
+          <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+            <div class="flex items-center mb-6">
+              <img src="https://picsum.photos/id/1002/60/60" alt="用户头像" class="w-12 h-12 rounded-full mr-4">
+              <div>
+                <h4 class="font-bold">张华</h4>
+                <p class="text-sm text-gray-500">考研学生</p>
+              </div>
+            </div>
+            <div class="text-yellow-400 mb-4">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star-half-o"></i>
+            </div>
+            <p class="text-gray-600">
+              "备考期间，AI-EduMate的智能复习功能帮了我大忙，根据记忆曲线自动安排复习计划，让我的记忆效率提高了很多。"
+            </p>
+          </div>
+          
+          <!-- 评价3 -->
+          <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+            <div class="flex items-center mb-6">
+              <img src="https://picsum.photos/id/1003/60/60" alt="用户头像" class="w-12 h-12 rounded-full mr-4">
+              <div>
+                <h4 class="font-bold">王芳</h4>
+                <p class="text-sm text-gray-500">科研工作者</p>
+              </div>
+            </div>
+            <div class="text-yellow-400 mb-4">
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+              <i class="fa fa-star"></i>
+            </div>
+            <p class="text-gray-600">
+              "作为科研工作者，AI-EduMate的文献整理和数据分析功能帮我节省了大量时间，让我能够更专注于研究本身。"
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 项目愿景 -->
+  <section id="vision" class="py-20 bg-primary text-white">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold mb-6">
+            重新定义AI时代的学习方式
+          </h2>
+          <p class="mb-6 text-white/90">
+            AI-EduMate的愿景是让技术真正服务于人的认知成长，通过深度融合AI技术与教育科学，打造一个智能化、个性化、无缝化的学习平台。
+          </p>
+          <p class="mb-8 text-white/90">
+            我们相信，每个人都有独特的学习方式和节奏，AI-EduMate将帮助用户发现最适合自己的学习路径，让学习变得更加高效、有趣。
+          </p>
+          
+          <div class="space-y-6">
+            <div class="flex">
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-4">
+                <i class="fa fa-lightbulb-o text-white"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold mb-2">教育价值</h3>
+                <p class="text-white/80">
+                  通过认知科学指导的智能规划，提升学习效率，让每个学习者都能充分发挥潜力。
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex">
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-4">
+                <i class="fa fa-cogs text-white"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold mb-2">技术价值</h3>
+                <p class="text-white/80">
+                  探索多模态AI在教育场景的融合应用范式，为智能教育提供技术支持。
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex">
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mr-4">
+                <i class="fa fa-globe text-white"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold mb-2">社会价值</h3>
+                <p class="text-white/80">
+                  助力教育公平，提供无障碍学习支持，让优质教育资源惠及更多人。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="relative">
+          <div class="relative z-10">
+            <img src="https://picsum.photos/id/30/600/400" alt="AI-EduMate愿景" class="w-full h-auto rounded-xl shadow-2xl">
+          </div>
+          
+          <!-- 装饰元素 -->
+          <div class="absolute -top-6 -right-6 w-32 h-32 bg-white/10 rounded-full"></div>
+          <div class="absolute -bottom-8 -left-8 w-24 h-24 bg-white/10 rounded-full"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 行动召唤 -->
+  <section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="grid md:grid-cols-2">
+          <div class="p-12 md:p-16 flex flex-col justify-center">
+            <h2 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold mb-6">
+              开始您的智能学习之旅
+            </h2>
+            <p class="text-gray-600 mb-8">
+              立即注册AI-EduMate，体验智能化、个性化、无缝化的学习方式，提升您的学习效率。
+            </p>
+            
+            <div class="space-y-4 mb-8">
+              <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                  <i class="fa fa-check text-primary"></i>
+                </div>
+                <span>7天免费试用，无需信用卡</span>
+              </div>
+              <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                  <i class="fa fa-check text-primary"></i>
+                </div>
+                <span>多平台同步，随时随地学习</span>
+              </div>
+              <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                  <i class="fa fa-check text-primary"></i>
+                </div>
+                <span>专业客服团队，随时提供帮助</span>
+              </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-4">
+              <a href="#" class="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center">
+                <span>免费开始</span>
+                <i class="fa fa-arrow-right ml-2"></i>
+              </a>
+              <a href="#" class="border border-gray-300 hover:border-primary hover:text-primary px-8 py-3 rounded-lg font-medium transition-all flex items-center justify-center">
+                <i class="fa fa-calendar mr-2"></i>
+                <span>预约演示</span>
+              </a>
+            </div>
+          </div>
+          
+          <div class="bg-primary/5 p-8 md:p-16 flex items-center justify-center">
+            <div class="max-w-md w-full">
+              <h3 class="text-xl font-bold mb-6 text-center">注册获取免费试用</h3>
+              
+              <form class="space-y-4">
+                <div>
+                  <label for="name" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                  <input type="text" id="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors" placeholder="请输入您的姓名">
+                </div>
+                
+                <div>
+                  <label for="email" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                  <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors" placeholder="请输入您的邮箱">
+                </div>
+                
+                <div>
+                  <label for="user-type" class="block text-sm font-medium text-gray-700 mb-1">用户类型</label>
+                  <select id="user-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors">
+                    <option value="">请选择用户类型</option>
+                    <option value="student">在校学生</option>
+                    <option value="exam">备考群体</option>
+                    <option value="lifelong">终身学习者</option>
+                    <option value="researcher">科研工作者</option>
+                  </select>
+                </div>
+                
+                <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-lg font-medium transition-all transform hover:scale-[1.02]">
+                  立即注册
+                </button>
+              </form>
+              
+              <p class="text-sm text-gray-500 text-center mt-4">
+                注册即表示您同意我们的<a href="#" class="text-primary hover:underline">服务条款</a>和<a href="#" class="text-primary hover:underline">隐私政策</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white py-16">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-4 gap-12">
+        <div>
+          <a href="#" class="flex items-center space-x-2 mb-6">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-r from-primary to-tertiary flex items-center justify-center">
+              <i class="fa fa-graduation-cap text-white text-xl"></i>
+            </div>
+            <span class="text-xl font-bold">AI-EduMate</span>
+          </a>
+          <p class="text-gray-400 mb-6">
+            重新定义AI时代的学习方式，让技术真正服务于人的认知成长。
+          </p>
+          <div class="flex space-x-4">
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-facebook"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-twitter"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-instagram"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors">
+              <i class="fa fa-linkedin"></i>
+            </a>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-bold mb-6">产品</h3>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">功能</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">定价</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">更新日志</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">集成</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">API文档</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-bold mb-6">资源</h3>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">博客</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">教程</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">帮助中心</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">社区</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">网络研讨会</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-bold mb-6">公司</h3>
+          <ul class="space-y-3">
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">关于我们</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">联系我们</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">加入我们</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">隐私政策</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">服务条款</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+        <p class="text-gray-400 text-sm mb-4 md:mb-0">
+          &copy; 2025 AI-EduMate. 保留所有权利。
+        </p>
+        <div class="flex space-x-6">
+          <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">隐私政策</a>
+          <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">服务条款</a>
+          <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">Cookie政策</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // 导航栏滚动效果
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        navbar.classList.add('bg-white', 'shadow-md', 'py-2');
+        navbar.classList.remove('py-4');
+      } else {
+        navbar.classList.remove('bg-white', 'shadow-md', 'py-2');
+        navbar.classList.add('py-4');
+      }
+    });
+    
+    // 移动端菜单切换
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    menuToggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      if (menuToggle.innerHTML.includes('bars')) {
+        menuToggle.innerHTML = '<i class="fa fa-times"></i>';
+      } else {
+        menuToggle.innerHTML = '<i class="fa fa-bars"></i>';
+      }
+    });
+    
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+          
+          // 关闭移动端菜单
+          if (!mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+            menuToggle.innerHTML = '<i class="fa fa-bars"></i>';
+          }
+        }
+      });
+    });
+    
+    // 数据可视化图表
+    window.addEventListener('load', () => {
+      // 学习时间分布图表
+      const studyTimeCtx = document.getElementById('studyTimeChart').getContext('2d');
+      new Chart(studyTimeCtx, {
+        type: 'bar',
+        data: {
+          labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+          datasets: [{
+            label: '学习时间(小时)',
+            data: [2.5, 3.8, 4.2, 3.0, 5.5, 4.0, 3.2],
+            backgroundColor: '#165DFF',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+      
+      // 知识掌握度热力图
+      const knowledgeCtx = document.getElementById('knowledgeHeatmap').getContext('2d');
+      new Chart(knowledgeCtx, {
+        type: 'line',
+        data: {
+          labels: ['第一周', '第二周', '第三周', '第四周', '第五周', '第六周'],
+          datasets: [{
+            label: '知识掌握度',
+            data: [40, 55, 68, 72, 85, 90],
+            backgroundColor: 'rgba(22, 93, 255, 0.1)',
+            borderColor: '#165DFF',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              grid: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.05)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    });
+    
+    // 元素滚动动画
+    const animateOnScroll = () => {
+      const elements = document.querySelectorAll('.card-hover');
+      
+      elements.forEach(element => {
+        const elementPosition = element.getBoundingClientRect().top;
+        const screenPosition = window.innerHeight / 1.2;
+        
+        if (elementPosition < screenPosition) {
+          element.classList.add('opacity-100', 'translate-y-0');
+          element.classList.remove('opacity-0', 'translate-y-10');
+        }
+      });
+    };
+    
+    // 初始动画
+    document.addEventListener('DOMContentLoaded', () => {
+      animateOnScroll();
+    });
+    
+    // 滚动时触发动画
+    window.addEventListener('scroll', () => {
+      animateOnScroll();
+    });
+  </script>
+</body>
+</html>

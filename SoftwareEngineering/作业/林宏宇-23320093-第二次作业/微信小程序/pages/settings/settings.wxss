@@ -1,0 +1,284 @@
+page {
+  background-color: #f5f5f5;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f5f5f5;
+  position: relative;
+  overflow: hidden;
+}
+
+.content-scroll {
+  flex: 1;
+  width: 100%;
+  height: calc(100vh - 130rpx); /* 适应导航栏高度 */
+  box-sizing: border-box;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* 增强iOS滑动流畅度 */
+}
+
+.settings-form {
+  padding: 20rpx 30rpx;
+  background-color: #fff;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 30rpx;
+  position: relative;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 10rpx;
+  font-weight: 500;
+}
+
+.form-input {
+  height: 80rpx;
+  background: #f9f9f9;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 80rpx;
+  display: flex;
+  align-items: center;
+}
+
+.form-input.disabled {
+  background: #f0f0f0;
+  color: #666;
+  display: flex;
+  align-items: center;
+  line-height: 80rpx;
+}
+
+.picker-view {
+  height: 80rpx;
+  background: #f9f9f9;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 80rpx;
+  display: flex;
+  align-items: center;
+}
+
+.avatar-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.avatar-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  margin-bottom: 10rpx;
+}
+
+.change-text {
+  font-size: 24rpx;
+  color: #007aff;
+}
+
+/* 区块标题样式 */
+.section-header {
+  padding: 30rpx 0 15rpx;
+  border-bottom: 1rpx solid #eee;
+  margin-bottom: 25rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 新增：三种不同的区块样式 */
+.section-header.primary {
+  border-left: 8rpx solid #4285f4;
+  padding-left: 20rpx;
+}
+
+.section-header.secondary {
+  border-left: 8rpx solid #34a853;
+  padding-left: 20rpx;
+}
+
+.section-header.tertiary {
+  border-left: 8rpx solid #ea4335;
+  padding-left: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 5rpx;
+}
+
+.section-desc {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.section-desc.captain-edit {
+  color: #ff6600;
+  font-weight: bold;
+}
+
+/* 密码输入框及相关样式优化 */
+.password-group {
+  margin-bottom: 40rpx;
+}
+
+.password-input-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: #f9f9f9;
+  border-radius: 8rpx;
+  position: relative;
+}
+
+.password-input-container .form-input {
+  flex: 1;
+  background: transparent;
+}
+
+.password-icon {
+  padding: 0 20rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+}
+
+.icon-text {
+  font-size: 24rpx;
+  color: #007aff;
+}
+
+.password-tips {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 10rpx;
+}
+
+.password-input {
+  letter-spacing: 5rpx;
+}
+
+/* 竞赛记录样式 */
+.competitions {
+  padding: 15rpx 20rpx;
+  min-height: 80rpx;
+  max-height: 200rpx;
+  overflow-y: auto;
+  display: block;
+  line-height: normal;
+}
+
+.competition-item {
+  margin-bottom: 10rpx;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.no-data {
+  color: #999;
+  font-size: 26rpx;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.button-group {
+  padding: 30rpx;
+}
+
+.save-button {
+  width: 100%;
+  height: 90rpx;
+  line-height: 90rpx;
+  background: #1aad19;
+  color: #fff;
+  font-size: 32rpx;
+  border-radius: 8rpx;
+}
+
+.safe-area-bottom {
+  height: 40rpx;
+}
+
+/* 单选框样式 */
+.radio-group {
+  display: flex;
+  padding: 20rpx 0;
+}
+
+.radio-label {
+  margin-right: 50rpx;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+}
+
+/* 在队长编辑模式下突出显示可编辑的字段 */
+.isCaptainEdit .form-input:not(.disabled) {
+  background: #f8ffed;
+  border: 1rpx solid #d9eebf;
+}
+
+.isCaptainEdit .picker-view {
+  background: #f8ffed;
+  border: 1rpx solid #d9eebf;
+}
+
+/* 新增：用于显示多行文本的 view 样式 */
+.form-value-block {
+  background: #f0f0f0;
+  border-radius: 8rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 80rpx; /* 保持最小高度与其他输入框一致 */
+  box-sizing: border-box;
+}
+
+/* 新增：textarea 样式 */
+.form-textarea {
+  width: 100%;
+  min-height: 120rpx; /* 默认最小高度 */
+  background: #f9f9f9;
+  border-radius: 8rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.isCaptainEdit .form-textarea {
+  background: #f8ffed;
+  border: 1rpx solid #d9eebf;
+} 

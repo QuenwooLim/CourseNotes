@@ -1,0 +1,71 @@
+<navigation-bar title="队员档案" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="container">
+  <scroll-view class="content-scroll" 
+               scroll-y="true" 
+               refresher-enabled="{{true}}" 
+               refresher-triggered="{{refreshing}}" 
+               bindrefresherrefresh="onRefresh" 
+               enhanced="true" 
+               show-scrollbar="true" 
+               fast-deceleration="true" 
+               bounces="true"
+               style="height: {{scrollHeight ? scrollHeight + 'px' : 'calc(100vh - 44px - env(safe-area-inset-bottom, 0px))'}}">
+    <!-- 添加队员统计信息区域 -->
+    <view class="stats-container">
+      <view class="stats-count">目前在训{{activeCount}}人</view>
+      <view class="stats-note">队员档案自2025年创建小程序开始统计</view>
+    </view>
+    
+    <view class="member-list">
+      <block wx:if="{{members.length > 0}}">
+        <view class="member-item {{item.teamStatus === '在训' ? 'status-active' : (item.teamStatus === '退役' ? 'status-retired' : (item.teamStatus === '退队' ? 'status-left' : ''))}}" wx:for="{{members}}" wx:key="_id" bindtap="onMemberTap" data-id="{{item._id}}">
+          <!-- 左侧头像 -->
+          <image class="member-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"></image>
+          
+          <!-- 右侧信息区域 -->
+          <view class="member-details">
+            <text class="member-name">{{item.nickName || '-'}}</text>
+            <view class="info-row">
+              <text class="label">学院:</text>
+              <text class="value">{{item.college || '-'}}</text>
+            </view>
+            <view class="info-row">
+              <text class="label">年级:</text>
+              <text class="value">{{item.grade || '-'}}</text>
+            </view>
+          </view>
+          
+          <!-- 右上角状态文字 -->
+          <text class="status-text status-text-{{item.teamStatus === '在训' ? 'active' : (item.teamStatus === '退役' ? 'retired' : (item.teamStatus === '退队' ? 'left' : ''))}}">
+            {{item.teamStatus || '-'}}
+          </text>
+        </view>
+      </block>
+      
+      <!-- 添加中大龙文字 - 移到循环外部 -->
+      <view class="sysu-dragon" wx:if="{{members.length > 0}}">
+        <text>壮哉我中大龙</text>
+      </view>
+      
+      <block wx:if="{{members.length === 0 && !loading}}">
+        <view class="empty-state">
+          <text>暂无队员信息</text>
+        </view>
+      </block>
+      <block wx:if="{{loading}}">
+        <view class="loading-state">
+          <text>加载中...</text>
+        </view>
+      </block>
+    </view>
+    
+    <!-- 修改底部提示 - 让它在所有情况下都显示 -->
+    <view class="end-state">
+      <text class="end-text">{{members.length > 0 ? '已经到底了~' : '暂无更多队员信息'}}</text>
+    </view>
+    
+    <!-- 增加更大的底部安全区域间距 -->
+    <view class="safe-area-bottom"></view>
+    <view style="height: 50rpx;"></view>
+  </scroll-view>
+</view> 

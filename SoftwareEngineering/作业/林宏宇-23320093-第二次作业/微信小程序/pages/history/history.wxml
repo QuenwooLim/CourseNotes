@@ -1,0 +1,66 @@
+<view class="container">
+  <navigation-bar title="个人打卡历史记录" back="{{true}}" color="black" background="#FFF" bindback="onBackTap"></navigation-bar>
+  
+  <scroll-view class="content-scroll" scroll-y type="list" enable-pull-down-refresh="{{true}}" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onPullDownRefresh">
+    <!-- 标题 -->
+    <view class="header">
+      <text class="title">{{isViewingOther ? viewUserName + '的' : '我的'}}打卡记录</text>
+      <text class="subtitle">累计打卡 {{totalCount}} 次</text>
+    </view>
+    
+    <!-- 打卡列表 -->
+    <view class="history-list">
+      <block wx:if="{{historyList.length > 0}}">
+        <view class="history-item" wx:for="{{historyList}}" wx:key="_id" bindtap="onHistoryItemTap" data-id="{{item._id}}">
+          <view class="history-header">
+            <text class="history-date">{{item.date}}</text>
+            <text class="history-task-name">{{item.taskTitle || '未知任务'}}</text>
+          </view>
+          
+          <!-- 新增：显示时间周期和打卡类型 -->
+          <view class="history-details">
+            <view class="detail-item">
+              <text class="detail-label">时间周期:</text>
+              <text class="detail-value">{{item.timePeriod || '未知'}}</text>
+            </view>
+            <view class="detail-item">
+              <text class="detail-label">打卡类型:</text>
+              <text class="detail-value">{{item.checkinType || '未知'}}</text>
+            </view>
+          </view>
+          
+          <!-- 移除：打卡内容 -->
+          <!-- 
+          <view class="history-content">
+            <text class="content-label">打卡内容：</text>
+            <text class="content-text">{{item.content}}</text>
+          </view> 
+          -->
+          
+          <!-- 移除：右下角时间显示 -->
+          <!-- 
+          <view class="history-meta">
+            <text class="history-time">{{item.createTimeFormat}}</text>
+          </view> 
+          -->
+        </view>
+      </block>
+      
+      <view wx:if="{{historyList.length === 0 && !loading}}" class="empty-state">
+        <text class="empty-text">暂无打卡记录</text>
+      </view>
+      
+      <view wx:if="{{loading && !refreshing}}" class="loading-state">
+        <view class="loading-icon"></view>
+        <text class="loading-text">加载中...</text>
+      </view>
+      
+      <view wx:if="{{!hasMore && historyList.length > 0}}" class="end-state">
+        <text class="end-text">已经到底了~</text>
+      </view>
+    </view>
+    
+    <!-- 底部安全区域 -->
+    <view class="safe-area-bottom"></view>
+  </scroll-view>
+</view> 

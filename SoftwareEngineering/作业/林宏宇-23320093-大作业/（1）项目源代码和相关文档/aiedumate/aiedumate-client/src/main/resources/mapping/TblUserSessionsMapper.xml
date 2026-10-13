@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.aiedumate.client.dao.generator.TblUserSessionsMapper">
+  <resultMap id="BaseResultMap" type="com.aiedumate.client.entity.TblUserSessions">
+    <id column="session_id" jdbcType="VARCHAR" property="sessionId" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="ip_address" jdbcType="VARCHAR" property="ipAddress" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="expires_time" jdbcType="TIMESTAMP" property="expiresTime" />
+    <result column="is_expired" jdbcType="BIT" property="isExpired" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.aiedumate.client.entity.TblUserSessions">
+    <result column="user_agent" jdbcType="LONGVARCHAR" property="userAgent" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    session_id, username, ip_address, created_time, expires_time, is_expired
+  </sql>
+  <sql id="Blob_Column_List">
+    user_agent
+  </sql>
+  <select id="selectByExampleWithBLOBs" parameterType="com.aiedumate.client.entity.TblUserSessionsExample" resultMap="ResultMapWithBLOBs">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    'true' as QUERYID,
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from tbl_user_sessions
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByExample" parameterType="com.aiedumate.client.entity.TblUserSessionsExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    'true' as QUERYID,
+    <include refid="Base_Column_List" />
+    from tbl_user_sessions
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from tbl_user_sessions
+    where session_id = #{sessionId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from tbl_user_sessions
+    where session_id = #{sessionId,jdbcType=VARCHAR}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.aiedumate.client.entity.TblUserSessionsExample">
+    delete from tbl_user_sessions
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.aiedumate.client.entity.TblUserSessions">
+    insert into tbl_user_sessions (session_id, username, ip_address, 
+      created_time, expires_time, is_expired, 
+      user_agent)
+    values (#{sessionId,jdbcType=VARCHAR}, #{username,jdbcType=VARCHAR}, #{ipAddress,jdbcType=VARCHAR}, 
+      #{createdTime,jdbcType=TIMESTAMP}, #{expiresTime,jdbcType=TIMESTAMP}, #{isExpired,jdbcType=BIT}, 
+      #{userAgent,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.aiedumate.client.entity.TblUserSessions">
+    insert into tbl_user_sessions
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="sessionId != null">
+        session_id,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      <if test="ipAddress != null">
+        ip_address,
+      </if>
+      <if test="createdTime != null">
+        created_time,
+      </if>
+      <if test="expiresTime != null">
+        expires_time,
+      </if>
+      <if test="isExpired != null">
+        is_expired,
+      </if>
+      <if test="userAgent != null">
+        user_agent,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="sessionId != null">
+        #{sessionId,jdbcType=VARCHAR},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="ipAddress != null">
+        #{ipAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="createdTime != null">
+        #{createdTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="expiresTime != null">
+        #{expiresTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isExpired != null">
+        #{isExpired,jdbcType=BIT},
+      </if>
+      <if test="userAgent != null">
+        #{userAgent,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.aiedumate.client.entity.TblUserSessionsExample" resultType="java.lang.Long">
+    select count(*) from tbl_user_sessions
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update tbl_user_sessions
+    <set>
+      <if test="row.sessionId != null">
+        session_id = #{row.sessionId,jdbcType=VARCHAR},
+      </if>
+      <if test="row.username != null">
+        username = #{row.username,jdbcType=VARCHAR},
+      </if>
+      <if test="row.ipAddress != null">
+        ip_address = #{row.ipAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="row.createdTime != null">
+        created_time = #{row.createdTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="row.expiresTime != null">
+        expires_time = #{row.expiresTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="row.isExpired != null">
+        is_expired = #{row.isExpired,jdbcType=BIT},
+      </if>
+      <if test="row.userAgent != null">
+        user_agent = #{row.userAgent,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    <if test="example != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExampleWithBLOBs" parameterType="map">
+    update tbl_user_sessions
+    set session_id = #{row.sessionId,jdbcType=VARCHAR},
+      username = #{row.username,jdbcType=VARCHAR},
+      ip_address = #{row.ipAddress,jdbcType=VARCHAR},
+      created_time = #{row.createdTime,jdbcType=TIMESTAMP},
+      expires_time = #{row.expiresTime,jdbcType=TIMESTAMP},
+      is_expired = #{row.isExpired,jdbcType=BIT},
+      user_agent = #{row.userAgent,jdbcType=LONGVARCHAR}
+    <if test="example != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update tbl_user_sessions
+    set session_id = #{row.sessionId,jdbcType=VARCHAR},
+      username = #{row.username,jdbcType=VARCHAR},
+      ip_address = #{row.ipAddress,jdbcType=VARCHAR},
+      created_time = #{row.createdTime,jdbcType=TIMESTAMP},
+      expires_time = #{row.expiresTime,jdbcType=TIMESTAMP},
+      is_expired = #{row.isExpired,jdbcType=BIT}
+    <if test="example != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.aiedumate.client.entity.TblUserSessions">
+    update tbl_user_sessions
+    <set>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="ipAddress != null">
+        ip_address = #{ipAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="createdTime != null">
+        created_time = #{createdTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="expiresTime != null">
+        expires_time = #{expiresTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isExpired != null">
+        is_expired = #{isExpired,jdbcType=BIT},
+      </if>
+      <if test="userAgent != null">
+        user_agent = #{userAgent,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where session_id = #{sessionId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.aiedumate.client.entity.TblUserSessions">
+    update tbl_user_sessions
+    set username = #{username,jdbcType=VARCHAR},
+      ip_address = #{ipAddress,jdbcType=VARCHAR},
+      created_time = #{createdTime,jdbcType=TIMESTAMP},
+      expires_time = #{expiresTime,jdbcType=TIMESTAMP},
+      is_expired = #{isExpired,jdbcType=BIT},
+      user_agent = #{userAgent,jdbcType=LONGVARCHAR}
+    where session_id = #{sessionId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.aiedumate.client.entity.TblUserSessions">
+    update tbl_user_sessions
+    set username = #{username,jdbcType=VARCHAR},
+      ip_address = #{ipAddress,jdbcType=VARCHAR},
+      created_time = #{createdTime,jdbcType=TIMESTAMP},
+      expires_time = #{expiresTime,jdbcType=TIMESTAMP},
+      is_expired = #{isExpired,jdbcType=BIT}
+    where session_id = #{sessionId,jdbcType=VARCHAR}
+  </update>
+</mapper>

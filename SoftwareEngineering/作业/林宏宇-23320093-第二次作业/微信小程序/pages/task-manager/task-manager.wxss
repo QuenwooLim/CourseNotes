@@ -1,0 +1,216 @@
+page {
+  background-color: #f5f5f5;
+  height: 100vh;
+}
+
+.container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 统计信息区域样式 */
+.stats-container {
+  background-color: #fff;
+  margin: 0 0 20rpx 0;
+  padding: 30rpx;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.stats-count {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.stats-note {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.content-scroll {
+  flex: 1;
+  height: calc(100vh - 44px - env(safe-area-inset-bottom, 0px));
+  padding: 20rpx;
+  padding-bottom: 40rpx;
+  box-sizing: border-box;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.task-item {
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 30rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  border-left: 10rpx solid #1aad19;
+}
+
+.modified-task {
+  background-color: #fffef0;
+  border-left: 10rpx solid #ff9500;
+  animation: highlight-pulse 2s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+
+.modified-tag {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #ff9500;
+  color: #fff;
+  font-size: 24rpx;
+  padding: 6rpx 16rpx;
+  transform: rotate(45deg) translate(20rpx, -10rpx);
+  transform-origin: top right;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.task-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-btn {
+  padding: 10rpx 20rpx;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  text-align: center;
+}
+
+.action-btn.edit {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.action-btn.delete {
+  background-color: #fff1f0;
+  color: #ff4d4f;
+}
+
+.task-content {
+  padding: 10rpx 0;
+}
+
+.task-desc {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+  line-height: 1.5;
+}
+
+.task-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.meta-item {
+  display: flex;
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+
+.label {
+  color: #999;
+  width: 150rpx;
+  flex-shrink: 0;
+}
+
+.value {
+  color: #333;
+  font-weight: 500;
+}
+
+.empty-state,
+.loading-state {
+  text-align: center;
+  color: #999;
+  padding: 60rpx 0;
+  font-size: 28rpx;
+}
+
+.add-task-section {
+  margin: 30rpx 0;
+}
+
+.add-btn {
+  background-color: #07c160;
+  color: #fff;
+  font-size: 28rpx;
+  padding: 20rpx 0;
+  border-radius: 12rpx;
+}
+
+.end-state {
+  text-align: center;
+  padding: 30rpx 0 70rpx 0;
+  margin-top: 20rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.end-text {
+  font-size: 26rpx;
+  color: #999;
+  position: relative;
+  padding: 0 30rpx;
+}
+
+.end-text::before, .end-text::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40rpx;
+  height: 2rpx;
+  background-color: #ddd;
+}
+
+.end-text::before {
+  left: -20rpx;
+}
+
+.end-text::after {
+  right: -20rpx;
+}
+
+.safe-area-bottom {
+  height: env(safe-area-inset-bottom, 34px);
+  background-color: #f5f5f5;
+  width: 100%;
+  margin-bottom: 30rpx;
+} 

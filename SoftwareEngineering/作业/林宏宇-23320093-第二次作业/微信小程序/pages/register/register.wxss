@@ -1,0 +1,158 @@
+page {
+  background-color: #f5f5f5;
+  height: 100vh;
+}
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.scroll-area {
+  flex: 1;
+  height: calc(100vh - 45px);
+}
+
+.form-container {
+  padding: 30rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.logo {
+  width: 180rpx;
+  height: 180rpx;
+  margin-bottom: 20rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding-left: 10rpx;
+  border-left: 6rpx solid #1296db;
+}
+
+.form-group {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.form-item {
+  margin-bottom: 30rpx;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+}
+
+.label.required::after {
+  content: '*';
+  color: #ff4d4f;
+  margin-left: 5rpx;
+}
+
+.input {
+  height: 80rpx;
+  border-bottom: 1rpx solid #ddd;
+  font-size: 28rpx;
+  padding: 0 10rpx;
+}
+
+.picker {
+  height: 80rpx;
+  border-bottom: 1rpx solid #ddd;
+  font-size: 28rpx;
+  padding: 0 10rpx;
+  display: flex;
+  align-items: center;
+  color: #333;
+}
+
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10rpx 0;
+}
+
+.radio-label {
+  margin-right: 40rpx;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+
+.error-message {
+  color: #ff4d4f;
+  font-size: 28rpx;
+  margin-bottom: 30rpx;
+  text-align: center;
+}
+
+.register-btn {
+  height: 90rpx;
+  margin-top: 40rpx;
+  margin-bottom: 30rpx;
+  line-height: 90rpx;
+  font-size: 32rpx;
+  border-radius: 45rpx;
+  background-color: #1296db;
+  color: #fff;
+}
+
+.login-link {
+  text-align: center;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 40rpx;
+}
+
+.link {
+  color: #1296db;
+  font-weight: bold;
+}
+
+.safe-area-bottom {
+  height: 50rpx;
+}
+
+.notice-box {
+  margin: 0 30rpx 30rpx;
+  padding: 20rpx;
+  background-color: #fff7e6;
+  border-radius: 12rpx;
+  border-left: 6rpx solid #ffbb00;
+}
+
+.notice-text {
+  font-size: 26rpx;
+  color: #ff7700;
+  line-height: 1.5;
+} 

@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.aiedumate.client.dao.generator.TblCourseSchedulesMapper">
+  <resultMap id="BaseResultMap" type="com.aiedumate.client.entity.TblCourseSchedules">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="course" jdbcType="VARCHAR" property="course" />
+    <result column="teacher" jdbcType="VARCHAR" property="teacher" />
+    <result column="classroom" jdbcType="VARCHAR" property="classroom" />
+    <result column="day_of_week" jdbcType="CHAR" property="dayOfWeek" />
+    <result column="time_slot" jdbcType="CHAR" property="timeSlot" />
+    <result column="start_time" jdbcType="VARCHAR" property="startTime" />
+    <result column="end_time" jdbcType="VARCHAR" property="endTime" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="created_time" jdbcType="TIMESTAMP" property="createdTime" />
+    <result column="updated_time" jdbcType="TIMESTAMP" property="updatedTime" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    id, username, course, teacher, classroom, day_of_week, time_slot, start_time, end_time, 
+    remark, created_time, updated_time
+  </sql>
+  <select id="selectByExample" parameterType="com.aiedumate.client.entity.TblCourseSchedulesExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    'true' as QUERYID,
+    <include refid="Base_Column_List" />
+    from tbl_course_schedules
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from tbl_course_schedules
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from tbl_course_schedules
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.aiedumate.client.entity.TblCourseSchedulesExample">
+    delete from tbl_course_schedules
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.aiedumate.client.entity.TblCourseSchedules">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into tbl_course_schedules (username, course, teacher, 
+      classroom, day_of_week, time_slot, 
+      start_time, end_time, remark, 
+      created_time, updated_time)
+    values (#{username,jdbcType=VARCHAR}, #{course,jdbcType=VARCHAR}, #{teacher,jdbcType=VARCHAR}, 
+      #{classroom,jdbcType=VARCHAR}, #{dayOfWeek,jdbcType=CHAR}, #{timeSlot,jdbcType=CHAR}, 
+      #{startTime,jdbcType=VARCHAR}, #{endTime,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR}, 
+      #{createdTime,jdbcType=TIMESTAMP}, #{updatedTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.aiedumate.client.entity.TblCourseSchedules">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into tbl_course_schedules
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="username != null">
+        username,
+      </if>
+      <if test="course != null">
+        course,
+      </if>
+      <if test="teacher != null">
+        teacher,
+      </if>
+      <if test="classroom != null">
+        classroom,
+      </if>
+      <if test="dayOfWeek != null">
+        day_of_week,
+      </if>
+      <if test="timeSlot != null">
+        time_slot,
+      </if>
+      <if test="startTime != null">
+        start_time,
+      </if>
+      <if test="endTime != null">
+        end_time,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="createdTime != null">
+        created_time,
+      </if>
+      <if test="updatedTime != null">
+        updated_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="course != null">
+        #{course,jdbcType=VARCHAR},
+      </if>
+      <if test="teacher != null">
+        #{teacher,jdbcType=VARCHAR},
+      </if>
+      <if test="classroom != null">
+        #{classroom,jdbcType=VARCHAR},
+      </if>
+      <if test="dayOfWeek != null">
+        #{dayOfWeek,jdbcType=CHAR},
+      </if>
+      <if test="timeSlot != null">
+        #{timeSlot,jdbcType=CHAR},
+      </if>
+      <if test="startTime != null">
+        #{startTime,jdbcType=VARCHAR},
+      </if>
+      <if test="endTime != null">
+        #{endTime,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createdTime != null">
+        #{createdTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updatedTime != null">
+        #{updatedTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.aiedumate.client.entity.TblCourseSchedulesExample" resultType="java.lang.Long">
+    select count(*) from tbl_course_schedules
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update tbl_course_schedules
+    <set>
+      <if test="row.id != null">
+        id = #{row.id,jdbcType=INTEGER},
+      </if>
+      <if test="row.username != null">
+        username = #{row.username,jdbcType=VARCHAR},
+      </if>
+      <if test="row.course != null">
+        course = #{row.course,jdbcType=VARCHAR},
+      </if>
+      <if test="row.teacher != null">
+        teacher = #{row.teacher,jdbcType=VARCHAR},
+      </if>
+      <if test="row.classroom != null">
+        classroom = #{row.classroom,jdbcType=VARCHAR},
+      </if>
+      <if test="row.dayOfWeek != null">
+        day_of_week = #{row.dayOfWeek,jdbcType=CHAR},
+      </if>
+      <if test="row.timeSlot != null">
+        time_slot = #{row.timeSlot,jdbcType=CHAR},
+      </if>
+      <if test="row.startTime != null">
+        start_time = #{row.startTime,jdbcType=VARCHAR},
+      </if>
+      <if test="row.endTime != null">
+        end_time = #{row.endTime,jdbcType=VARCHAR},
+      </if>
+      <if test="row.remark != null">
+        remark = #{row.remark,jdbcType=VARCHAR},
+      </if>
+      <if test="row.createdTime != null">
+        created_time = #{row.createdTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="row.updatedTime != null">
+        updated_time = #{row.updatedTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    <if test="example != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update tbl_course_schedules
+    set id = #{row.id,jdbcType=INTEGER},
+      username = #{row.username,jdbcType=VARCHAR},
+      course = #{row.course,jdbcType=VARCHAR},
+      teacher = #{row.teacher,jdbcType=VARCHAR},
+      classroom = #{row.classroom,jdbcType=VARCHAR},
+      day_of_week = #{row.dayOfWeek,jdbcType=CHAR},
+      time_slot = #{row.timeSlot,jdbcType=CHAR},
+      start_time = #{row.startTime,jdbcType=VARCHAR},
+      end_time = #{row.endTime,jdbcType=VARCHAR},
+      remark = #{row.remark,jdbcType=VARCHAR},
+      created_time = #{row.createdTime,jdbcType=TIMESTAMP},
+      updated_time = #{row.updatedTime,jdbcType=TIMESTAMP}
+    <if test="example != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.aiedumate.client.entity.TblCourseSchedules">
+    update tbl_course_schedules
+    <set>
+      <if test="username != null">
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="course != null">
+        course = #{course,jdbcType=VARCHAR},
+      </if>
+      <if test="teacher != null">
+        teacher = #{teacher,jdbcType=VARCHAR},
+      </if>
+      <if test="classroom != null">
+        classroom = #{classroom,jdbcType=VARCHAR},
+      </if>
+      <if test="dayOfWeek != null">
+        day_of_week = #{dayOfWeek,jdbcType=CHAR},
+      </if>
+      <if test="timeSlot != null">
+        time_slot = #{timeSlot,jdbcType=CHAR},
+      </if>
+      <if test="startTime != null">
+        start_time = #{startTime,jdbcType=VARCHAR},
+      </if>
+      <if test="endTime != null">
+        end_time = #{endTime,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="createdTime != null">
+        created_time = #{createdTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updatedTime != null">
+        updated_time = #{updatedTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.aiedumate.client.entity.TblCourseSchedules">
+    update tbl_course_schedules
+    set username = #{username,jdbcType=VARCHAR},
+      course = #{course,jdbcType=VARCHAR},
+      teacher = #{teacher,jdbcType=VARCHAR},
+      classroom = #{classroom,jdbcType=VARCHAR},
+      day_of_week = #{dayOfWeek,jdbcType=CHAR},
+      time_slot = #{timeSlot,jdbcType=CHAR},
+      start_time = #{startTime,jdbcType=VARCHAR},
+      end_time = #{endTime,jdbcType=VARCHAR},
+      remark = #{remark,jdbcType=VARCHAR},
+      created_time = #{createdTime,jdbcType=TIMESTAMP},
+      updated_time = #{updatedTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

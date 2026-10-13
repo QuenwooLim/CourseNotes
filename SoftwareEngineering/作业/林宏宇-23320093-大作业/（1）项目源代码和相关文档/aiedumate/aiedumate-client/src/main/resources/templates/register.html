@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .register-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .register-header h2 {
+            color: #333;
+            font-weight: 600;
+        }
+        .form-control:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+        .btn-register {
+            background-color: #4e73df;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            font-weight: 600;
+        }
+        .btn-register:hover {
+            background-color: #3a5bd9;
+        }
+        .login-link {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .login-link a {
+            color: #6c757d;
+            text-decoration: none;
+        }
+        .login-link a:hover {
+            color: #4e73df;
+        }
+        .error-message {
+            color: #e74a3b;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+        .password-strength {
+            height: 5px;
+            margin-top: 5px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="register-container">
+        <div class="register-header">
+            <h2>用户注册</h2>
+            <p class="text-muted">创建您的账户</p>
+        </div>
+        <form id="registerForm">
+            <div class="mb-3">
+                <label for="username" class="form-label">用户名</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+                <div id="usernameError" class="error-message"></div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">密码</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+                <div class="password-strength">
+                    <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                </div>
+                <div id="passwordError" class="error-message"></div>
+                <small class="text-muted">至少8个字符，包含字母和数字</small>
+            </div>
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">确认密码</label>
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                <div id="confirmPasswordError" class="error-message"></div>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">电子邮箱</label>
+                <input type="email" class="form-control" id="email" name="email">
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">手机号码</label>
+                <input type="tel" class="form-control" id="phone" name="phone">
+            </div>
+            <button type="submit" class="btn btn-primary btn-register">注册</button>
+        </form>
+        <div class="login-link">
+            已有账号? <a href="/login">立即登录</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // 清除之前的错误提示
+        document.getElementById('usernameError').style.display = 'none';
+        document.getElementById('passwordError').style.display = 'none';
+        document.getElementById('confirmPasswordError').style.display = 'none';
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const confirmPassword = document.getElementById('confirmPassword').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+
+        // 前端验证
+        if (!username) {
+            showError('usernameError', '请输入用户名');
+            return;
+        }
+
+        if (!password) {
+            showError('passwordError', '请输入密码');
+            return;
+        }
+
+        if (password.length < 8) {
+            showError('passwordError', '密码长度至少8位');
+            return;
+        }
+
+        if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+            showError('passwordError', '密码必须包含字母和数字');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            showError('confirmPasswordError', '两次输入的密码不一致');
+            return;
+        }
+
+        // 发送注册请求
+        register(username, password, email, phone);
+    });
+
+    // 密码强度检测
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const strengthBar = document.getElementById('passwordStrengthBar');
+
+        // 简单的密码强度计算
+        let strength = 0;
+        if (password.length > 0) strength += 20;
+        if (password.length >= 8) strength += 20;
+        if (/[a-z]/.test(password)) strength += 20;
+        if (/[A-Z]/.test(password)) strength += 20;
+        if (/[0-9]/.test(password)) strength += 20;
+
+        // 设置强度条颜色和宽度
+        strengthBar.style.width = strength + '%';
+        if (strength < 40) {
+            strengthBar.style.backgroundColor = '#e74a3b';
+        } else if (strength < 80) {
+            strengthBar.style.backgroundColor = '#f6c23e';
+        } else {
+            strengthBar.style.backgroundColor = '#1cc88a';
+        }
+    });
+
+    function showError(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.style.display = 'block';
+    }
+
+    function register(username, password, email, phone) {
+        fetch('/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password,
+                email: email,
+                phone: phone
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.code === 200) {
+                // 注册成功
+                Swal.fire({
+                    icon: 'success',
+                    title: '注册成功',
+                    text: '即将跳转到登录页面',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = '/login';
+                });
+            } else {
+                // 注册失败
+                Swal.fire({
+                    icon: 'error',
+                    title: '注册失败',
+                    text: data.message || '注册过程中发生错误'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: '发生错误',
+                text: '注册过程中发生错误，请稍后再试'
+            });
+        });
+    }
+</script>
+</body>
+</html>

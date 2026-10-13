@@ -1,0 +1,19 @@
+server:
+    port: 8080
+
+spring:
+    application:
+        name: mcp-server
+    datasource:
+        driverClassName: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://127.0.0.1:3306/mcp?useUnicode=true&characterEncoding=utf-8
+        username: root
+        password: root
+
+mybatis:
+    # 指定别名设置的包为所有entity
+    type-aliases-package: com.myproject.entity
+    mapper-locations: # mapper映射文件位置
+        classpath:mapping/*.xml
+    configuration:
+        map-underscore-to-camel-case: true # 驼峰命名规范

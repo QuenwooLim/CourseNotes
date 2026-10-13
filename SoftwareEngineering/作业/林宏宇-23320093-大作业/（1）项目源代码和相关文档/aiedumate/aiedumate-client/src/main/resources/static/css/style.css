@@ -1,0 +1,160 @@
+/* 基础样式 */
+body {
+    background-color: #f7f7f8;
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.5;
+    color: #374151;
+    margin: 0;
+    padding: 0;
+}
+
+.chat-container {
+    max-width: 900px;
+    margin: 0 auto;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: #ffffff;
+    scroll-behavior: smooth;
+}
+
+/* 消息气泡样式 */
+.message {
+    padding: 1rem 1rem 1.5rem 1rem;
+    position: relative;
+    max-width: 85%;
+    margin-bottom: 0.5rem;
+    border-radius: 0.5rem;
+    line-height: 1.5;
+}
+
+.user-message {
+    background-color: #f3f4f6;
+    margin-left: auto;
+    border-top-right-radius: 0;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+.bot-message {
+    background-color: #f9fafb;
+    margin-right: auto;
+    border-top-left-radius: 0;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+/* 大模型特有的代码块样式 */
+.code-block {
+    background-color: #f6f8fa;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
+    border: 1px solid #e1e4e8;
+}
+
+.code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+    color: #6a737d;
+}
+
+.copy-button {
+    background: none;
+    border: none;
+    color: #6a737d;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+/* Markdown样式增强 */
+.message-content strong {
+    font-weight: 600;
+}
+
+.message-content em {
+    font-style: italic;
+}
+
+.message-content a {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
+
+.message-content ul,
+.message-content ol {
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+.message-content li {
+    margin-bottom: 0.25rem;
+}
+
+.message-content blockquote {
+    border-left: 3px solid #e5e7eb;
+    padding-left: 1rem;
+    margin: 0.5rem 0;
+    color: #6b7280;
+}
+
+/* 输入区域 */
+.input-area {
+    padding: 1rem;
+    background-color: #ffffff;
+    border-top: 1px solid #e5e7eb;
+}
+
+.input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+.input-group button {
+    padding: 0.75rem 1.5rem;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.input-group button:hover {
+    background-color: #2563eb;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .chat-container {
+        max-width: 100%;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+}

@@ -1,0 +1,33 @@
+<view class="login-container">
+  <view class="header">
+    <image class="logo" src="/images/logo.png" mode="aspectFit"></image>
+    <text class="title">队员登录</text>
+  </view>
+  
+  <view class="form">
+    <view class="form-item">
+      <text class="label">学号</text>
+      <input class="input" type="text" value="{{form.studentId}}" bindinput="onStudentIdInput" placeholder="请输入学号" maxlength="20" />
+    </view>
+    
+    <view class="form-item">
+      <text class="label">密码</text>
+      <view class="password-container" bindtap="onPasswordContainerTap">
+        <input class="input password-input" type="text" value="{{passwordDisplay}}" disabled="true" placeholder="请输入密码" />
+        <input class="hidden-input" type="text" value="{{form.password}}" bindinput="onPasswordInput" focus="{{passwordFocus}}" maxlength="20" />
+      </view>
+    </view>
+    
+    <button class="submit-btn" type="primary" bindtap="onSubmit" loading="{{loading}}" disabled="{{loading}}">
+      登录
+    </button>
+    
+    <view class="toggle-mode" bindtap="navigateToRegister">
+      首次使用？点击注册队员账号
+    </view>
+  </view>
+  
+  <view class="footer">
+    <text class="copyright">打卡小程序 ©2023</text>
+  </view>
+</view> 

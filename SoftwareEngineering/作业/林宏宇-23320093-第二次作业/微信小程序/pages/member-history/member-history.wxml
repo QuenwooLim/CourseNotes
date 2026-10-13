@@ -1,0 +1,104 @@
+<view class="container">
+  <!-- 导航栏 -->
+  <navigation-bar 
+    title="{{memberName}}的打卡记录"
+    back="{{true}}" 
+    bindback="onBackTap"
+  />
+  
+  <!-- 内容区域 -->
+  <scroll-view 
+    class="content-scroll"
+    scroll-y="{{true}}"
+    enable-flex="{{true}}"
+    refresher-enabled="{{true}}"
+    refresher-triggered="{{loading}}"
+    bindrefresherrefresh="onPullDownRefresh"
+  >
+    <!-- 用户信息 -->
+    <view class="user-info">
+      <image class="user-avatar" src="{{memberInfo.avatarUrl || '/images/default-avatar.png'}}"></image>
+      <view class="user-details">
+        <view class="user-name">{{memberInfo.nickName}}</view>
+        <view class="user-id">{{memberInfo.studentId || '未设置学号'}}</view>
+      </view>
+      <view class="stats-box">
+        <view class="stats-item">
+          <view class="stats-value">{{totalCheckins || 0}}</view>
+          <view class="stats-label">总打卡</view>
+        </view>
+        <view class="stats-item">
+          <view class="stats-value">{{continuousCheckins || 0}}</view>
+          <view class="stats-label">连续打卡</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 打卡记录筛选 -->
+    <view class="filter-bar">
+      <view class="filter-item {{filterType === 'all' ? 'active' : ''}}" bindtap="onFilterTap" data-type="all">全部记录</view>
+      <view class="filter-item {{filterType === 'month' ? 'active' : ''}}" bindtap="onFilterTap" data-type="month">本月</view>
+      <view class="filter-item {{filterType === 'week' ? 'active' : ''}}" bindtap="onFilterTap" data-type="week">本周</view>
+    </view>
+    
+    <!-- 打卡记录列表 -->
+    <view class="history-list" wx:if="{{history.length > 0}}">
+      <block wx:for="{{history}}" wx:key="_id">
+        <view class="history-item">
+          <view class="date-group">
+            <view class="date-text">{{item.dateText}}</view>
+            <view class="weekday">{{item.weekday}}</view>
+          </view>
+          <view class="checkin-details">
+            <view class="time-box">
+              <text class="checkin-time">{{item.timeText}}</text>
+              <text class="task-name">{{item.taskTitle || item.taskName}}</text>
+            </view>
+            <view class="content-box" wx:if="{{item.content}}">
+              <text class="content-label">内容：</text>
+              <text class="content-text">{{item.content}}</text>
+            </view>
+            <view class="content-box" wx:if="{{item.training}}">
+              <text class="content-label">训练：</text>
+              <text class="content-text">{{item.training}}</text>
+            </view>
+            <view class="content-box" wx:if="{{item.remark}}">
+              <text class="content-label">备注：</text>
+              <text class="content-text">{{item.remark}}</text>
+            </view>
+            <view class="location" wx:if="{{item.location}}">
+              <text class="location-icon">📍</text>
+              <text class="location-text">{{item.location}}</text>
+            </view>
+            <view class="images-box" wx:if="{{item.images && item.images.length > 0}}">
+              <block wx:for="{{item.images}}" wx:for-item="image" wx:key="*this">
+                <image 
+                  class="checkin-image" 
+                  src="{{image}}" 
+                  mode="aspectFill"
+                  bindtap="previewImage"
+                  data-urls="{{item.images}}"
+                  data-current="{{image}}"
+                ></image>
+              </block>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+    
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!loading && history.length === 0}}">
+      <text class="empty-text">暂无打卡记录</text>
+    </view>
+    
+    <!-- 加载状态 -->
+    <view class="loading-state" wx:if="{{loading && !isPullDownRefresh}}">
+      <view class="loading-icon"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+  </scroll-view>
+  
+  <!-- 底部安全区域 -->
+  <view class="safe-area-bottom"></view>
+</view> 

@@ -1,0 +1,99 @@
+<navigation-bar title="打卡任务管理" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="container">
+  <scroll-view class="content-scroll" 
+               scroll-y="true" 
+               refresher-enabled="{{true}}" 
+               refresher-triggered="{{refreshing}}" 
+               bindrefresherrefresh="onPullDownRefresh" 
+               enhanced="true" 
+               show-scrollbar="true" 
+               fast-deceleration="true" 
+               bounces="true"
+               bindscrolltolower="onReachBottom"
+               style="height: {{scrollHeight ? scrollHeight + 'px' : 'calc(100vh - 44px - env(safe-area-inset-bottom, 0px))'}}">
+    
+    <!-- 任务统计信息区域 -->
+    <view class="stats-container">
+      <view class="stats-count">共有任务 {{taskList.length}} 个</view>
+      <view class="stats-note">队长可管理任务的创建、修改和删除</view>
+    </view>
+    
+    <!-- 任务列表 -->
+    <view class="task-list">
+      <block wx:if="{{taskList.length > 0}}">
+        <view wx:for="{{taskList}}" wx:key="_id" class="task-item {{item.isRecentlyModified ? 'modified-task' : ''}}">
+          <!-- 任务卡片头部 -->
+          <view class="task-header">
+            <text class="task-title">{{item.title}}</text>
+            <view class="action-buttons">
+              <view class="action-btn edit" catchtap="onEditTask" data-id="{{item._id}}">编辑</view>
+              <view class="action-btn delete" catchtap="onDeleteTask" data-id="{{item._id}}">删除</view>
+            </view>
+          </view>
+          
+          <!-- 任务卡片内容 -->
+          <view class="task-content" bindtap="onTaskDetail" data-id="{{item._id}}">
+            <view class="task-desc">{{item.description || '无描述'}}</view>
+            <view class="task-meta">
+              <view class="meta-item">
+                <text class="label">时间周期:</text>
+                <text class="value">{{item.timePeriod || '未设置'}}</text>
+              </view>
+              
+              <view class="meta-item">
+                <text class="label">打卡类型:</text>
+                <text class="value">{{item.checkinType || '未设置'}}</text>
+              </view>
+              
+              <view class="meta-item">
+                <text class="label">打卡时间:</text>
+                <text class="value">{{item.startDateTime || '未设置'}} - {{item.endDateTime || '未设置'}}</text>
+              </view>
+              
+              <view class="meta-item">
+                <text class="label">参与人数:</text>
+                <text class="value">{{item.participants.length || 0}}人</text>
+              </view>
+              
+              <view class="meta-item">
+                <text class="label">创建日期:</text>
+                <text class="value">{{item.createdAtFormatted || '未知'}}</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 新增/已更新标签 -->
+          <view wx:if="{{item.isRecentlyModified}}" class="modified-tag">新增/已更新</view>
+        </view>
+      </block>
+      
+      <!-- 空状态显示 -->
+      <block wx:if="{{taskList.length === 0 && !loading}}">
+        <view class="empty-state">
+          <text>暂无打卡任务</text>
+        </view>
+      </block>
+      
+      <!-- 加载状态显示 -->
+      <block wx:if="{{loading && !refreshing}}">
+        <view class="loading-state">
+          <text>加载中...</text>
+        </view>
+      </block>
+    </view>
+    
+    <!-- 添加任务按钮 -->
+    <view class="add-task-section">
+      <button class="add-btn" bindtap="onCreateTask">添加新任务</button>
+    </view>
+    
+    <!-- 底部提示文字 -->
+    <view class="end-state">
+      <text class="end-text">{{taskList.length > 0 ? '已经到底了~' : '暂无任务'}}</text>
+    </view>
+    
+    <!-- 底部安全区域 -->
+    <view class="safe-area-bottom"></view>
+    <view style="height: 50rpx;"></view>
+  </scroll-view>
+</view> 

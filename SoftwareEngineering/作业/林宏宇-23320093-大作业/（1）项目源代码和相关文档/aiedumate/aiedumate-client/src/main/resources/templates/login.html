@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-header h2 {
+            color: #333;
+            font-weight: 600;
+        }
+        .form-control:focus {
+            border-color: #4e73df;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+        .btn-login {
+            background-color: #4e73df;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            font-weight: 600;
+        }
+        .btn-login:hover {
+            background-color: #3a5bd9;
+        }
+        .extra-links {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .extra-links a {
+            color: #6c757d;
+            text-decoration: none;
+        }
+        .extra-links a:hover {
+            color: #4e73df;
+        }
+        .error-message {
+            color: #e74a3b;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="login-container">
+        <div class="login-header">
+            <h2>用户登录</h2>
+            <p class="text-muted">请输入您的账号和密码</p>
+        </div>
+        <form id="loginForm">
+            <div class="mb-3">
+                <label for="username" class="form-label">用户名</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+                <div id="usernameError" class="error-message"></div>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">密码</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+                <div id="passwordError" class="error-message"></div>
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="rememberMe">
+                <label class="form-check-label" for="rememberMe">记住我</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-login">登录</button>
+        </form>
+        <div class="extra-links">
+            <a href="#" id="forgotPassword">忘记密码?</a> |
+            <a href="#" id="registerLink">注册新账号</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // 清除之前的错误提示
+        document.getElementById('usernameError').style.display = 'none';
+        document.getElementById('passwordError').style.display = 'none';
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        // 简单前端验证
+        if (!username) {
+            showError('usernameError', '请输入用户名');
+            return;
+        }
+
+        if (!password) {
+            showError('passwordError', '请输入密码');
+            return;
+        }
+
+        // 发送登录请求
+        login(username, password);
+    });
+
+    function showError(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.style.display = 'block';
+    }
+
+    function login(username, password) {
+        fetch('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        })
+        .then(response => {
+            console.log('response:', response);
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.message || '登录失败');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('data：' + data);
+            if (data.code === 200) {
+                // 登录成功，保存token到localStorage
+                localStorage.setItem('jwtToken', data.data.token);
+
+                // 设置Authorization头
+                setAuthHeader(data.data.token);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '登录成功',
+                    text: '欢迎回来！',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    // 跳转到首页或其他页面
+                    window.location.href = '/chat';
+                });
+
+                // 如果需要记住我功能
+                const rememberMe = document.getElementById('rememberMe').checked;
+                if (rememberMe) {
+                    localStorage.setItem('rememberedUser', username);
+                }
+            } else {
+                // 登录失败
+                Swal.fire({
+                    icon: 'error',
+                    title: '登录失败',
+                    text: data.message || '用户名或密码错误'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: '发生错误',
+                text: '登录过程中发生错误，请稍后再试'
+            });
+        });
+    }
+
+    // 设置Authorization头
+    function setAuthHeader(token) {
+        console.log('token:', token);
+        if (token) {
+            // 为所有fetch请求设置默认的Authorization头
+            fetch = (originalFetch => {
+                return function(url, options = {}) {
+                    options.headers = options.headers || {};
+                    options.headers.Authorization = `Bearer ${token}`;
+                    return originalFetch(url, options);
+                };
+            })(fetch);
+        }
+    }
+
+    // 注册链接点击事件
+    document.getElementById('registerLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.href = '/register';
+    });
+
+    // 忘记密码链接点击事件
+    document.getElementById('forgotPassword').addEventListener('click', function(e) {
+        e.preventDefault();
+        Swal.fire({
+            title: '忘记密码',
+            text: '请联系管理员重置密码',
+            icon: 'info'
+        });
+    });
+
+    // 页面加载时检查是否有记住的用户名
+    window.addEventListener('DOMContentLoaded', function() {
+        const rememberedUser = localStorage.getItem('rememberedUser');
+        if (rememberedUser) {
+            document.getElementById('username').value = rememberedUser;
+            document.getElementById('rememberMe').checked = true;
+        }
+        const token = localStorage.getItem('jwtToken');
+        if (token) {
+            setAuthHeader(token);
+        }
+    });
+</script>
+</body>
+</html>

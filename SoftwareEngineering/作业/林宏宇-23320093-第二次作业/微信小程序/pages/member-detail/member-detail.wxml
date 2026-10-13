@@ -1,0 +1,76 @@
+<navigation-bar title="队员详情" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="container">
+  <scroll-view class="content-scroll" scroll-y="true" wx:if="{{memberInfo && !loading}}">
+    <!-- 头像和姓名 -->
+    <view class="profile-header">
+      <image class="avatar" src="{{memberInfo.avatarUrl || '/images/default-avatar.png'}}"></image>
+      <text class="name">{{memberInfo.nickName || '未知姓名'}}</text>
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="info-section">
+      <view class="section-title">基本信息</view>
+      <view class="info-grid">
+        <view class="info-item">
+          <text class="label">学号:</text>
+          <text class="value">{{memberInfo.studentId || '-'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="label">性别:</text>
+          <text class="value">{{memberInfo.gender === 'male' ? '男' : (memberInfo.gender === 'female' ? '女' : '-')}}</text>
+        </view>
+        <view class="info-item">
+          <text class="label">学院:</text>
+          <text class="value">{{memberInfo.college || '-'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="label">年级:</text>
+          <text class="value">{{memberInfo.grade || '-'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 队员信息 -->
+    <view class="info-section">
+      <view class="section-title">队员信息</view>
+      <view class="info-grid">
+        <view class="info-item">
+          <text class="label">队员ID:</text>
+          <text class="value">{{memberInfo._id || '-'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="label">队员状态:</text>
+          <text class="value">{{memberInfo.teamStatus || '-'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="label">入队时间:</text>
+          <text class="value">{{memberInfo.joinDate || '-'}}</text>
+        </view>
+        <view class="info-item">
+          <text class="label">左右桨:</text>
+          <text class="value">{{memberInfo.paddleSide || '-'}}</text>
+        </view>
+        <view class="info-item full-width">
+          <text class="label">测试水平:</text>
+          <text class="value">{{memberInfo.testLevel || '-'}}</text>
+        </view>
+        <view class="info-item full-width">
+          <text class="label">参赛记录:</text>
+          <view class="competitions-list">
+            <block wx:if="{{memberInfo.competitions && memberInfo.competitions.length > 0}}">
+              <text class="competition-item" wx:for="{{memberInfo.competitions}}" wx:key="index">{{item}}</text>
+            </block>
+            <text wx:else class="no-competitions">无</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="safe-area-bottom"></view>
+  </scroll-view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+</view> 

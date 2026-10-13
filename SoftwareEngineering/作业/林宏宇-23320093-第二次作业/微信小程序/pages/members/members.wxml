@@ -1,0 +1,45 @@
+<view class="container">
+  <navigation-bar title="用户列表" back="{{true}}" color="black" background="#FFF" bindback="onBackTap"></navigation-bar>
+  
+  <scroll-view class="content-scroll" scroll-y type="list" enable-pull-down-refresh="{{true}}" refresher-enabled refresher-triggered="{{refreshing}}" bindrefresherrefresh="onPullDownRefresh">
+    <!-- 标题 -->
+    <view class="header">
+      <text class="title">所有用户列表</text>
+      <text class="subtitle">共计 {{members.length}} 人</text>
+    </view>
+    
+    <!-- 搜索栏 -->
+    <view class="search-bar">
+      <input class="search-input" type="text" placeholder="搜索用户姓名" value="{{searchValue}}" bindinput="onSearchInput"/>
+      <view class="search-btn" bindtap="onSearchTap">搜索</view>
+    </view>
+    
+    <!-- 用户列表 -->
+    <view class="members-list">
+      <block wx:if="{{filteredMembers.length > 0}}">
+        <view class="member-item" wx:for="{{filteredMembers}}" wx:key="_id" bindtap="onMemberTap" data-id="{{item._id}}" data-nickname="{{item.nickName}}">
+          <image class="member-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"></image>
+          <view class="member-info">
+            <text class="member-name">{{item.nickName || '微信用户'}}</text>
+            <text class="member-id" wx:if="{{item.studentId}}">学号: {{item.studentId}}</text>
+          </view>
+          <view class="member-stats">
+            <text class="action-arrow">></text>
+          </view>
+        </view>
+      </block>
+      
+      <view wx:if="{{filteredMembers.length === 0 && !loading}}" class="empty-state">
+        <text class="empty-text">暂无用户数据</text>
+      </view>
+      
+      <view wx:if="{{loading && !refreshing}}" class="loading-state">
+        <view class="loading-icon"></view>
+        <text class="loading-text">加载中...</text>
+      </view>
+    </view>
+    
+    <!-- 底部安全区域 -->
+    <view class="safe-area-bottom"></view>
+  </scroll-view>
+</view> 

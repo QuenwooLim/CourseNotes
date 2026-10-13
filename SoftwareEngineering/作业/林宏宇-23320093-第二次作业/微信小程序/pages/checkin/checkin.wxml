@@ -1,0 +1,161 @@
+<navigation-bar title="{{isView ? '打卡详情' : '提交打卡'}}" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="checkin-container">
+  <scroll-view scroll-y class="form-scroll" type="list">
+    <view class="task-card" wx:if="{{task}}">
+      <view class="task-title">{{task.title}}</view>
+      <view class="task-desc">{{task.description}}</view>
+      <view class="task-meta">
+        <view class="task-type">打卡类型：{{task.checkinType || '未设置'}}</view>
+        <view class="task-deadline">{{task.endDateTime || task.deadline}}</view>
+      </view>
+    </view>
+
+    <!-- 添加查看用户信息提示 -->
+    <view class="user-info-tip" wx:if="{{isView && viewingUserName}}">
+      <text>当前正在查看 <text class="username">{{viewingUserName}}</text> 的打卡内容</text>
+    </view>
+
+    <view class="form">
+      <view class="form-item">
+        <text class="label">打卡日期</text>
+        <view class="date-picker">
+          <picker mode="date" value="{{form.date}}" start="2020-01-01" end="2030-12-31" bindchange="onDateChange" disabled="{{isView}}">
+            <view class="picker-text">{{form.date}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <!-- 非集训打卡表单 -->
+      <block wx:if="{{!isTrainingCheckin}}">
+        <!-- 训练动作一 -->
+        <view class="form-item">
+          <text class="label">训练动作一<text class="required">*</text></text>
+          <input class="input" placeholder="请输入训练动作名称" value="{{form.exercise1.name}}" bindinput="onExercise1NameInput" disabled="{{isView}}"/>
+          <textarea 
+            class="textarea" 
+            placeholder="请输入训练内容" 
+            value="{{form.exercise1.content}}"
+            bindinput="onExercise1ContentInput"
+            disabled="{{isView}}"
+          ></textarea>
+        </view>
+
+        <!-- 训练动作二 -->
+        <view class="form-item">
+          <text class="label">训练动作二<text class="required">*</text></text>
+          <input class="input" placeholder="请输入训练动作名称" value="{{form.exercise2.name}}" bindinput="onExercise2NameInput" disabled="{{isView}}"/>
+          <textarea 
+            class="textarea" 
+            placeholder="请输入训练内容" 
+            value="{{form.exercise2.content}}"
+            bindinput="onExercise2ContentInput"
+            disabled="{{isView}}"
+          ></textarea>
+        </view>
+
+        <!-- 训练动作三 -->
+        <view class="form-item">
+          <text class="label">训练动作三<text class="required">*</text></text>
+          <input class="input" placeholder="请输入训练动作名称" value="{{form.exercise3.name}}" bindinput="onExercise3NameInput" disabled="{{isView}}"/>
+          <textarea 
+            class="textarea" 
+            placeholder="请输入训练内容" 
+            value="{{form.exercise3.content}}"
+            bindinput="onExercise3ContentInput"
+            disabled="{{isView}}"
+          ></textarea>
+        </view>
+
+        <!-- 训练动作四 -->
+        <view class="form-item">
+          <text class="label">训练动作四</text>
+          <input class="input" placeholder="请输入训练动作名称" value="{{form.exercise4.name}}" bindinput="onExercise4NameInput" disabled="{{isView}}"/>
+          <textarea 
+            class="textarea" 
+            placeholder="请输入训练内容" 
+            value="{{form.exercise4.content}}"
+            bindinput="onExercise4ContentInput"
+            disabled="{{isView}}"
+          ></textarea>
+        </view>
+
+        <!-- 训练动作五 -->
+        <view class="form-item">
+          <text class="label">训练动作五</text>
+          <input class="input" placeholder="请输入训练动作名称" value="{{form.exercise5.name}}" bindinput="onExercise5NameInput" disabled="{{isView}}"/>
+          <textarea 
+            class="textarea" 
+            placeholder="请输入训练内容" 
+            value="{{form.exercise5.content}}"
+            bindinput="onExercise5ContentInput"
+            disabled="{{isView}}"
+          ></textarea>
+        </view>
+
+        <!-- 训练动作六 -->
+        <view class="form-item">
+          <text class="label">训练动作六</text>
+          <input class="input" placeholder="请输入训练动作名称" value="{{form.exercise6.name}}" bindinput="onExercise6NameInput" disabled="{{isView}}"/>
+          <textarea 
+            class="textarea" 
+            placeholder="请输入训练内容" 
+            value="{{form.exercise6.content}}"
+            bindinput="onExercise6ContentInput"
+            disabled="{{isView}}"
+          ></textarea>
+        </view>
+      </block>
+
+      <!-- 集训打卡表单 -->
+      <block wx:else>
+        <view class="form-item">
+          <text class="label">训练内容<text class="required">*</text></text>
+          <textarea 
+            class="textarea" 
+            placeholder="请输入训练内容" 
+            value="{{form.trainingContent}}"
+            bindinput="onTrainingContentInput"
+            disabled="{{isView}}"
+          ></textarea>
+        </view>
+      </block>
+
+      <!-- 公共部分 -->
+      <view class="form-item">
+        <text class="label">备注信息</text>
+        <textarea 
+          class="textarea" 
+          placeholder="请输入备注信息（选填）" 
+          value="{{form.remark}}"
+          bindinput="onRemarkInput"
+          disabled="{{isView}}"
+        ></textarea>
+      </view>
+
+      <!-- 图片上传部分 -->
+      <view class="form-item">
+        <text class="label">图片凭证</text>
+        <view class="image-uploader">
+          <view class="image-preview" wx:if="{{form.imageUrl}}">
+            <image src="{{form.imageUrl}}" mode="aspectFill" bindtap="previewImage" lazy-load="true" binderror="handleImageError"></image>
+            <view class="delete-icon" catchtap="deleteImage" wx:if="{{!isView}}">×</view>
+          </view>
+          <view class="upload-button" bindtap="chooseImage" wx:if="{{!form.imageUrl && !isView}}">
+            <text class="upload-icon">+</text>
+            <text class="upload-text">上传图片</text>
+          </view>
+          <view class="empty-image-tip" wx:if="{{!form.imageUrl && isView}}">
+            <text>无图片凭证</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="submit-section" wx:if="{{!isView}}">
+      <button class="submit-btn" bindtap="handleSubmit" disabled="{{loading}}">提交打卡</button>
+    </view>
+    
+    <!-- 底部安全区域 -->
+    <view class="safe-area-bottom"></view>
+  </scroll-view>
+</view> 

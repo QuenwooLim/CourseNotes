@@ -1,0 +1,119 @@
+page {
+  background-color: #f8f8f8;
+  height: 100vh;
+}
+
+.container {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-scroll {
+  flex: 1;
+  padding: 20rpx;
+}
+
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 40rpx 20rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.avatar {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  border: 4rpx solid #eee;
+}
+
+.name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.info-section {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  margin-bottom: 25rpx;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 两列布局 */
+  gap: 25rpx 20rpx; /* 行间距 列间距 */
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1; /* 占据整行 */
+}
+
+.label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.value {
+  font-size: 28rpx;
+  color: #444;
+  line-height: 1.5; /* 增加行高以便阅读 */
+  white-space: pre-wrap; /* 允许换行 */
+  word-break: break-all; /* 允许在单词内换行 */
+}
+
+.competitions-list {
+  margin-top: 5rpx;
+}
+
+.competition-item {
+  display: block;
+  background-color: #f5f5f5;
+  padding: 8rpx 15rpx;
+  border-radius: 6rpx;
+  margin-bottom: 10rpx;
+  font-size: 26rpx;
+  color: #555;
+}
+
+.no-competitions {
+  font-size: 26rpx;
+  color: #aaa;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.safe-area-bottom {
+  height: env(safe-area-inset-bottom);
+} 

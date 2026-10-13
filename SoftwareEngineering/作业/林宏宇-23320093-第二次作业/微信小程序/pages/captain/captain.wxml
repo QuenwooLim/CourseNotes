@@ -1,0 +1,35 @@
+<navigation-bar title="队长模式" back="{{true}}" color="black" background="#FFF"></navigation-bar>
+<view class="captain-container">
+  <view class="header">
+    <text class="title">队长管理中心</text>
+  </view>
+
+  <scroll-view scroll-y class="content-scroll" type="list">
+    <view class="captain-info">
+      <view class="welcome">
+        <text class="welcome-text">欢迎，队长！</text>
+        <text class="sub-text">您可以管理打卡任务和查看队员打卡情况</text>
+      </view>
+    </view>
+
+    <view class="action-list">
+      <view class="action-item" bindtap="onManageTaskTap">
+        <text class="action-text">管理打卡任务</text>
+        <text class="sub-text">发布、删除、修改任务</text>
+        <text class="action-arrow">></text>
+      </view>
+      <view class="action-item" bindtap="onViewMembersTap">
+        <text class="action-text">查看用户打卡</text>
+        <text class="action-arrow">></text>
+      </view>
+      <view class="action-item" bindtap="onManageSettingsTap">
+        <text class="action-text">管理个人信息设置</text>
+        <text class="sub-text">查看和修改队员信息</text>
+        <text class="action-arrow">></text>
+      </view>
+    </view>
+    
+    <!-- 添加底部安全区域 -->
+    <view class="safe-area-bottom"></view>
+  </scroll-view>
+</view> 

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "打卡记录",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "navigation-bar": "/components/navigation-bar/navigation-bar"
+  }
+} 

@@ -1,0 +1,26 @@
+/**
+ * 格式化用户ID为5位数字
+ * 如1转为00001
+ */
+var formatUserId = function(id) {
+  if (!id) return '未登录';
+  
+  // 如果是数字或可以转为数字，则格式化为5位
+  var idStr = id.toString();
+  if (getRegExp('^\\d+$').test(idStr)) {
+    // 使用0填充到5位数
+    var paddedId = '';
+    for (var i = 0; i < 5 - idStr.length; i++) {
+      paddedId += '0';
+    }
+    paddedId += idStr;
+    return paddedId;
+  }
+  
+  // 如果是非数字ID，则返回原值
+  return id;
+};
+
+module.exports = {
+  formatUserId: formatUserId
+}; 

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "发布任务",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "navigation-bar": "/components/navigation-bar/navigation-bar"
+  }
+}

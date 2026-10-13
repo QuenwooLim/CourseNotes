@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生笔记系统</title>
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/bootstrap-icons.css" rel="stylesheet">
+    <link href="./css/github.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        #sidebar {
+            height: 100vh;
+            background-color: #ffffff;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+        }
+        #content {
+            height: 100vh;
+            overflow-y: auto;
+            background-color: #ffffff;
+            padding: 2rem;
+        }
+        .note-item {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .note-item:hover {
+            background-color: #e9ecef;
+        }
+        .note-item.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .folder {
+            font-weight: bold;
+            margin-top: 1rem;
+            color: #495057;
+        }
+        .search-box {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+        }
+        .note-title {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #212529;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 0.5rem;
+        }
+        .note-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .markdown-content {
+            line-height: 1.6;
+        }
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3 {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .markdown-content code {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+        .markdown-content a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .markdown-content a:hover {
+            text-decoration: underline;
+        }
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6c757d;
+        }
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+        .editor-container {
+            display: none;
+            margin-top: 1rem;
+        }
+        #noteContentEditor {
+            min-height: 300px;
+            font-family: monospace;
+        }
+        .action-buttons {
+            margin-top: 1rem;
+        }
+        .offline-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<!-- 加载动画 -->
+<div class="loading-spinner spinner-border text-primary" role="status">
+    <span class="visually-hidden">加载中...</span>
+</div>
+
+<!-- 离线提示 -->
+<div class="offline-badge badge bg-warning text-dark">
+    <i class="bi bi-exclamation-triangle-fill"></i> 离线模式
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- 左侧导航栏 -->
+        <div class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebar">
+            <div class="search-box">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="搜索笔记..." id="searchInput">
+                    <button class="btn btn-outline-secondary" type="button" id="searchButton">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-3" id="noteDirectory">
+                <div class="text-center my-3">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <span>加载笔记目录...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧内容区域 -->
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-0" id="content">
+            <div id="noteContainer" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="note-title" id="noteTitle"></div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" id="editButton">
+                            <i class="bi bi-pencil"></i> 编辑
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" id="deleteButton">
+                            <i class="bi bi-trash"></i> 删除
+                        </button>
+                    </div>
+                </div>
+                <div class="note-meta" id="noteMeta"></div>
+                <div class="markdown-content" id="noteContent"></div>
+
+                <!-- 笔记编辑器 -->
+                <div class="editor-container" id="editorContainer">
+                    <div class="mb-3">
+                        <label for="noteTitleEditor" class="form-label">标题</label>
+                        <input type="text" class="form-control" id="noteTitleEditor">
+                    </div>
+                    <div class="mb-3">
+                        <label for="noteCategoryEditor" class="form-label">课程</label>
+                        <select class="form-select" id="noteCategoryEditor"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="noteContentEditor" class="form-label">内容</label>
+                        <textarea class="form-control" id="noteContentEditor"></textarea>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="saveButton">
+                            <i class="bi bi-save"></i> 保存
+                        </button>
+                        <button class="btn btn-outline-secondary" id="cancelButton">
+                            <i class="bi bi-x"></i> 取消
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 空状态 -->
+            <div id="emptyState" class="empty-state">
+                <i class="bi bi-journal-text" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h4>选择一篇笔记开始阅读</h4>
+                <p>或者使用搜索功能查找特定内容</p>
+                <button class="btn btn-primary mt-3" id="createNewNote">
+                    <i class="bi bi-plus"></i> 创建新笔记
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 引入必要的JS库 -->
+<script src="./js/bootstrap.bundle.min.js"></script>
+<script src="./js/marked.min.js"></script>
+<script src="./js/highlight.min.js"></script>
+<script>
+    // 配置常量
+    const API_BASE_URL = '/api/notes';
+    const REQUEST_TIMEOUT = 10000; // 10秒超时
+    const MAX_RETRY = 2;
+    const CACHE_EXPIRY = 60 * 60 * 1000; // 1小时缓存过期时间
+
+    // 初始化Marked和Highlight.js
+    marked.setOptions({
+        highlight: function(code, lang) {
+            if (lang && hljs.getLanguage(lang)) {
+                return hljs.highlight(lang, code).value;
+            }
+            return hljs.highlightAuto(code).value;
+        },
+        breaks: true,
+        gfm: true
+    });
+
+    // 应用状态管理
+    const appState = {
+        notesData: {},
+        categories: [],
+        currentNoteId: null,
+        isEditing: false,
+        pendingRequests: {},
+        isOnline: navigator.onLine,
+        db: null
+    };
+
+    // 初始化IndexedDB
+    async function initDB() {
+        appState.db = await idb.openDB('NotesDB', 1, {
+            upgrade(db) {
+                db.createObjectStore('notes', { keyPath: 'id' });
+                db.createObjectStore('categories', { keyPath: 'id' });
+                db.createObjectStore('notesList', { keyPath: 'id' });
+                db.createObjectStore('metadata', { keyPath: 'key' });
+            }
+        });
+    }
+
+    // DOM元素缓存
+    const dom = {
+        noteDirectory: document.getElementById('noteDirectory'),
+        noteContainer: document.getElementById('noteContainer'),
+        emptyState: document.getElementById('emptyState'),
+        noteTitle: document.getElementById('noteTitle'),
+        noteMeta: document.getElementById('noteMeta'),
+        noteContent: document.getElementById('noteContent'),
+        searchInput: document.getElementById('searchInput'),
+        searchButton: document.getElementById('searchButton'),
+        createNewNote: document.getElementById('createNewNote'),
+        editButton: document.getElementById('editButton'),
+        deleteButton: document.getElementById('deleteButton'),
+        editorContainer: document.getElementById('editorContainer'),
+        noteTitleEditor: document.getElementById('noteTitleEditor'),
+        noteCategoryEditor: document.getElementById('noteCategoryEditor'),
+        noteContentEditor: document.getElementById('noteContentEditor'),
+        saveButton: document.getElementById('saveButton'),
+        cancelButton: document.getElementById('cancelButton'),
+        loadingSpinner: document.querySelector('.loading-spinner'),
+        offlineBadge: document.querySelector('.offline-badge')
+    };
+
+    // 网络状态检测
+    function setupNetworkDetection() {
+        function updateOnlineStatus() {
+            appState.isOnline = navigator.onLine;
+            if (appState.isOnline) {
+                dom.offlineBadge.style.display = 'none';
+                // 当恢复在线时，尝试同步数据
+                fetchNoteDirectory();
+            } else {
+                dom.offlineBadge.style.display = 'block';
+                showError('网络连接已断开，正在使用离线模式');
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+    }
+
+    // API请求封装
+    async function apiRequest(endpoint, method = 'GET', data = null, retryCount = 0) {
+        const url = `${API_BASE_URL}${endpoint}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+        const requestId = `${method}_${url}`;
+        if (appState.pendingRequests[requestId]) {
+            return appState.pendingRequests[requestId];
+        }
+
+        try {
+            const token = localStorage.getItem('jwtToken');
+            const headers = {
+                'Authorization': `Bearer ${token}`
+            };
+
+            if (data) {
+                headers['Content-Type'] = 'application/json';
+            }
+
+            const request = fetch(url, {
+                method,
+                headers,
+                body: data ? JSON.stringify(data) : null,
+                signal: controller.signal
+            });
+
+            appState.pendingRequests[requestId] = request;
+            const response = await request;
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `请求失败: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            // 缓存成功的响应
+            if (method === 'GET') {
+                await cacheResponse(endpoint, result);
+            }
+
+            return result;
+        } catch (error) {
+            console.error(`API请求错误 (${retryCount + 1}/${MAX_RETRY}):`, error);
+
+            // 在重试前检查是否有缓存
+            if (method === 'GET' && retryCount === 0) {
+                const cached = await getCachedResponse(endpoint);
+                if (cached) {
+                    console.log('使用缓存数据');
+                    return cached;
+                }
+            }
+
+            if (retryCount < MAX_RETRY - 1 && !error.message.includes('aborted')) {
+                // 指数退避重试
+                await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                return apiRequest(endpoint, method, data, retryCount + 1);
+            }
+
+            throw error;
+        } finally {
+            delete appState.pendingRequests[requestId];
+            clearTimeout(timeoutId);
+        }
+    }
+
+    // 缓存API响应
+    async function cacheResponse(endpoint, data) {
+        if (!appState.db) return;
+
+        try {
+            const now = Date.now();
+            const cacheKey = endpoint.split('?')[0]; // 移除查询参数
+
+            // 存储数据
+            if (cacheKey.includes('/content')) {
+                await appState.db.put('notes', { ...data, id: cacheKey.split('=')[1], cachedAt: now });
+            } else if (cacheKey.includes('/categories')) {
+                await appState.db.put('metadata', { key: 'categories', data, cachedAt: now });
+            } else if (cacheKey.includes('/list')) {
+                await appState.db.put('metadata', { key: 'notesList', data, cachedAt: now });
+            }
+        } catch (error) {
+            console.error('缓存数据失败:', error);
+        }
+    }
+
+    // 获取缓存的API响应
+    async function getCachedResponse(endpoint) {
+        if (!appState.db) return null;
+
+        try {
+            const cacheKey = endpoint.split('?')[0]; // 移除查询参数
+            const now = Date.now();
+
+            if (cacheKey.includes('/content')) {
+                const noteId = endpoint.split('=')[1];
+                const cached = await appState.db.get('notes', noteId);
+                if (cached && now - cached.cachedAt < CACHE_EXPIRY) {
+                    return cached;
+                }
+            } else if (cacheKey.includes('/categories')) {
+                const cached = await appState.db.get('metadata', 'categories');
+                if (cached && now - cached.cachedAt < CACHE_EXPIRY) {
+                    return cached.data;
+                }
+            } else if (cacheKey.includes('/list')) {
+                const cached = await appState.db.get('metadata', 'notesList');
+                if (cached && now - cached.cachedAt < CACHE_EXPIRY) {
+                    return cached.data;
+                }
+            }
+
+            return null;
+        } catch (error) {
+            console.error('获取缓存数据失败:', error);
+            return null;
+        }
+    }
+
+    // 显示加载动画
+    function showLoading() {
+        dom.loadingSpinner.style.display = 'block';
+    }
+
+    // 隐藏加载动画
+    function hideLoading() {
+        dom.loadingSpinner.style.display = 'none';
+    }
+
+    // 显示错误消息
+    function showError(message) {
+        const existingAlert = document.querySelector('.alert-danger');
+        if (existingAlert) existingAlert.remove();
+
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        const container = document.querySelector('.container-fluid');
+        container.insertBefore(alertDiv, container.firstChild);
+
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            setTimeout(() => alertDiv.remove(), 150);
+        }, 5000);
+    }
+
+    // 从API获取笔记目录
+    async function fetchNoteDirectory() {
+        showLoading();
+        try {
+            // 并行获取分类和笔记
+            const [categoriesData, notesData] = await Promise.all([
+                apiRequest('/categories').catch(() => []),
+                apiRequest('/list').catch(() => [])
+            ]);
+
+            // 更新应用状态
+            appState.categories = categoriesData || [];
+            appState.notesData = {};
+
+            // 缓存笔记基本信息
+            notesData.forEach(note => {
+                appState.notesData[note.id] = {
+                    title: note.title,
+                    category: note.category
+                };
+            });
+
+            // 渲染笔记目录
+            renderNoteDirectory(notesData);
+        } catch (error) {
+            console.error('获取笔记目录失败:', error);
+
+            // 尝试使用缓存数据
+            const cachedNotes = await getCachedResponse('/list');
+            const cachedCategories = await getCachedResponse('/categories');
+
+            if (cachedNotes && cachedCategories) {
+                appState.categories = cachedCategories;
+                renderNoteDirectory(cachedNotes);
+                showError(`获取最新数据失败，显示缓存内容: ${error.message}`);
+            } else {
+                dom.noteDirectory.innerHTML = `
+                    <div class="alert alert-danger">
+                        加载笔记目录失败: ${error.message}
+                        <button class="btn btn-sm btn-outline-secondary mt-2" onclick="fetchNoteDirectory()">
+                            重试
+                        </button>
+                    </div>
+                `;
+            }
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // 渲染笔记目录
+    function renderNoteDirectory(notes) {
+        let html = '';
+
+        // 按分类组织笔记
+        appState.categories.forEach(category => {
+            html += `<div class="folder">${category.name}</div>`;
+
+            const categoryNotes = notes.filter(note => note.category === category.name);
+            if (categoryNotes.length === 0) {
+                html += `<div class="text-muted small ps-3">暂无笔记</div>`;
+            } else {
+                categoryNotes.forEach(note => {
+                    html += `
+                        <div class="note-item" data-note-id="${note.id}">
+                            ${note.title}
+                        </div>
+                    `;
+                });
+            }
+        });
+
+        // 添加创建新笔记按钮
+        html += `
+            <div class="folder mt-4">操作</div>
+            <button class="btn btn-sm btn-outline-primary w-100 mt-2" id="sidebarCreateNote">
+                <i class="bi bi-plus"></i> 新建笔记
+            </button>
+        `;
+
+        dom.noteDirectory.innerHTML = html;
+
+        // 添加笔记点击事件
+        document.querySelectorAll('.note-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const noteId = this.getAttribute('data-note-id');
+                loadNoteContent(noteId);
+            });
+        });
+
+        // 添加创建新笔记按钮事件
+        document.getElementById('sidebarCreateNote').addEventListener('click', createNewNote);
+    }
+
+    // 从API加载笔记内容
+    async function loadNoteContent(noteId) {
+        if (!noteId) return;
+
+        showLoading();
+        try {
+            // 更新活动状态
+            document.querySelectorAll('.note-item').forEach(i => i.classList.remove('active'));
+            const noteItem = document.querySelector(`.note-item[data-note-id="${noteId}"]`);
+            if (noteItem) noteItem.classList.add('active');
+
+            appState.currentNoteId = noteId;
+
+            // 获取笔记详情
+            const note = await apiRequest(`/content?id=${noteId}`);
+
+            // 显示笔记内容
+            displayNoteContent(note);
+
+            // 退出编辑模式
+            cancelEdit();
+        } catch (error) {
+            console.error('加载笔记内容失败:', error);
+
+            // 尝试显示缓存内容
+            const cachedNote = await getCachedResponse(`/content?id=${noteId}`);
+            if (cachedNote) {
+                displayNoteContent(cachedNote);
+                showError(`获取最新内容失败，显示缓存版本: ${error.message}`);
+            } else {
+                showError(`加载笔记内容失败: ${error.message}`);
+            }
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // 显示笔记内容
+    function displayNoteContent(note) {
+        dom.emptyState.style.display = 'none';
+        dom.noteContainer.style.display = 'block';
+
+        // 更新笔记内容
+        dom.noteTitle.textContent = note.title;
+
+        const categoryName = appState.categories.find(c => c.id === note.category)?.name || '未分类';
+        dom.noteMeta.innerHTML = `
+            最后更新: ${new Date(note.lastUpdated || Date.now()).toLocaleString()} ·
+            分类: ${categoryName} ·
+            标签: ${note.tags ? note.tags.join(', ') : '无'}
+        `;
+
+        dom.noteContent.innerHTML = marked.parse(note.content || '');
+    }
+
+    // 设置搜索功能
+    function setupSearch() {
+        function performSearch() {
+            const searchTerm = dom.searchInput.value.toLowerCase();
+
+            document.querySelectorAll('.note-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+
+        dom.searchInput.addEventListener('input', performSearch);
+        dom.searchButton.addEventListener('click', performSearch);
+    }
+
+    // 创建新笔记
+    function createNewNote() {
+        appState.currentNoteId = null;
+        appState.isEditing = true;
+
+        // 清空编辑器
+        dom.noteTitleEditor.value = '';
+        dom.noteContentEditor.value = '';
+
+        // 填充分类选择器
+        dom.noteCategoryEditor.innerHTML = '';
+        appState.categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            dom.noteCategoryEditor.appendChild(option);
+        });
+
+        // 默认选择第一个分类
+        if (appState.categories.length > 0) {
+            dom.noteCategoryEditor.value = appState.categories[0].name;
+        }
+
+        // 显示编辑器
+        dom.emptyState.style.display = 'none';
+        dom.noteContainer.style.display = 'block';
+        dom.noteTitle.style.display = 'none';
+        dom.noteMeta.style.display = 'none';
+        dom.noteContent.style.display = 'none';
+        dom.editorContainer.style.display = 'block';
+        dom.editButton.style.display = 'none';
+        dom.deleteButton.style.display = 'none';
+    }
+
+    // 进入编辑模式
+    function startEdit() {
+        if (!appState.currentNoteId || !appState.notesData[appState.currentNoteId]) return;
+
+        appState.isEditing = true;
+        const note = appState.notesData[appState.currentNoteId];
+
+        // 填充编辑器
+        dom.noteTitleEditor.value = note.title;
+        dom.noteContentEditor.value = note.content || '';
+
+        // 填充分类选择器
+        dom.noteCategoryEditor.innerHTML = '';
+        appState.categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.name;
+            dom.noteCategoryEditor.appendChild(option);
+        });
+
+        // 设置当前分类
+        dom.noteCategoryEditor.value = note.category || (appState.categories[0]?.name || '');
+
+        // 显示编辑器
+        dom.noteTitle.style.display = 'none';
+        dom.noteMeta.style.display = 'none';
+        dom.noteContent.style.display = 'none';
+        dom.editorContainer.style.display = 'block';
+    }
+
+    // 取消编辑
+    function cancelEdit() {
+        appState.isEditing = false;
+
+        // 隐藏编辑器
+        dom.editorContainer.style.display = 'none';
+
+        // 显示笔记内容
+        dom.noteTitle.style.display = 'block';
+        dom.noteMeta.style.display = 'block';
+        dom.noteContent.style.display = 'block';
+        dom.editButton.style.display = 'block';
+        dom.deleteButton.style.display = 'block';
+
+        // 如果是新笔记，返回空状态
+        if (!appState.currentNoteId) {
+            dom.emptyState.style.display = 'flex';
+            dom.noteContainer.style.display = 'none';
+        }
+    }
+
+    // 保存笔记
+    async function saveNote() {
+        const noteData = {
+            title: dom.noteTitleEditor.value.trim(),
+            category: dom.noteCategoryEditor.value,
+            content: dom.noteContentEditor.value
+        };
+
+        if (!noteData.title) {
+            showError('请输入笔记标题');
+            return;
+        }
+
+        showLoading();
+        try {
+            let response;
+            let endpoint;
+
+            if (appState.currentNoteId) {
+                // 更新现有笔记
+                endpoint = '/update';
+                noteData.id = appState.currentNoteId;
+                response = await apiRequest(endpoint, 'PUT', noteData);
+            } else {
+                // 创建新笔记
+                endpoint = '/add';
+                response = await apiRequest(endpoint, 'POST', noteData);
+            }
+
+            // 刷新笔记目录和内容
+            await fetchNoteDirectory();
+
+            // 如果是新笔记，加载它
+            if (!appState.currentNoteId && response.id) {
+                await loadNoteContent(response.id);
+            } else if (appState.currentNoteId) {
+                // 重新加载当前笔记
+                await loadNoteContent(appState.currentNoteId);
+            }
+        } catch (error) {
+            console.error('保存笔记失败:', error);
+
+            // 离线模式下保存到本地
+            if (!appState.isOnline) {
+                try {
+                    await saveNoteOffline(noteData);
+                    showError('网络连接已断开，笔记已保存到本地，将在恢复连接后同步');
+                    await fetchNoteDirectory();
+                    return;
+                } catch (offlineError) {
+                    console.error('离线保存失败:', offlineError);
+                    error.message = `${error.message} (离线保存也失败)`;
+                }
+            }
+
+            showError(`保存笔记失败: ${error.message}`);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // 离线保存笔记
+    async function saveNoteOffline(noteData) {
+        if (!appState.db) throw new Error('数据库未初始化');
+
+        const now = Date.now();
+        const note = {
+            ...noteData,
+            id: appState.currentNoteId || `offline_${now}`,
+            lastUpdated: now,
+            isOffline: true
+        };
+
+        await appState.db.put('notes', note);
+        return note;
+    }
+
+    // 删除笔记
+    async function deleteNote() {
+        if (!appState.currentNoteId || !confirm('确定要删除这篇笔记吗？')) return;
+
+        showLoading();
+        try {
+            await apiRequest(`/delete?id=${appState.currentNoteId}`, 'DELETE');
+
+            // 刷新笔记目录
+            await fetchNoteDirectory();
+
+            // 显示空状态
+            appState.currentNoteId = null;
+            dom.emptyState.style.display = 'flex';
+            dom.noteContainer.style.display = 'none';
+        } catch (error) {
+            console.error('删除笔记失败:', error);
+            showError(`删除笔记失败: ${error.message}`);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // 初始化事件监听
+    function setupEventListeners() {
+        dom.createNewNote.addEventListener('click', createNewNote);
+        dom.editButton.addEventListener('click', startEdit);
+        dom.deleteButton.addEventListener('click', deleteNote);
+        dom.saveButton.addEventListener('click', saveNote);
+        dom.cancelButton.addEventListener('click', cancelEdit);
+    }
+
+    // 初始化应用
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            // await initDB();
+            setupNetworkDetection();
+            setupSearch();
+            setupEventListeners();
+            await fetchNoteDirectory();
+
+            // 检查URL中是否有笔记ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const noteId = urlParams.get('noteId');
+            if (noteId) {
+                await loadNoteContent(noteId);
+            }
+        } catch (error) {
+            console.error('应用初始化失败:', error);
+            showError(`应用初始化失败: ${error.message}`);
+        }
+    });
+</script>
+</body>
+</html>

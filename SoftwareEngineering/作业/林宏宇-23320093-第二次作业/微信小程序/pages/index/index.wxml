@@ -1,0 +1,49 @@
+<!--index.wxml-->
+<navigation-bar title="任务打卡" back="{{false}}" color="black" background="#FFF"></navigation-bar>
+<view class="page-container">
+  <scroll-view class="scrollarea" scroll-y type="list" enable-pull-down-refresh="{{true}}" refresher-enabled bindscrolltolower="onReachBottom" refresher-triggered="{{refreshing}}" bindrefresherrefresh="onPullDownRefresh">
+    <!-- 未登录时显示提示和登录按钮 -->
+    <view wx:if="{{hasLoginTip}}" class="login-prompt">
+      <image class="login-image" src="/images/login.png" mode="aspectFit"></image>
+      <text class="login-tip">登录后查看任务列表</text>
+      <button class="login-btn" bindtap="onLoginTap">立即登录</button>
+    </view>
+    
+    <view class="task-list" wx:else>
+      <block wx:if="{{tasks.length > 0}}">
+        <view class="task-item {{item.isNewTask ? 'new-task' : ''}}" wx:for="{{tasks}}" wx:key="_id" bindtap="handleTaskClick" data-task="{{item}}" hover-class="task-item-hover">
+          <view class="task-info">
+            <view class="task-header">
+              <text class="task-title">{{item.title}}</text>
+              <view class="task-status {{item.hasJoined ? 'joined' : ''}} {{item.isExpired ? 'expired' : ''}} {{item.isNotStarted ? 'not-started' : ''}} {{item.isNewTask ? 'new' : ''}}">
+                {{item.isNewTask ? '新' : ''}}{{item.isExpired ? '已截止' : (item.isNotStarted ? '未开始' : (item.hasJoined ? '已参与' : '未参与'))}}
+              </view>
+            </view>
+            <text class="task-desc">{{item.description}}</text>
+            <view class="task-meta">
+              <text class="task-deadline">{{item.deadline}}</text>
+              <text class="task-creator">发布者: {{item.creatorName || '未知'}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <view wx:if="{{tasks.length === 0 && !loading}}" class="empty-state">
+        <image class="empty-image" src="/images/empty.png" mode="aspectFit"></image>
+        <text class="empty-text">暂无任务</text>
+      </view>
+      
+      <view wx:if="{{loading && !refreshing}}" class="loading-state">
+        <view class="loading-icon"></view>
+        <text class="loading-text">加载中...</text>
+      </view>
+      
+      <view wx:if="{{!hasMore && tasks.length > 0}}" class="end-state">
+        <text class="end-text">已经到底了~</text>
+      </view>
+    </view>
+  </scroll-view>
+  
+  <!-- 页脚安全区域 -->
+  <view class="safe-area-bottom"></view>
+</view>

@@ -1,0 +1,30 @@
+/**app.wxss**/
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx 0;
+  box-sizing: border-box;
+} 
+
+/* 修复底部导航区域 */
+.safe-area-bottom {
+  height: env(safe-area-inset-bottom);
+  width: 100%;
+  max-height: 50rpx;
+} 
+
+/* 导航栏样式修复 */
+.weui-navigation-bar {
+  width: 100vw !important;
+}
+
+.weui-navigation-bar__inner {
+  width: 100vw !important;
+  left: 0 !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+} 

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "队员列表",
+  "usingComponents": {
+    "navigation-bar": "/components/navigation-bar/navigation-bar"
+  }
+} 

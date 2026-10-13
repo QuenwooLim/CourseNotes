@@ -1,0 +1,77 @@
+<view class="container">
+  <navigation-bar title="用户注册" back="{{true}}" bindback="onBackTap" color="black" background="#FFF"></navigation-bar>
+  
+  <scroll-view scroll-y class="scroll-area">
+    <view class="form-container">
+      <view class="logo-container">
+        <image class="logo" src="/images/logo.png" mode="aspectFit"></image>
+        <text class="title">注册新账号</text>
+      </view>
+      
+      <view class="notice-box">
+        <text class="notice-text">基本信息和个人信息注册后不可修改，请认真填写</text>
+      </view>
+      
+      <view class="form-group">
+        <text class="section-title">基本信息</text>
+        <view class="form-item">
+          <text class="label required">学号</text>
+          <input class="input" type="text" placeholder="请输入学号" bindinput="onStudentIdInput" value="{{form.studentId}}" />
+        </view>
+        
+        <view class="form-item">
+          <text class="label required">姓名</text>
+          <input class="input" type="text" placeholder="请输入姓名" bindinput="onInput" data-field="nickName" value="{{form.nickName}}" />
+        </view>
+        
+        <view class="form-item">
+          <text class="label required">密码</text>
+          <input class="input" type="password" placeholder="请输入密码" bindinput="onInput" data-field="password" value="{{form.password}}" />
+        </view>
+        
+        <view class="form-item">
+          <text class="label required">确认密码</text>
+          <input class="input" type="password" placeholder="请再次输入密码" bindinput="onInput" data-field="confirmPassword" value="{{form.confirmPassword}}" />
+        </view>
+      </view>
+      
+      <view class="form-group">
+        <text class="section-title">个人信息</text>
+        <view class="form-item">
+          <text class="label required">性别</text>
+          <radio-group class="radio-group" bindchange="onInput" data-field="gender">
+            <label class="radio-label"><radio value="male" checked="{{form.gender === 'male'}}"/>男</label>
+            <label class="radio-label"><radio value="female" checked="{{form.gender === 'female'}}"/>女</label>
+          </radio-group>
+        </view>
+        
+        <view class="form-item">
+          <text class="label required">学院</text>
+          <input class="input" type="text" placeholder="填写全称，例：计算机学院" bindinput="onInput" data-field="college" value="{{form.college}}" />
+        </view>
+        
+        <view class="form-item">
+          <text class="label required">年级</text>
+          <input class="input" type="text" placeholder="填写全称，例：2023级本科生" bindinput="onInput" data-field="grade" value="{{form.grade}}" />
+        </view>
+        
+        <view class="form-item">
+          <text class="label required">队员状态</text>
+          <picker bindchange="onStatusChange" value="{{statusIndex}}" range="{{teamStatusOptions}}">
+            <view class="picker">{{teamStatusOptions[statusIndex] || '请选择队员状态'}}</view>
+          </picker>
+        </view>
+      </view>
+      
+      <view class="error-message" wx:if="{{errorMessage}}">{{errorMessage}}</view>
+      
+      <button class="register-btn" bindtap="onRegister" loading="{{loading}}">注册</button>
+      
+      <view class="login-link">
+        已有账号？<text class="link" bindtap="goToLogin">立即登录</text>
+      </view>
+    </view>
+  </scroll-view>
+  
+  <view class="safe-area-bottom"></view>
+</view> 

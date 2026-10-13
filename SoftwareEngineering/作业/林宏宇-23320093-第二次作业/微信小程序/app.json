@@ -1,0 +1,72 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/register/register",
+    "pages/index/index",
+    "pages/checkin/checkin",
+    "pages/task/task",
+    "pages/ranking/ranking",
+    "pages/profile/profile",
+    "pages/task-detail/task-detail",
+    "pages/captain/captain",
+    "pages/task-manager/task-manager",
+    "pages/history/history",
+    "pages/settings/settings",
+    "pages/members/members",
+    "pages/member-history/member-history",
+    "pages/member-profiles/member-profiles",
+    "pages/member-detail/member-detail"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "打卡小程序",
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom",
+    "pageOrientation": "portrait"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#1296db",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "打卡",
+        "iconPath": "images/tab1.png",
+        "selectedIconPath": "images/tab1-active.png"
+      },
+      {
+        "pagePath": "pages/ranking/ranking",
+        "text": "排行榜",
+        "iconPath": "images/tab2.png",
+        "selectedIconPath": "images/tab2-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我",
+        "iconPath": "images/tab4.png",
+        "selectedIconPath": "images/tab4-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "renderer": "skyline",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "defaultContentBox": true,
+      "disableABTest": true
+    }
+  },
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "您的位置信息将用于打卡定位"
+    }
+  },
+  "entryPagePath": "pages/login/login"
+}

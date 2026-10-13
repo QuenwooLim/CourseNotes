@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-EduMate</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gray-color: #6c757d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 1rem 0;
+        }
+        
+        .video-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .video-thumbnail {
+            position: relative;
+            padding-top: 56.25%; /* 16:9 宽高比 */
+            background-color: #eee;
+            overflow: hidden;
+        }
+        
+        .video-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .video-card:hover .play-icon {
+            opacity: 1;
+        }
+        
+        .play-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--primary-color);
+        }
+        
+        .video-info {
+            padding: 1.2rem;
+        }
+        
+        .video-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+        }
+        
+        .video-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+        
+        .video-duration {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+        
+        .search-filter {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-color);
+        }
+        
+        .filter-dropdown {
+            min-width: 200px;
+        }
+        
+        .filter-dropdown select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            color: var(--gray-color);
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>我的视频收藏</h1>
+            <p class="subtitle">精选优质视频内容，随时随地观看</p>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="search-filter">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="搜索视频...">
+            </div>
+            <div class="filter-dropdown">
+                <select>
+                    <option value="">所有分类</option>
+                    <option value="education">教育</option>
+                    <option value="entertainment">娱乐</option>
+                    <option value="sports">体育</option>
+                    <option value="technology">科技</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="video-grid">
+            <!-- 视频卡片1 -->
+            <div class="video-card">
+                <div class="video-thumbnail">
+                    <img src="https://via.placeholder.com/600x400" alt="视频缩略图">
+                    <div class="play-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
+                    <span class="video-duration">12:34</span>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">如何制作美味的意大利面</h3>
+                    <div class="video-meta">
+                        <span>美食频道</span>
+                        <span>2023-10-15</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 视频卡片2 -->
+            <div class="video-card">
+                <div class="video-thumbnail">
+                    <img src="https://via.placeholder.com/600x400" alt="视频缩略图">
+                    <div class="play-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
+                    <span class="video-duration">08:21</span>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">JavaScript高级技巧教程</h3>
+                    <div class="video-meta">
+                        <span>编程学院</span>
+                        <span>2023-09-28</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 视频卡片3 -->
+            <div class="video-card">
+                <div class="video-thumbnail">
+                    <img src="https://via.placeholder.com/600x400" alt="视频缩略图">
+                    <div class="play-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
+                    <span class="video-duration">15:42</span>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">2023年最佳旅行目的地</h3>
+                    <div class="video-meta">
+                        <span>旅行家</span>
+                        <span>2023-10-05</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 视频卡片4 -->
+            <div class="video-card">
+                <div class="video-thumbnail">
+                    <img src="https://via.placeholder.com/600x400" alt="视频缩略图">
+                    <div class="play-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
+                    <span class="video-duration">22:18</span>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">家庭健身：无需器械的全身训练</h3>
+                    <div class="video-meta">
+                        <span>健康生活</span>
+                        <span>2023-09-15</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 视频卡片5 -->
+            <div class="video-card">
+                <div class="video-thumbnail">
+                    <img src="https://via.placeholder.com/600x400" alt="视频缩略图">
+                    <div class="play-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
+                    <span class="video-duration">10:05</span>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">摄影构图的基本原则</h3>
+                    <div class="video-meta">
+                        <span>视觉艺术</span>
+                        <span>2023-08-30</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 视频卡片6 -->
+            <div class="video-card">
+                <div class="video-thumbnail">
+                    <img src="https://via.placeholder.com/600x400" alt="视频缩略图">
+                    <div class="play-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
+                    <span class="video-duration">18:37</span>
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">如何开始投资股票市场</h3>
+                    <div class="video-meta">
+                        <span>财经频道</span>
+                        <span>2023-10-10</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>© 2023 我的视频收藏 | 使用HTML和CSS构建</p>
+        </div>
+    </footer>
+</body>
+</html>

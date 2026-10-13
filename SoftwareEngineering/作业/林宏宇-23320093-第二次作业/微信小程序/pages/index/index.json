@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "打卡任务",
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#f5f5f5",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "navigation-bar": "/components/navigation-bar/navigation-bar"
+  }
+}

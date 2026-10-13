@@ -1,0 +1,401 @@
+page {
+  background-color: #f5f5f5;
+  height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20rpx;
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* 修复导航栏样式 */
+.weui-navigation-bar {
+  width: 100vw !important;
+}
+
+.weui-navigation-bar__inner {
+  width: 100vw !important;
+  left: 0 !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.header {
+  background-color: #fff;
+  padding: 30rpx;
+  text-align: center;
+  margin-bottom: 20rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.content-scroll {
+  flex: 1;
+  height: calc(100vh - 180rpx);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ranking-list {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 顶部排行样式 */
+.top-ranking {
+  /* background: linear-gradient(180deg, #e0f2ff 0%, #ffffff 100%); */ /* 移除背景 */
+  padding: 20rpx 20rpx 20rpx; /* 减小顶部内边距 */
+  margin-bottom: 20rpx;
+  position: relative; 
+  min-height: 280rpx; /* 显著减小最小高度 */
+  display: flex;
+  justify-content: center;
+  align-items: flex-end; 
+}
+
+.top-three-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end; 
+  position: relative; 
+  width: 100%;
+  height: 240rpx; /* 减小容器高度 */
+}
+
+.champion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: absolute; 
+  bottom: 10rpx; /* 稍微降低，为上方留空间 */
+  left: 50%;
+  transform: translateX(-50%); 
+  z-index: 2; 
+}
+
+.crown-icon {
+  font-size: 50rpx; /* 稍微缩小皇冠 */
+  margin-bottom: -8rpx; 
+}
+
+.champion .avatar-container {
+  position: relative;
+  margin-bottom: 8rpx; /* 减小间距 */
+}
+
+.champion-avatar {
+  width: 120rpx; /* 缩小头像 */
+  height: 120rpx;
+  border-radius: 50%;
+  border: 5rpx solid #ffd700; /* 调整边框 */
+  background-color: #fff;
+}
+
+.champion .rank-badge.first {
+  background-color: #ffd700;
+  color: #8c5300;
+  position: absolute;
+  bottom: -5rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32rpx; /* 缩小徽章 */
+  height: 32rpx;
+  line-height: 32rpx;
+  font-size: 18rpx;
+}
+
+.champion-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.champion-name {
+  font-size: 28rpx; /* 缩小字体 */
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.champion-score {
+  font-size: 22rpx; /* 缩小字体 */
+  color: #666;
+}
+
+/* 移除 runners-up 容器，直接定位 runner-up */
+.runner-up {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: absolute; 
+  bottom: 5rpx; /* 调整垂直位置 */
+  z-index: 1; 
+}
+
+.runner-up.second {
+  left: 40rpx; /* 调整水平位置 */
+}
+
+.runner-up.third {
+  right: 40rpx; /* 调整水平位置 */
+}
+
+.runner-up .avatar-container {
+  position: relative;
+  margin-bottom: 6rpx; /* 减小间距 */
+}
+
+.runner-avatar {
+  width: 90rpx; /* 缩小头像 */
+  height: 90rpx;
+  border-radius: 50%;
+  border: 4rpx solid #c0c0c0; 
+  background-color: #fff;
+}
+
+.runner-up.third .runner-avatar {
+  border-color: #cd7f32; 
+}
+
+.runner-up .rank-badge {
+  position: absolute;
+  bottom: -5rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30rpx; /* 缩小徽章 */
+  height: 30rpx;
+  line-height: 30rpx;
+}
+
+.rank-badge {
+  font-size: 18rpx; /* 缩小字体 */
+  font-weight: bold;
+  width: 36rpx;
+  height: 36rpx;
+  line-height: 36rpx;
+  text-align: center;
+  border-radius: 50%;
+  color: #fff;
+}
+
+.rank-badge.second {
+  background-color: #c0c0c0; 
+}
+
+.rank-badge.third {
+  background-color: #cd7f32; 
+}
+
+.runner-name {
+  font-size: 24rpx; /* 缩小字体 */
+  color: #333;
+  margin-bottom: 3rpx;
+}
+
+.runner-score {
+  font-size: 20rpx; /* 缩小字体 */
+  color: #666;
+}
+
+/* 其他排名列表样式 */
+.ranking-list {
+  padding: 0 20rpx;
+  text-align: center;
+  padding: 40rpx 0;
+  color: #999;
+}
+
+/* 顶部排行榜为空时的样式 */
+.empty-top-ranking {
+  width: 100%;
+  height: 200rpx; /* 给一些高度 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28rpx;
+  color: #999;
+}
+
+.other-ranking {
+  background-color: #fff;
+  border-radius: 0;
+  padding: 20rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 10rpx;
+  border-bottom: 1rpx solid #eee;
+  margin: 0 10rpx;
+}
+
+.ranking-item:last-child {
+  border-bottom: none;
+}
+
+.ranking-item .rank-number {
+  width: 40rpx;
+  height: 40rpx;
+  background-color: #f5f5f5;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #666;
+  margin-right: 20rpx;
+}
+
+.ranking-item .avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  margin-right: 20rpx;
+}
+
+.ranking-item .user-info {
+  flex: 1;
+}
+
+.ranking-item .name {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.ranking-item .student-id {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.ranking-item .score {
+  font-size: 28rpx;
+  color: #07c160;
+  font-weight: bold;
+}
+
+.current-user {
+  background-color: rgba(18, 150, 219, 0.1);
+  border-left: 6rpx solid #1296db;
+  padding-left: 14rpx;
+  margin-left: 0;
+}
+
+.current-user-tag {
+  background-color: #1296db;
+  color: white;
+  border-radius: 30rpx;
+  padding: 6rpx 16rpx;
+  font-size: 24rpx;
+}
+
+.empty-tip {
+  text-align: center;
+  padding: 60rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.user-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  margin-right: 20rpx;
+}
+
+.user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nickname {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.count {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 筛选样式 */
+.filter-container {
+  width: 100%;
+  background-color: #fff;
+  margin-bottom: 10rpx;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.05);
+}
+
+.filter-section {
+  padding: 20rpx;
+}
+
+.filter-header {
+  padding-bottom: 15rpx;
+  margin-bottom: 15rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.filter-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.filter-item {
+  width: 48%;
+  margin-bottom: 15rpx;
+}
+
+.filter-label {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.picker {
+  height: 70rpx;
+  background-color: #f9f9f9;
+  border-radius: 6rpx;
+  padding: 0 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.picker-text {
+  font-size: 26rpx;
+  color: #333;
+}
+
+.picker-arrow {
+  font-size: 22rpx;
+  color: #999;
+} 

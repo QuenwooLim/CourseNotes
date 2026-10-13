@@ -1,0 +1,35 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: mcp-client
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/mcp?useUnicode=true&characterEncoding=utf-8
+    username: root
+    password: root
+  ai:
+    deepseek:
+      api-key: sk-20d710af3e874d51aa22b50de4c0535f
+    mcp:
+      client:
+        toolcallback:
+          enabled: true
+        sse:
+          connections:
+            server1:
+              url: http://localhost:8080
+
+
+mybatis:
+  # 指定别名设置的包为所有entity
+  type-aliases-package: com.myproject.entity
+  mapper-locations: # mapper映射文件位置
+    classpath:mapping/*.xml
+  configuration:
+    map-underscore-to-camel-case: true # 驼峰命名规范
+
+jwt:
+  secret: koGG/ElVPbNJJKr0Mqi7Fcjecy2b8Dzvx53psZ4n41kFNlKGOEX8nz/GBgEjkZB0CE4AaCY7vP3nY2NoSGVpmw==
+  expiration: 7200 #单位为秒，120分钟登录过期
