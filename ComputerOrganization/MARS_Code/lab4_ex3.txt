@@ -1,0 +1,43 @@
+          .data
+source:   .word   3, 1, 4, 1, 5, 9, 0
+dest:     .word   0, 0, 0, 0, 0, 0, 0
+countmsg: .asciiz " values copied. "
+
+          .text
+
+main:   la      $a0,source
+        la      $a1,dest
+
+loop:   lw      $v1, 0($a0)     # read next word from source
+        addiu   $v0, $v0, 1     # increment count words copied
+        ##计数器$v0没有初始化
+        
+        sw      $v1, 0($a1)     # write to destination
+        addiu   $a0, $a0, 1     # advance pointer to next source
+        ##一次只偏移了一个字节，应该偏移四个字节（.word每个元素四个字节）
+        
+        addiu   $a1, $a1, 1     # advance pointer to next dest
+        ##一次只偏移了一个字节，应该偏移四个字节（.word每个元素四个字节）
+        
+        bne     $v1, $zero, loop # loop if word copied not zero
+
+loopend:
+        move    $a0,$v0         # $a0 <- count
+        jal     puti            # print it
+
+        la      $a0,countmsg    # $a0 <- countmsg
+        jal     puts            # print it
+
+        li      $a0,0x0A        # $a0 <- '\n'
+        jal     putc            # print it
+	##puti,puts,putc没有提供函数实现
+
+finish:
+        li      $v0, 10         # Exit the program
+        syscall
+
+
+
+
+### The following functions do syscalls in order to print data (integer, string, character)
+#Note: argument $a0 to syscall has already been set by the CALLEE
