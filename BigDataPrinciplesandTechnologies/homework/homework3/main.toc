@@ -1,0 +1,29 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}聚类算法对比实验}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}实验目标}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}数据集与预处理}{1}{section.1.2}%
+\contentsline {section}{\numberline {1.3}算法原理}{2}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}K-means 原理}{2}{subsection.1.3.1}%
+\contentsline {subsection}{\numberline {1.3.2}DBSCAN 原理}{2}{subsection.1.3.2}%
+\contentsline {section}{\numberline {1.4}核心算法伪代码}{2}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}K-means}{2}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}DBSCAN}{3}{subsection.1.4.2}%
+\contentsline {section}{\numberline {1.5}参数设置与实验设计}{3}{section.1.5}%
+\contentsline {section}{\numberline {1.6}评估指标设计与实现}{4}{section.1.6}%
+\contentsline {section}{\numberline {1.7}实验结果}{4}{section.1.7}%
+\contentsline {subsection}{\numberline {1.7.1}K-means 结果}{4}{subsection.1.7.1}%
+\contentsline {subsection}{\numberline {1.7.2}DBSCAN 结果}{5}{subsection.1.7.2}%
+\contentsline {subsection}{\numberline {1.7.3}可视化结果对比}{5}{subsection.1.7.3}%
+\contentsline {subsection}{\numberline {1.7.4}全部实验可视化一览}{5}{subsection.1.7.4}%
+\contentsline {section}{\numberline {1.8}实验结果分析与评价}{7}{section.1.8}%
+\contentsline {subsection}{\numberline {1.8.1}实验结果分析}{7}{subsection.1.8.1}%
+\contentsline {subsection}{\numberline {1.8.2}实验结果评价}{7}{subsection.1.8.2}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}总结}{9}{chapter.2}%
+\contentsline {section}{\numberline {2.1}实验总结}{9}{section.2.1}%
+\contentsline {section}{\numberline {2.2}技术学习总结}{9}{section.2.2}%
+\contentsline {section}{\numberline {2.3}心得体会}{9}{section.2.3}%
+\contentsline {chapter}{参考文献}{10}{chapter*.7}%
+\contentsline {chapter}{\numberline {附录 A\hspace {.3em}}实验代码}{11}{appendix.A}%
+\contentsline {section}{\numberline {A.1}聚类算法代码清单}{11}{section.A.1}%
+\contentsline {section}{\numberline {A.2}K-means 代码实现细节}{11}{section.A.2}%
+\contentsline {section}{\numberline {A.3}DBSCAN 代码实现细节}{13}{section.A.3}%

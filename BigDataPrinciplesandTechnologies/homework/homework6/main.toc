@@ -1,0 +1,24 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}ViLT 模型简介}{1}{chapter.1}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}图文多模态问答（VQA）任务实验}{2}{chapter.2}%
+\contentsline {section}{\numberline {2.1}实验目标}{2}{section.2.1}%
+\contentsline {section}{\numberline {2.2}方法概述}{2}{section.2.2}%
+\contentsline {section}{\numberline {2.3}数据与预处理}{2}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}数据集说明}{2}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}预处理}{3}{subsection.2.3.2}%
+\contentsline {section}{\numberline {2.4}实验设置}{3}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}VQA 推理}{3}{subsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.4.2}监督微调（ResNet-18）}{4}{subsection.2.4.2}%
+\contentsline {section}{\numberline {2.5}实验结果}{4}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}三组训练策略准确率对比}{4}{subsection.2.5.1}%
+\contentsline {subsection}{\numberline {2.5.2}未训练ViLT每类准确率}{4}{subsection.2.5.2}%
+\contentsline {section}{\numberline {2.6}实验结果分析}{5}{section.2.6}%
+\contentsline {subsection}{\numberline {2.6.1}总体表现}{5}{subsection.2.6.1}%
+\contentsline {subsection}{\numberline {2.6.2}每类性能与混淆概况}{5}{subsection.2.6.2}%
+\contentsline {subsection}{\numberline {2.6.3}混淆矩阵揭示的典型误判包括}{5}{subsection.2.6.3}%
+\contentsline {subsection}{\numberline {2.6.4}方法比较与深入分析}{5}{subsection.2.6.4}%
+\contentsline {chapter}{\numberline {3\hspace {.3em}}结论}{6}{chapter.3}%
+\contentsline {section}{\numberline {3.1}实验结论}{6}{section.3.1}%
+\contentsline {section}{\numberline {3.2}心得体会}{6}{section.3.2}%
+\contentsline {chapter}{参考文献}{7}{chapter*.4}%
+\contentsline {chapter}{\numberline {附录 A\hspace {.3em}}附录：实现代码}{8}{appendix.A}%

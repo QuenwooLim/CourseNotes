@@ -1,0 +1,34 @@
+{
+  "best_subset": {
+    "params": {
+      "embed_dim": 64,
+      "hidden_size": 128,
+      "lr": 0.0005,
+      "batch_size": 128
+    },
+    "metrics": {
+      "epoch": 3,
+      "loss": 0.6585035390853882,
+      "acc": 0.60664,
+      "precision": 0.5817089616280495,
+      "recall": 0.7592,
+      "f1": 0.6587075727077116
+    }
+  },
+  "final_train": {
+    "params": {
+      "embed_dim": 64,
+      "hidden_size": 128,
+      "lr": 0.0005,
+      "batch_size": 128
+    },
+    "metrics": {
+      "epoch": 5,
+      "loss": 0.6550104337692261,
+      "acc": 0.56836,
+      "precision": 0.543391052658305,
+      "recall": 0.85608,
+      "f1": 0.6648029074643557
+    }
+  }
+}

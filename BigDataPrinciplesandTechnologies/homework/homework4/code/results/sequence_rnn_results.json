@@ -1,0 +1,14 @@
+{
+  "rnn_test_subset": {
+    "acc": 0.5,
+    "precision": 0.5,
+    "recall": 1.0,
+    "f1": 0.6666666666666666
+  },
+  "mean_embed_test_subset": {
+    "acc": 0.4778,
+    "precision": 0.4775793811101236,
+    "recall": 0.47288,
+    "f1": 0.4752180729187603
+  }
+}

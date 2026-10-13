@@ -1,0 +1,278 @@
+%% 替换为：电影推荐系统实验报告（基于 homework7/code/movie_recommendation_system.py 的实现与运行结果）
+\chapter{混合电影推荐系统实验}
+
+\section{数据集与预处理}
+\subsection{数据来源}
+使用 MovieLens 数据集（工程中为 \texttt{ml-latest-small} 子集），脚本加载输出为：9742 部电影，100836 条评分。
+
+\subsection{预处理流程}
+主要步骤：
+\begin{enumerate}
+  \item 用评分表构造用户-物品矩阵（pivot，缺失填 0）；
+  \item 计算用户相似度：对用户-物品稠密矩阵使用余弦相似度；
+  \item 计算物品相似度：对物品-用户矩阵使用余弦相似度；
+  \item 内容相似度：对电影的 \texttt{genres} 字段使用 TF-IDF，计算余弦相似度矩阵；
+  \item SVD 降维（TruncatedSVD，n\_components=50）用于降维/加速（当前实现为演示用途）。
+\end{enumerate}
+
+\section{推荐系统模型设计}
+总体设计思想以可解释、易实现的混合推荐为主线，先用协同过滤捕捉用户群体偏好，再用基于内容的相似度补充长尾与冷启动场景。为兼顾计算效率与可复现性，离线预计算用户/物品相似度与内容相似度矩阵，在线阶段按“候选召回 + 加权融合 + 多样性重排”的流水线生成推荐；当用户历史稀少时，引入热门度作为兜底信号提升覆盖率。
+
+实现要点：
+\begin{itemize}
+  \item \textbf{用户协同过滤 (user-based CF)}：用用户相似度选择 top-N 相似用户，按相似度和对方评分汇总候选电影；
+  \item \textbf{物品协同过滤 (item-based CF)}：对用户已评分电影查找相似电影并累加评分贡献；
+  \item \textbf{内容推荐}：对用户最近观看的若干电影使用基于类型的相似度返回候选；
+  \item \textbf{混合策略}：按权重合并得分，默认权重为 $\text{cf\_weight}=0.6, \text{content\_weight}=0.4$；冷启动用户（历史少于 5 条）会引入热度权重 (popularity)。
+\end{itemize}
+
+\section{算法详解}
+下面对重点算法与实现细节做深入说明，便于理解当前系统的设计与后续改进方向。
+
+\subsection{协同过滤（Collaborative Filtering）}
+协同过滤通过用户历史评分的相似性来实现个性化推荐，常见形式有基于用户（user-based）和基于物品（item-based）两类。
+
+\subsubsection{基于用户的协同过滤}
+设 $r_{u,i}$ 为用户 $u$ 对物品 $i$ 的评分，$\bar r_u$ 为用户 $u$ 的平均评分，$N(u)$ 为与 $u$ 相似的近邻用户集合，则基于用户的预测可以写为：
+$$
+\hat r_{u,i} = \bar r_u + \frac{\sum_{v\in N(u)} s(u,v)\,(r_{v,i}-\bar r_v)}{\sum_{v\in N(u)} |s(u,v)|},
+$$
+其中 $s(u,v)$ 为用户相似度（见下节）。该公式能校正不同用户评分尺度的偏差（通过去均值处理）。实现中也常采用不去均值的简化形式：直接按相似度加权对相邻用户的评分求和并归一化。
+
+本实现采用不去均值的简化形式，并省略归一化项，只对 Top-$k$ 相似用户累加相似度加权评分：
+$$
+\text{score}_{u,i}=\sum_{v\in N_k(u)} s(u,v)\, r_{v,i}.
+$$
+其中 $k=10$，仅对用户未评分的电影进行排序推荐。
+
+\subsubsection{基于物品的协同过滤}
+物品协同过滤把每个物品视为一个向量（在用户维度上），对用户已评分物品查找最相似的物品并累加贡献：
+$$
+\hat r_{u,i} = \frac{\sum_{j\in S(u)} s(i,j)\,r_{u,j}}{\sum_{j\in S(u)} |s(i,j)|},
+$$
+其中 $S(u)$ 为用户 $u$ 已评分的物品集合，$s(i,j)$ 为物品相似度。物品相似度通常可预先计算并缓存，适合在线推荐场景。
+
+当前实现同样采用简化的加权求和，不做归一化：
+$$
+\text{score}_{u,i}=\sum_{j\in R(u)} s(i,j)\, r_{u,j}.
+$$
+实际代码对用户已评分电影逐个取 Top-$k$ 相似物品（$k=10$）并累加得分，最后按得分排序推荐。
+
+\subsection{相似度度量与改进}
+常见相似度包括：
+\begin{itemize}
+  \item 余弦相似度（Cosine）：当将评分向量 $\mathbf r_u$ 视为实向量时，
+  $$s_{cos}(u,v)=\frac{\mathbf r_u\cdot\mathbf r_v}{\|\mathbf r_u\|\|\mathbf r_v\|}.$$ 
+  在稀疏评分中通常只对共同评分的项（co-rated items）计算余弦值，以避免零填充的偏差。
+  \item 皮尔逊相关（Pearson）：对用户评分做中心化处理后衡量线性相关性，公式为：
+  $$s_{pearson}(u,v)=\frac{\sum_{i\in I_{uv}}(r_{u,i}-\bar r_u)(r_{v,i}-\bar r_v)}{\sqrt{\sum_{i\in I_{uv}}(r_{u,i}-\bar r_u)^2}\sqrt{\sum_{i\in I_{uv}}(r_{v,i}-\bar r_v)^2}},$$
+  其中 $I_{uv}$ 为 $u,v$ 的共同评分集合。
+  \item 收缩/正则化（Shrinkage）：当共同评分数 $n_{uv}$ 很小时，相似度的不确定性较大，可用收缩策略降低权重：
+  $$s_{shrunk} = \frac{n_{uv}}{n_{uv}+\lambda}\,s(u,v),$$
+  其中 $\lambda$ 控制收缩强度。
+\end{itemize}
+
+在实现中，选择相似度时要注意是否需要去均值、是否仅对共同评分计算，以及如何对相似度做阈值截断或 Top-K 保留以减少计算与噪声影响。
+
+本代码中用户相似度与物品相似度直接对缺失填 0 的稠密矩阵计算余弦相似度，因此未显式只取共同评分项，也未加入收缩修正；实际采用 Top-$k$ 截断来控制噪声与计算量。
+
+\subsection{矩阵分解（Matrix Factorization）}
+显式评分预测常用矩阵分解方法，将评分矩阵 $R$ 分解为低秩因子：
+$$R\approx P Q^T,\quad P\in\mathbb R^{|U|\times f},\ Q\in\mathbb R^{|I|\times f}.$$ 
+预测为 $\hat r_{u,i}=p_u^T q_i$，训练通过最小化有正则项的平方损失：
+$$L=\sum_{(u,i)\in K}(r_{u,i}-p_u^T q_i)^2+\lambda\bigl(\|p_u\|^2+\|q_i\|^2\bigr).$$
+可用随机梯度下降（SGD）或交替最小二乘（ALS）优化。矩阵分解在稀疏数据上的表现通常优于基于邻域的简单 CF，且能自然刻画隐语义特征。
+
+当前实现中仅计算了 TruncatedSVD 作为降维与加速的演示，未将分解结果用于评分预测或重排。
+
+\subsection{基于内容的推荐（Content-based）}
+基于内容的方法把物品表示为特征向量（如从类型、简介、标签、演员等构建），对电影类型使用 TF-IDF 向量化并计算余弦相似度：
+$$s_{content}(i,j)=\frac{v_i\cdot v_j}{\|v_i\|\|v_j\|}.$$ 
+此外，可为用户构建兴趣向量（对用户喜欢的电影特征向量加权平均），用 $\text{score}(i|u)=\text{sim}(v_i, v_u)$ 排序推荐。
+
+本实现仅使用 \texttt{genres} 字段构建 TF-IDF，并预计算电影间相似度矩阵。对用户选取最近 3 部已评分电影，各自取 Top-$K$ 相似电影形成候选，并以出现次数作为内容得分：
+$$
+\text{score}_{content}(i|u)=\sum_{m\in R_{recent}(u)} \mathbb{I}[i\in \text{TopK}(m)].
+$$
+
+\subsection{混合策略详述}
+常见混合方法包括：
+\begin{itemize}
+  \item 加权混合（Weighted）：对各个子系统输出分数归一化后按权重线性组合：
+  $$S(i|u)=\alpha\,S_{cf}(i|u)+\beta\,S_{content}(i|u)+\gamma\,S_{pop}(i),\quad \alpha+\beta+\gamma=1.$$ 
+  \item 切换式（Switching）：根据用户历史量级或置信度选择使用 CF 或内容推荐；
+  \item 级联/候选-重排（Cascade / Candidate-ReRank）：先用高召回的轻量模型（如流行度或 Item-CF）召回候选，再用更精细的排序模型（学习到的回归/排序器）进行重排；
+  \item 特征组合（Feature-Combination）与学习融合（Learning-to-Fuse）：将 CF 得分、内容特征以及用户/物品元特征拼接，训练一个监督排序模型（如 LambdaMART）学习最佳组合权重。
+\end{itemize}
+
+本实现采用加权混合，将各子系统的候选出现次数作为分数：
+$$
+S(i|u)=w_{cf}\,c_{cf}(i|u)+w_{content}\,c_{content}(i|u)+w_{pop}\,c_{pop}(i).
+$$
+其中 $c_{cf}$ 来自用户 CF 与物品 CF 的候选合并计数，$c_{content}$ 来自最近 3 部电影的内容候选计数，$c_{pop}$ 表示是否属于全局评分数 Top-$K$。默认 $w_{cf}=0.6,\ w_{content}=0.4,\ w_{pop}=0$；当用户历史评分少于 5 条时，权重调整为 $0.4/0.3/0.3$ 以引入热度补偿。
+
+实现注意：当前融合未做显式分数归一化，而是以候选计数作为统一尺度，便于快速混合。
+
+\subsection{多样性与再排序（Diversity \& Re-ranking）}
+为了避免推荐列表过于集中在同一类型，可采用最大边际相关性（MMR）等增量选择策略：
+$$\text{MMR} = \arg\max_{i\in C\setminus S} \bigl[\lambda\,\text{rel}(i)- (1-\lambda)\max_{j\in S}\text{sim}(i,j)\bigr],$$
+其中 $C$ 为候选集，$S$ 为已选集合，$\text{rel}(i)$ 为相关性分数，$\text{sim}(i,j)$ 为物品相似度，$\lambda$ 控制多样性与相关性的权衡。
+
+当前实现采用简化的类型多样性惩罚：
+$$
+\text{score}'(i)=\text{score}(i)-0.1\sum_{g\in G(i)}\text{count}(g),
+$$
+其中 $G(i)$ 为电影 $i$ 的类型集合，$\text{count}(g)$ 为已选列表中类型 $g$ 出现次数，仅保留 $\text{score}'(i)>0$ 的候选。
+
+\subsection{冷启动、稀疏性与可扩展性}
+\begin{itemize}
+  \item 冷启动：本实现中当用户历史少于 5 条时引入热度推荐，热度由电影评分次数的全局 Top-$K$ 提供；对新物品未做专门冷启动；
+  \item 稀疏性：矩阵分解、默认评分推断（imputation）和组合特征都能缓解稀疏性；
+  \item 可扩展性：使用稀疏矩阵、局部近邻（Top-K）预计算、近似最近邻检索（Faiss/Annoy）、并行/分布式训练提升大规模可用性。
+\end{itemize}
+
+\subsection{离线评估协议}
+
+\begin{enumerate}
+  \item 对单个用户，取其最近的 $\lfloor n\cdot test\_ratio\rfloor$ 条评分作为测试集；
+  \item 为避免数据泄露，评估时会临时从全局评分表中剔除这些测试评分，重建训练时用的用户-物品矩阵与相似度矩阵（即在训练数据上生成推荐），随后恢复原始评分；
+  \item 推荐列表长度在评估中使用 $K=20$（函数中默认），命中数定义为 $|\text{recommendations}\cap\text{test\_movies}|$，命中率为命中数除以测试集大小；
+\end{enumerate}
+
+\section{实验结果}
+
+\subsection{召回率比较}
+
+在对样例用户\{4,16,27,69,99,101,110,120,134,180\}的离线评估中，我们比较了混合推荐（hybrid）与三种子系统的召回率（Recall@20）。下表列出每位用户的测试集大小以及混合推荐与各子系统的召回率：
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{r r r r r r}
+\hline
+用户 ID & 测试集大小 & 混合 & 用户CF & 物品CF & 内容 \\
+\hline
+4   & 43 & 2.33\%  & 2.33\%  & 2.33\%  & 2.33\% \\
+16  & 19 & 15.79\% & 10.53\% & 10.53\% & 0.00\% \\
+27  & 27 & 7.41\%  & 7.41\%  & 11.11\% & 3.70\% \\
+69  & 9  & 33.33\% & 22.22\% & 11.11\% & 0.00\% \\
+99  & 10 & 20.00\% & 20.00\% & 20.00\% & 10.00\% \\
+101 & 12 & 25.00\% & 8.33\%  & 8.33\%  & 0.00\% \\
+110 & 10 & 20.00\% & 20.00\% & 0.00\%  & 10.00\% \\
+120 & 4  & 25.00\% & 0.00\%  & 0.00\%  & 0.00\% \\
+134 & 7  & 14.29\% & 0.00\%  & 14.29\% & 14.29\% \\
+180 & 4  & 75.00\% & 50.00\% & 50.00\% & 25.00\% \\
+\hline
+\end{tabular}
+\caption{样例用户的 Recall@20 比较（混合 vs 子系统）}
+\end{table}
+
+总体观察分析：
+\begin{itemize}
+  \item 对多数用户而言，用户/物品协同过滤在召回上通常优于纯内容推荐；混合策略在大多数样例中能保持或提升召回，尤其在用户历史较丰富时效果明显。
+  \item 内容推荐在样本稀疏或用户偏好更依赖类型相似时表现较好，但总体召回不稳定。
+  \item 个别用户（如 120）出现子系统召回为 0 而混合推荐仍有命中，说明混合中引入的流行度/补偿策略在冷启动场景能提高覆盖。
+\end{itemize}
+
+\subsection{结果命中率}
+
+\subsubsection{优化前}
+下面展示对若干示例用户的离线评估结果（脚本运行日志摘录，使用样例用户集 \{4,16,27,69,99,101,110,120,134,180\}）：
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{r r r r r}
+\hline
+用户 ID & 历史评分数 & 测试集大小 & 命中数 & Recall@20 \\
+\hline
+4   & 216 & 43 & 1 & 2.33\% \\
+16  & 98  & 19 & 2 & 10.53\% \\
+27  & 135 & 27 & 2 & 7.41\% \\
+69  & 46  & 9  & 0 & 0.00\% \\
+99  & 53  & 10 & 2 & 20.00\% \\
+101 & 61  & 12 & 2 & 16.67\% \\
+110 & 51  & 20 & 1 & 5.00\% \\
+120 & 22  & 4  & 0 & 0.00\% \\
+134 & 35  & 7  & 0 & 0.00\% \\
+180 & 24  & 4  & 1 & 25.00\% \\
+\hline
+\end{tabular}
+\caption{示例用户的离线评估结果（Recall@20）}
+\end{table}
+
+\subsubsection{优化后}
+采用加权混合策略后，重新评估同一批示例用户的离线结果如下：
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{r r r r r}
+\hline
+用户 ID & 历史评分数 & 测试集大小 & 命中数 & Recall@20 \\
+\hline
+4   & 216 & 43 & 1 & 2.33\% \\
+16  & 98  & 19 & 3 & 15.79\% \\
+27  & 135 & 27 & 2 & 7.41\% \\
+69  & 46  & 9  & 3 & 33.33\% \\
+99  & 53  & 10 & 2 & 20.00\% \\
+101 & 61  & 12 & 3 & 25.00\% \\
+110 & 51  & 20 & 2 & 20.00\% \\
+120 & 22  & 4  & 1 & 25.00\% \\
+134 & 35  & 7  & 1 & 14.29\% \\
+180 & 24  & 4  & 3 & 75.00\% \\
+\hline
+\end{tabular}
+\caption{示例用户的离线评估结果（Recall@20）}
+\end{table}
+
+\paragraph{结果分析}
+从对比可见，优化后 10 名用户中有 7 名 Recall@20 提升，3 名保持不变，未出现下降。提升最明显的用户包括 69、110 与 180，说明加权混合策略对原本召回较低的用户具有显著补偿作用；而用户 4、27、99 的结果基本持平，提示在偏好稳定或历史较充分的用户上增益有限。需要注意的是，部分用户测试集规模较小（如 4、120、180），Recall 波动较大，结论仍需通过更大规模用户采样或多次切分进行稳健性验证。
+
+\subsection{典型案例分析}
+选取3个代表性用户进行深入分析，案例来自运行日志的混合推荐结果与离线评估指标：
+
+\subsubsection{用户 16：中等历史、协同过滤主导}
+\begin{itemize}
+  \item 评分概况：历史评分 98 条，最近观看为 Full Metal Jacket (4.5)、Good Will Hunting (3.5)、Forrest Gump (3.5)。
+  \item 推荐摘要：Godfather: Part II、The Departed、Saving Private Ryan、Braveheart、Star Wars: Episode VI 等，偏向战争/犯罪/史诗类。
+  \item 离线评估：测试集大小 19，命中 3，Recall@20 为 15.79\%，Precision 为 17.65\%；User-CF 与 Item-CF Recall 均为 10.5\%。
+  \item 结论：内容侧基于 genres 的信号较弱，混合结果主要由协同过滤贡献。
+\end{itemize}
+
+\subsubsection{用户 69：高评分偏好、混合召回提升}
+\begin{itemize}
+  \item 评分概况：历史评分 46 条，最近观看为 Cast Away (4.0)、O Brother, Where Art Thou? (5.0)、The Sixth Sense (5.0)。
+  \item 推荐摘要：Raiders of the Lost Ark、Braveheart、Gladiator、Back to the Future、The Godfather 等，动作/冒险/剧情为主。
+  \item 离线评估：测试集大小 9，命中 3，Recall@20 为 33.33\%，Precision 为 15.00\%；User-CF Recall 22.2\%，Item-CF Recall 11.1\%。
+  \item 结论：协同过滤能较好捕捉该用户的主流类型偏好，混合策略进一步提高召回。
+\end{itemize}
+
+\subsubsection{用户 120：冷启动场景、热度兜底}
+\begin{itemize}
+  \item 评分概况：历史评分 22 条，最近观看为 Jack (3.0)、The Godfather (5.0)、101 Dalmatians (4.0)。
+  \item 推荐摘要：Toy Story、Eraser、The Nutty Professor、Mr. Holland's Opus、Multiplicity 等，偏向 90 年代热门片。
+  \item 离线评估：测试集大小 4，命中 1，Recall@20 为 25.00\%，Precision 为 5.00\%；User-CF、Item-CF、内容推荐 Recall 均为 0。
+  \item 结论：在历史较少的情况下，混合策略通过热度补偿提供有效覆盖，但个性化程度仍有限。
+\end{itemize}
+
+
+\section{结果分析}
+\begin{itemize}
+  \item 实验结果表明，当前推荐系统存在显著的流行度偏差（Popularity Bias），热门电影在推荐列表中出现频率过高，这可能影响长尾物品的曝光机会和推荐多样性；
+  \item 协同过滤部分在当前实现中未充分利用评分幅度（仅以出现计数），导致对用户特定偏好的区分度不足；
+  \item 对于评分样本稀疏或冷启动用户，内容推荐与流行度补偿能提高覆盖但牺牲个性化；
+  \item 评价指标单一（仅 Recall@K）可能无法全面反映排序质量，建议增加 Precision@K、NDCG@K、MAP 等并考虑按高评分（例如 rating>=4）定义正例。
+\end{itemize}
+
+
+\chapter{总结}
+
+\section{实验总结}
+本实验基于 MovieLens 小规模数据集实现了一个可解释的混合电影推荐系统，整体流程包含数据预处理、相似度计算、候选召回、加权融合与多样性重排。系统融合了用户 CF、物品 CF 与基于类型的内容推荐，并在冷启动场景中引入热门度兜底，提高覆盖率。离线评估采用按时间切分的单用户测试集，评估时剔除测试评分以避免数据泄露；在样例用户上混合策略总体优于单一方法，召回率得到提升，但仍存在流行度偏差和个体用户波动。
+
+整体来看，当前实现能够较好地展示推荐系统的核心机制与工程结构：协同过滤提供群体偏好信号，内容相似度补充长尾与稀疏情形，多样性惩罚避免列表同质化。与此同时，分数未归一化、评分幅度利用不足和评估样本较小仍限制了效果与结论的稳健性。
+
+\section{心得体会}
+通过本次实现，我对“召回 + 融合 + 重排”的推荐流水线有了更清晰的认识：即便是简单的 Top-$k$ 相似度与计数式融合，也能构成一个可用的推荐框架。实践中，评估设置（如是否剔除测试评分）对结果影响很大，修正评估流程后召回率明显改善，说明严格的离线评估是可靠结论的前提。
+
+后续可以从以下方向继续完善：引入去均值或归一化以提升 CF 稳定性；在内容侧引入更多字段（标签、简介）增强个性化；增加 Precision@K、NDCG@K 等指标并扩大用户采样范围；在工程上使用稀疏矩阵或近似近邻加速相似度计算。
+
+整体而言，本次实验验证了混合推荐的有效性，也暴露了在数据稀疏与分数标定方面的改进空间。

@@ -1,0 +1,37 @@
+\chapter{实验代码}
+
+\section{项目文件清单}
+下列为仓库中与实验直接相关的主要文件及其简要说明：
+\begin{itemize}
+	\item \textbf{code/stock.csv}: 已上传的原始股票历史数据（CSV，含日期与收盘价）。
+	\item \textbf{code/utils.py}: 数据加载、CSV 容错处理、滑动窗口构造与 \texttt{stock\_data.npz} 保存加载函数。
+	\item \textbf{code/arima\_model.py}: ARIMA 拟合与显式预测。
+	\item \textbf{code/lstm\_numpy.py}: 手写 LSTM 前向、BPTT 反向传播、优化器（SGD/Adam）、梯度裁剪、递归与多步输出实现。
+	\item \textbf{code/main.py}: 实验流水线入口，负责参数解析、数据准备、模型训练/预测、指标计算与绘图。
+	\item \textbf{code/plots.py}, \textbf{code/metrics.py}: 绘图函数与 MAE/RMSE 实现。
+\end{itemize}
+
+\section{完整源码（选读）}
+下面按模块把关键实现以源码形式插入，便于在编译后的 PDF 中逐行查看实现细节。
+
+\subsection{数据与工具}
+\lstinputlisting[style=cleanpython]{code/utils.py}
+
+\subsection{ARIMA 封装}
+\lstinputlisting[style=cleanpython]{code/arima_model.py}
+
+\subsection{手写 LSTM（NumPy 实现）}
+\lstinputlisting[style=cleanpython]{code/lstm_numpy.py}
+
+\subsection{主流程脚本}
+\lstinputlisting[style=cleanpython]{code/main.py}
+
+\subsection{绘图与评估}
+\lstinputlisting[style=cleanpython]{code/plots.py}
+\lstinputlisting[style=cleanpython]{code/metrics.py}
+
+\subsection{数据下载脚本}
+\lstinputlisting[style=cleanpython]{code/download_data.py}
+
+
+

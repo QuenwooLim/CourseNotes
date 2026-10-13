@@ -1,0 +1,36 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}电影评论情感分类实验}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}实验目标}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}数据与预处理}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}数据来源}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}数据预处理}{1}{subsection.1.2.2}%
+\contentsline {section}{\numberline {1.3}特征提取：TF-IDF}{2}{section.1.3}%
+\contentsline {section}{\numberline {1.4}模型原理说明与设计}{2}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}逻辑回归}{2}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}线性 SVM (hinge loss)}{3}{subsection.1.4.2}%
+\contentsline {subsection}{\numberline {1.4.3}简易单步 RNN}{3}{subsection.1.4.3}%
+\contentsline {section}{\numberline {1.5}模型实现}{4}{section.1.5}%
+\contentsline {subsection}{\numberline {1.5.1}逻辑回归}{4}{subsection.1.5.1}%
+\contentsline {subsection}{\numberline {1.5.2}线性 SVM }{4}{subsection.1.5.2}%
+\contentsline {subsection}{\numberline {1.5.3}简易单步 RNN }{4}{subsection.1.5.3}%
+\contentsline {section}{\numberline {1.6}实验结果}{5}{section.1.6}%
+\contentsline {subsection}{\numberline {1.6.1}重要特征（Top Weights）}{5}{subsection.1.6.1}%
+\contentsline {subsection}{\numberline {1.6.2}混淆矩阵}{6}{subsection.1.6.2}%
+\contentsline {subsection}{\numberline {1.6.3}训练损失曲线}{6}{subsection.1.6.3}%
+\contentsline {subsection}{\numberline {1.6.4}特征重要性（Logistic / SVM）}{6}{subsection.1.6.4}%
+\contentsline {subsection}{\numberline {1.6.5}改进的 SVM：Pegasos (mini-batch)}{7}{subsection.1.6.5}%
+\contentsline {subsection}{\numberline {1.6.6}超参数搜索（序列模型小网格）}{7}{subsection.1.6.6}%
+\contentsline {section}{\numberline {1.7}实验结果分析}{8}{section.1.7}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}总结}{10}{chapter.2}%
+\contentsline {section}{\numberline {2.1}实验总结}{10}{section.2.1}%
+\contentsline {section}{\numberline {2.2}心得体会}{10}{section.2.2}%
+\contentsline {chapter}{参考文献}{11}{chapter*.8}%
+\contentsline {chapter}{\numberline {附录 A\hspace {.3em}}实验代码}{12}{appendix.A}%
+\contentsline {section}{\numberline {A.1}项目文件说明}{12}{section.A.1}%
+\contentsline {section}{\numberline {A.2}主要代码}{13}{section.A.2}%
+\contentsline {subsection}{\numberline {A.2.1}数据加载与 TF-IDF 向量化}{13}{subsection.A.2.1}%
+\contentsline {subsection}{\numberline {A.2.2}核心模型实现（逻辑回归 / SVM / 简易 RNN）}{17}{subsection.A.2.2}%
+\contentsline {subsection}{\numberline {A.2.3}主运行脚本与超参数搜索}{24}{subsection.A.2.3}%
+\contentsline {subsection}{\numberline {A.2.4}SVM：Pegasos 训练脚本与验证}{33}{subsection.A.2.4}%
+\contentsline {subsection}{\numberline {A.2.5}序列模型：训练与网格搜索}{38}{subsection.A.2.5}%
+\contentsline {subsection}{\numberline {A.2.6}评估与绘图工具}{47}{subsection.A.2.6}%

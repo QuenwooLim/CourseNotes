@@ -1,0 +1,35 @@
+% code_styles.sty — common listings styles for this homework
+\ProvidesPackage{code_styles}[Code listing styles]
+\RequirePackage{xcolor}
+\RequirePackage{listings}
+
+% 颜色定义
+\definecolor{codebg}{RGB}{248,249,250}
+\definecolor{codeframe}{RGB}{220,223,228}
+\definecolor{codekw}{RGB}{25,85,145}
+\definecolor{codecm}{RGB}{90,125,90}
+\definecolor{codestr}{RGB}{136,44,136}
+
+% Python 风格（与文档中使用的一致）
+\lstdefinestyle{cleanpython}{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\bfseries\color{codekw},
+    commentstyle=\itshape\color{codecm},
+    stringstyle=\color{codestr},
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeframe},
+    framesep=6pt,
+    numbers=left,
+    numberstyle=\scriptsize\color{gray},
+    numbersep=8pt,
+    breaklines=true,
+    breakatwhitespace=false,
+    showstringspaces=false,
+    keepspaces=true,
+    tabsize=4,
+    columns=fullflexible
+}
+
+\endinput

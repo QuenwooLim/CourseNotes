@@ -1,0 +1,34 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}股票收盘价 7 天预测实验}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}实验目标}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}数据与预处理}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}数据来源}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}预处理流程}{1}{subsection.1.2.2}%
+\contentsline {section}{\numberline {1.3}输入表示与目标}{2}{section.1.3}%
+\contentsline {section}{\numberline {1.4}模型原理说明与设计}{2}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}ARIMA}{2}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}LSTM 原理}{2}{subsection.1.4.2}%
+\contentsline {section}{\numberline {1.5}模型实现（要点与伪代码）}{3}{section.1.5}%
+\contentsline {subsection}{\numberline {1.5.1}ARIMA（伪代码）}{3}{subsection.1.5.1}%
+\contentsline {subsection}{\numberline {1.5.2}手写 LSTM（训练伪代码）}{3}{subsection.1.5.2}%
+\contentsline {section}{\numberline {1.6}实验设置}{4}{section.1.6}%
+\contentsline {section}{\numberline {1.7}实验结果}{4}{section.1.7}%
+\contentsline {subsection}{\numberline {1.7.1}超参数搜索（小网格）摘要}{4}{subsection.1.7.1}%
+\contentsline {section}{\numberline {1.8}实验结果分析}{5}{section.1.8}%
+\contentsline {section}{\numberline {1.9}训练超参数与运行命令}{5}{section.1.9}%
+\contentsline {section}{\numberline {1.10}训练日志与偏差校准}{6}{section.1.10}%
+\contentsline {section}{\numberline {1.11}产物与复现实验说明}{6}{section.1.11}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}总结}{8}{chapter.2}%
+\contentsline {section}{\numberline {2.1}LSTM 与 ARIMA 模型总结}{8}{section.2.1}%
+\contentsline {section}{\numberline {2.2}实验总结}{8}{section.2.2}%
+\contentsline {section}{\numberline {2.3}心得体会}{9}{section.2.3}%
+\contentsline {chapter}{参考文献}{10}{chapter*.5}%
+\contentsline {chapter}{\numberline {附录 A\hspace {.3em}}实验代码}{11}{appendix.A}%
+\contentsline {section}{\numberline {A.1}项目文件清单}{11}{section.A.1}%
+\contentsline {section}{\numberline {A.2}完整源码（选读）}{11}{section.A.2}%
+\contentsline {subsection}{\numberline {A.2.1}数据与工具}{11}{subsection.A.2.1}%
+\contentsline {subsection}{\numberline {A.2.2}ARIMA 封装}{12}{subsection.A.2.2}%
+\contentsline {subsection}{\numberline {A.2.3}手写 LSTM（NumPy 实现）}{13}{subsection.A.2.3}%
+\contentsline {subsection}{\numberline {A.2.4}主流程脚本}{19}{subsection.A.2.4}%
+\contentsline {subsection}{\numberline {A.2.5}绘图与评估}{22}{subsection.A.2.5}%
+\contentsline {subsection}{\numberline {A.2.6}数据下载脚本}{23}{subsection.A.2.6}%

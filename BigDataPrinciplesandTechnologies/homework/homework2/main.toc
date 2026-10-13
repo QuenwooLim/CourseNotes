@@ -1,0 +1,31 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}实验细节}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}实验目标}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}方法实现}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}数据来源与预处理}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}NLP工具的使用}{1}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}Neo4j图谱构建}{1}{subsection.1.2.3}%
+\contentsline {section}{\numberline {1.3}数据统计}{1}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}原始数据统计}{1}{subsection.1.3.1}%
+\contentsline {subsection}{\numberline {1.3.2}知识图谱统计}{2}{subsection.1.3.2}%
+\contentsline {subsection}{\numberline {1.3.3}统计说明}{2}{subsection.1.3.3}%
+\contentsline {section}{\numberline {1.4}实验内容}{2}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}原始文本片段}{2}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}提取的实体与关系}{3}{subsection.1.4.2}%
+\contentsline {section}{\numberline {1.5}实验结果与分析}{3}{section.1.5}%
+\contentsline {subsection}{\numberline {1.5.1}图谱覆盖范围}{3}{subsection.1.5.1}%
+\contentsline {subsection}{\numberline {1.5.2}准确性分析}{3}{subsection.1.5.2}%
+\contentsline {section}{\numberline {1.6}核心代码及说明}{3}{section.1.6}%
+\contentsline {section}{\numberline {1.7}算法处理介绍}{4}{section.1.7}%
+\contentsline {section}{\numberline {1.8}结果展示}{5}{section.1.8}%
+\contentsline {subsection}{\numberline {1.8.1}关系图展示}{5}{subsection.1.8.1}%
+\contentsline {subsection}{\numberline {1.8.2}学校与各学院的关系图}{5}{subsection.1.8.2}%
+\contentsline {subsection}{\numberline {1.8.3}各学院与老师的关系图}{6}{subsection.1.8.3}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}总结}{7}{chapter.2}%
+\contentsline {section}{\numberline {2.1}实验总结}{7}{section.2.1}%
+\contentsline {section}{\numberline {2.2}主要成果}{7}{section.2.2}%
+\contentsline {chapter}{参考文献}{8}{chapter*.5}%
+\contentsline {chapter}{\numberline {附录 A\hspace {.3em}}实验代码}{9}{appendix.A}%
+\contentsline {section}{\numberline {A.1}数据预处理代码}{9}{section.A.1}%
+\contentsline {section}{\numberline {A.2}关系提取代码}{10}{section.A.2}%
+\contentsline {section}{\numberline {A.3}Neo4j图谱构建代码}{12}{section.A.3}%

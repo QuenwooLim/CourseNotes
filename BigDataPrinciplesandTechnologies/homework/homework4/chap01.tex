@@ -1,0 +1,293 @@
+\chapter{电影评论情感分类实验}
+
+% 安全包含图片：优先使用给定路径，其次尝试 code/ 前缀，缺图显示占位框
+\newcommand{\maybeincludegraphics}[2][]{%
+    \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+        \IfFileExists{code/#2}{\includegraphics[#1]{code/#2}}{%
+            \fbox{\parbox[b][3cm][c]{0.9\linewidth}{\centering 图像缺失：#2}}%
+        }%
+    }%
+}
+
+\section{实验目标}
+本实验使用 TF-IDF 作为特征提取方法，分别实现并比较三种手写分类器：逻辑回归（Logistic）、线性 SVM（hinge loss + SGD）和一个简易单步 RNN。评估指标为测试集准确率，并绘制混淆矩阵、训练损失曲线与特征权重。
+
+\section{数据与预处理}
+% 示例数据片段（CSV 格式）
+\subsection{数据来源}
+本实验使用 IMDB Large Movie Review 数据集（Large Movie Review Dataset）。该数据集包含 50,000 条影评，按常用划分为训练集 25,000 条与测试集 25,000 条，标签为二元情感（正面/负面），样本分布大体平衡，是文本情感分类的标准基准数据集。
+
+数据格式示例（CSV）：
+\begin{verbatim}
+id,text,label
+0,"I loved this movie. The plot was great and the acting superb.",1
+1,"Terrible film. I wasted two hours. Poor script and bad acting.",0
+2,"An enjoyable experience with charming characters.",1
+3,"Boring and predictable, not recommended.",0
+\end{verbatim}
+
+\subsection{数据预处理}
+本实验的数据预处理流程如下：
+\begin{enumerate}
+    \item 文本标准化：全部小写化，统一替换 HTML 换行标签（如 \texttt{<br/>}）为空格；使用正则去除非字母数字字符并合并多余空白。
+    \item 分词与停用词：使用简单空白分词并移除英语停用词（\texttt{nltk.corpus.stopwords}）。
+    \item 低频词过滤：去除在语料中出现次数小于 2 的词（\texttt{min\_df=2}），以降低噪声和稀疏性。
+    \item 输出统计：向量化后特征维度由 TF-IDF 的 \texttt{max\_features} 决定（本实验取 5000）；训练集与测试集样本数分别来源于提供的 CSV 文件。
+\end{enumerate}
+处理后，我们将清洗后的文本用于 TF-IDF 向量化，并把结果分为 \texttt{X\_train, X\_test, y\_train, y\_test, vocab}。
+
+\section{特征提取：TF-IDF}
+TF-IDF（Term Frequency–Inverse Document Frequency）用于衡量词项在文档中的重要性。
+定义：对于词项 $t$ 与文档 $d$，令 $\mathrm{tf}_{t,d}$ 为词频，令文档总数为 $N$，包含词 $t$ 的文档数为 $\mathrm{df}_t$，则常用的 IDF 定义为：
+$$\mathrm{idf}_t=\log\frac{N+1}{\mathrm{df}_t+1}+1.$$ 
+TF-IDF 权重为
+$$\mathrm{tfidf}_{t,d}=\mathrm{tf}_{t,d}\cdot\mathrm{idf}_t.$$ 
+在实际实现中使用 \texttt{sklearn.feature\_extraction.text.TfidfVectorizer}，并在本实验中设置：
+\begin{itemize}
+    \item \texttt{max\_features=5000}：保留重要的 5000 个 n-gram 特征（按 TF-IDF 权重自动选择）；
+    \item \texttt{ngram\_range=(1,2)}：同时考虑 unigram 与 bigram；
+    \item \texttt{stop\_words='english'}：移除常见英语停用词；
+    \item \texttt{min\_df=2}：只保留至少在 2 个文档中出现的词（去除低频噪声）。
+\end{itemize}
+向量化后得到稠密或稀疏的矩阵 $X_{train}\in\mathbb{R}^{n\times d},X_{test}\in\mathbb{R}^{m\times d}$，其中 $d\le5000$。这些向量作为三种手写模型的输入。
+
+注：TF-IDF 仅用于特征表示，不包含任何模型训练的内建机制，满足作业要求中“向量化可调用 sklearn，但建模需手写”的限制。
+
+\section{模型原理说明与设计}
+
+\subsection{逻辑回归}
+令样本集合为 $\{(x_i,y_i)\}_{i=1}^n$，标签 $y_i\in\{0,1\}$，模型预测概率
+$$\hat p_i=\sigma(z_i)=\frac{1}{1+e^{-z_i}},\qquad z_i=w^T x_i + b.$$ 
+交叉熵损失为
+$$L_{\text{LR}}(w,b)= -\frac{1}{n}\sum_{i=1}^n \big[y_i\log\hat p_i + (1-y_i)\log(1-\hat p_i)\big].$$
+对 $w,b$ 的梯度为
+$$\nabla_w L = \frac{1}{n} X^T(\hat p - y),\qquad \nabla_b L=\frac{1}{n}\sum_i(\hat p_i-y_i).$$
+
+\subsection{线性 SVM (hinge loss)}
+将标签映射为 $y_i\in\{-1,1\}$，使用带正则的 hinge 损失：
+$$L_{\text{SVM}}(w,b)=\frac{1}{2}\|w\|^2 + C\sum_{i=1}^n\max(0,\,1-y_i(w^T x_i+b)).$$
+当样本违反 margin（即 $1-y_i(w^T x_i+b)>0$）时，对应的梯度项为
+$$\nabla_w = w - C\sum_{i\in S} y_i x_i,\qquad \nabla_b = -C\sum_{i\in S} y_i,$$
+其中 $S$ 为违反 margin 的样本集合。
+
+\subsection{简易单步 RNN}
+对单步输入 $x$，隐状态和输出定义为：
+$$h=\tanh(W_x x + b_h),\qquad \hat y=\sigma(W_y h + b).$$
+交叉熵损失为 $L=-[y\log\hat y+(1-y)\log(1-\hat y)]$，反向传播要点：
+$$d\hat y=\hat y-y,\quad dW_y = d\hat y\cdot h^T,\quad dh = W_y^T d\hat y \odot (1-h^2),$$
+然后更新 $W_x,b_h$ 使用 $dh$ 的链式梯度。
+
+\section{模型实现}
+\subsection{逻辑回归}
+使用 sigmoid 与批量梯度下降：初始化 $w=0,b=0$，每轮计算梯度并更新：$dw=\frac{1}{n}X^T(\sigma(Xw+b)-y)$，支持调节学习率与迭代次数。
+\begin{lstlisting}[language=Python, style=cleanpython, caption={逻辑回归核心训练代码（伪代码）}]
+for epoch in range(epochs):
+    z = X.dot(w) + b
+    p = 1/(1+np.exp(-z))         # sigmoid
+    loss = -np.mean(y*np.log(p)+(1-y)*np.log(1-p))
+    dw = (1/n) * X.T.dot(p-y)
+    db = (1/n) * np.sum(p-y)
+    w -= lr * dw
+    b -= lr * db
+\end{lstlisting}
+
+\subsection{线性 SVM }
+采用 hinge loss 的逐样本 SGD：将标签映射到 $\{-1,1\}$，当 $y_i (x_i^T w + b) < 1$ 时按 hinge 梯度更新，同时加 L2 正则。
+\begin{lstlisting}[language=Python, style=cleanpython, caption={SVM (hinge loss + SGD) 关键步骤（伪代码）}]
+for epoch in range(epochs):
+    for i in range(n):
+        margin = y[i] * (X[i].dot(w) + b)
+        if margin < 1:
+            dw = -C * y[i] * X[i]
+            db = -C * y[i]
+        else:
+            dw = 0; db = 0
+        w -= lr * (w * reg_coef + dw)   # reg_coef = 1/(C*n)
+        b -= lr * db
+\end{lstlisting}
+
+
+\subsection{简易单步 RNN }
+由于输入为 TF-IDF 向量（视为单步序列），使用单步 tanh 隐层：$h=\tanh(W_x x + b_h)$，输出 $\hat y=\sigma(W_y h + b)$，并手写反向传播更新权重。
+\begin{lstlisting}[language=Python, style=cleanpython, caption={简易 RNN 训练关键步骤（伪代码）}]
+for epoch in range(epochs):
+    for i in range(n):
+        x = X[i]
+        h = np.tanh(Wx.dot(x) + bh)
+        p = 1/(1+np.exp(-(Wy.dot(h) + by)))
+        dy = p - y[i]
+        dWy = dy * h[np.newaxis,:]
+        dh = Wy.T * dy * (1 - h**2)
+        dWx = np.outer(dh, x)
+        # update parameters
+        Wy -= lr * dWy
+        Wx -= lr * dWx
+        bh -= lr * dh
+        by -= lr * dy
+\end{lstlisting}
+
+\section{实验结果}
+在同一测试集上进行训练与评估，对比各个模型，得到的测试准确率如下：
+\begin{table}[htbp]
+\centering
+\begin{tabular}{l c}
+\hline
+模型 & Test Acc \\
+\hline
+Logistic & 0.78636 \\
+SVM (hand SGD, calibrated) & 0.87292 \\
+SVM (sklearn SGD baseline) & 0.87556 \\
+SVM (Pegasos, mini-batch) & 0.76524 \\
+RNN (single-step, hand) & 0.50000 \\
+RNN (sequence GRU, PyTorch) & 0.56836 \\
+\hline
+\end{tabular}
+\caption{三种模型的测试集准确率（包含手写/库实现及序列 RNN 的最终对比）}
+\end{table}
+
+\subsection{重要特征（Top Weights）}
+\begin{figure}[htbp]
+    \centering
+    \maybeincludegraphics[width=0.45\textwidth]{code/plots/top_weights_lr.png}
+    \caption{逻辑回归模型权重绝对值最大的前 10 Top weights，展示最具区分力的文本特征。}
+\end{figure}
+
+\newpage
+\subsection{混淆矩阵}
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \maybeincludegraphics[width=\textwidth]{code/plots/confusion_lr.png}
+        \caption{逻辑回归}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \maybeincludegraphics[width=\textwidth]{code/plots/confusion_svm.png}
+        \caption{SVM (hinge+SGD)}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \maybeincludegraphics[width=\textwidth]{code/plots/confusion_seq_gru.png}
+        \caption{RNN（序列，GRU）}
+    \end{subfigure}
+    \caption{三模型在测试集上的混淆矩阵}
+\end{figure}
+
+\subsection{训练损失曲线}
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \maybeincludegraphics[width=\textwidth]{code/plots/loss_lr.png}
+        \caption{逻辑回归}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \maybeincludegraphics[width=\textwidth]{code/plots/loss_svm.png}
+        \caption{SVM}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.32\textwidth}
+        \centering
+        \maybeincludegraphics[width=\textwidth]{code/plots/loss_seq_gru.png}
+        \caption{RNN（序列，GRU）}
+    \end{subfigure}
+    \caption{三模型训练损失随迭代变化曲线}
+\end{figure}
+
+\subsection{特征重要性（Logistic / SVM）}
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \maybeincludegraphics[width=\textwidth]{code/plots/top_weights_lr.png}
+        \caption{逻辑回归 top-10 特征权重}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \maybeincludegraphics[width=\textwidth]{code/plots/top_weights_svm.png}
+        \caption{SVM top-10 特征权重}
+    \end{subfigure}
+    \caption{基于权重绝对值排序的 top 特征（左：逻辑回归；右：SVM）}
+\end{figure}
+
+\newpage
+\subsection{改进的 SVM：Pegasos (mini-batch)}
+为提高 SVM 的收敛性，采用 Pegasos 风格的 mini-batch 更新（源码见附录），在相同 TF-IDF 特征上训练得到：
+\begin{itemize}
+    \item Test Acc = 0.76524
+    \item Precision = 0.9046, Recall = 0.5930, F1 = 0.7164
+    \item 手写 hinge+SGD 在验证/测试集表现：Test Acc = 0.85936, Precision = 0.8549, Recall = 0.8657, F1 = 0.8602
+    \item sklearn 的 SGDClassifier(loss='hinge') 基线：Test Acc = 0.87556, Precision = 0.8818, Recall = 0.8674, F1 = 0.8745
+\end{itemize}
+相关可视化：混淆矩阵与 top-20 权重见下图。
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \maybeincludegraphics[width=\textwidth]{code/plots/confusion_svm_pegasos.png}
+        \caption{混淆矩阵}
+    \end{subfigure}\hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \maybeincludegraphics[width=\textwidth]{code/plots/top_weights_svm_pegasos.png}
+        \caption{top-20 特征权重}
+    \end{subfigure}
+    \caption{Pegasos SVM 的混淆矩阵与 top-20 特征权重}
+\end{figure}
+
+\subsection{超参数搜索（序列模型小网格）}
+对序列 GRU 模型在小规模子集上进行了轻量网格搜索，并使用最优配置在完整序列数据上重训练得到最终结果。部分摘要：
+\begin{itemize}
+    \item 子集最优配置：\texttt{embed\_dim=64}, \texttt{hidden\_size=128}, \texttt{lr=5e-4}（子集 F1=0.6587）
+    \item 使用上述最优配置在完整序列数据上重训练（5 epochs）得到：Test Acc = 0.56836, Precision = 0.54339, Recall = 0.85608, F1 = 0.66480
+    \item 注意：原始小网格中针对 TF-IDF 的 SVM 网格是在修复实现前得到，已在本次验证中用修复后的实现与 sklearn 基线做了对比（见上文 SVM 小节）。
+\end{itemize}
+
+
+\section{实验结果分析}
+
+\begin{itemize}
+    \item {\bf Logistic 的行为与损失解释：} 训练损失接近常数 $\ln 2\approx0.6931$ 并变化缓慢，说明模型虽然能较快把样本分类正确，但预测概率集中在 0.5 附近（置信度不高）。这可能由特征信息不足、较强的正则化或不充分的训练轮数导致。可通过放宽正则化、延长训练并使用学习率衰减、或改进特征（增加 n-gram、TF-IDF 平滑）来提升概率置信度。
+
+    \item {\bf SVM 的实现差异与诊断：} hand-SGD 初始实现退化为随机猜测，主要由正则化项缩放、权重衰减实现与 bias 更新规则等细节带来。修正后 hand-SGD 与 sklearn 的结果趋于一致，说明实现细节决定行为。Pegasos 表现不佳常见原因包括步长调度 $\eta_t$ 与正则化强度 $\lambda$ 不匹配、mini-batch 大小不合适或初始权重/随机种子敏感，应在验证集上系统搜索 $\{\lambda,\eta_0,\text{batch\_size}\}$。
+
+    \item {\bf RNN（单步 vs 序列）分析：} 将 TF-IDF 作为单步输入的手写 RNN 无法利用词序信息，因而表现接近随机（Test Acc≈0.50）。基于序列化文本的 PyTorch GRU 在子集上得到较好 F1（子集 F1≈0.659），重训练后在完整数据上 Test Acc≈0.56836、Precision≈0.54339、Recall≈0.85608、F1≈0.66480。这组指标表明模型召回较高但精度较低，可能源于阈值设定、类标签不均或模型过拟合正类。改进方向包括使用预训练词向量、双向编码器、注意力机制、以及基于验证集的阈值选择或损失加权。
+
+    \item {\bf 指标与诊断建议：} 准确率并不能完全反映模型优劣，建议常规报告 Precision/Recall/F1、ROC-AUC 与 PR 曲线，并对混淆矩阵中的假正例与假负例做抽样分析以找出系统性错误（如否定句、长文本或讽刺语气）。同时绘制置信度分布图以判断模型是否低置信度预测占优。
+
+    \item {\bf 手写实现的工程与调试建议：} 对所有手写模型进行梯度数值检验、固定随机种子、确保样本洗牌与训练/验证集分离；修正数值稳定性问题（sigmoid 溢出、交叉熵的 log-sum-exp 处理）；在实现中使用 minibatch、向量化与合理的学习率调度以提高训练稳定性。
+
+    \item {\bf 关于 Logistic 损失曲线的说明：} 在绘制的训练损失图中，逻辑回归的交叉熵损失值变化非常小（接近常数 $\ln 2\approx0.6931$），因此视觉上呈现近似直线。这是因为模型在大量样本上很快预测正确，但预测概率仍接近 0.5（置信度有限），导致负对数似然下降缓慢。若需更清晰展示微小变化，可绘制相对损失（例如 $L-L_{\min}$）或缩放纵轴来放大差异。
+
+    \item {\bf 实现层面的补充与对结果的解释：}
+    \begin{enumerate}
+        \item 本仓库中的简易 RNN 在 \texttt{models.SimpleRNN.forward} 中并未使用循环权重 \texttt{Wh}（仅使用了 \texttt{Wx} 和偏置），因此该实现实际上是单步的前馈 tanh 层，而非能学习序列依赖的递归网络。这解释了手写 RNN 在使用 TF-IDF（袋化特征）作为单步输入时表现很差的原因。
+        \item 手写 SVM 的逐样本实现在每个 epoch 对训练分数做阈值搜索并调整 bias，这相当于在训练集上校准阈值，会导致在测试上出现被高估的结果。更稳健的做法是在独立验证集上或使用交叉验证来校准阈值，并报告校准前后的指标。
+        \item Pegasos 与 hand-SGD 在正则化参数约定上不一致：\texttt{train\_svm\_sgd} 使用了 $\lambda=1/(C\cdot n)$ 的映射，而 \texttt{train\_svm\_pegasos} 则用 $\lambda=1/C$ 并省略了 bias，这会直接影响两种方法在同一 C 下的比较，可能是 Pegasos 表现较低的一个重要原因。
+        \item 当前实现把 TF-IDF 转为密集数组（\texttt{toarray()}），在内存与运算上成本较高。对线性模型应保留稀疏矩阵以利用稀疏运算或直接使用 sklearn 的在线优化器，可显著加速训练并减少内存占用。
+        \item 文本清洗策略（\texttt{clean\_text}）去掉了标点并把缩写拆分为单词（例如 "don't" → "don t"），可能损失否定信息，影响对否定句的判别。建议使用更精细的分词或保留常见缩写处理。
+    \end{enumerate}
+\end{itemize}
+
+\textbf{总体结论：}
+表格与实现细节共同指向一个结论：在当前的 TF-IDF 表示与实现约定下，线性模型（Logistic、线性 SVM）是最稳健且容易调优的选择；序列模型要取得超越线性基线需要改进数据表示（序列化 + 嵌入）与模型架构（双向/注意力/预训练嵌入）以及更规范的训练流程（验证集校准、正则化、早停），同时比较不同 SVM 实现时需统一正则化和 bias 的处理，以获得公平的对比。
+
+\chapter{总结}
+
+\section{实验总结}
+本实验基于 IMDB 影评数据完成了从数据清洗、TF-IDF 特征构造到多种模型实现与评估的完整流程。主要结论：
+\begin{itemize}
+    \item 在当前的 TF-IDF 表示与实现配置下，线性模型（主要是 SVM）是最稳健的选择——它们在准确率和可解释性上均优于本次手写的单步 RNN 与默认配置的 Pegasos SVM（详见第 1 章结果表）。
+    \item SVM（逐样本 SGD）在修正实现细节后能取得接近 sklearn 基线的性能；而 Pegasos 在本实现及超参数下表现落后，强烈提示需统一正则化定义并在验证集上搜索步长与正则化系数。
+    \item 序列模型（基于 PyTorch 的 GRU）在序列化文本并使用嵌入后表现优于手写单步 RNN，但仍未超越线性基线，表明在小网格与有限训练轮数下，特征质量（TF-IDF）对最终效果的影响更大。
+\end{itemize}
+
+\section{心得体会}
+
+\begin{itemize}
+    \item 在文本分类任务中，优秀的特征（如 TF-IDF 与合适的 n-gram）常常能让简单的线性模型达到很好效果，模型复杂度并非总是能够提高性能。
+    \item 代码实现细节（正则化的常数、阈值校准、是否含 bias、数值稳定性处理）会显著影响最终结果，研究或对比时必须对实现约定做严格记录并保持一致。
+    \item 后续可以考虑的探究方向：统一 SVM 正则化约定并在验证集上校准阈值；将 RNN/Transformer 的序列输入彻底实现（词嵌入 + 序列化 + minibatch）；并使用稀疏线性代数或 sklearn 的优化器加速线性模型训练。
+\end{itemize}
+

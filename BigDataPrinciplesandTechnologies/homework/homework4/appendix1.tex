@@ -1,0 +1,57 @@
+\chapter{实验代码}
+\section{项目文件说明}
+为便于审阅与复现，下面按功能模块列出本项目主要 Python 文件及其作用：
+\begin{itemize}
+	\item \textbf{数据与预处理}
+	\begin{itemize}
+		\item \textbf{code/source/}: 包含原始数据文件。
+		\item \textbf{code/data\_utils.py}: 数据下载、加载、清洗、分词与 TF‑IDF 向量化工具。
+	\end{itemize}
+	\item \textbf{模型与训练}
+	\begin{itemize}
+		\item \textbf{code/models.py}: 手写模型实现（逻辑回归、线性 SVM、简易单步 RNN），以及训练/预测与检查点接口。
+		\item \textbf{code/seq\_model\_pytorch.py}: PyTorch 中的序列模型定义（Embedding + GRU + FC）。
+		\item \textbf{code/train\_seq\_torch.py}: 序列模型训练脚本，支持子采样加速实验与保存训练历史、检查点。
+		\item \textbf{code/seq\_grid\_search.py}: 序列模型的小规模网格搜索，选择子集上的最佳超参并可重训练。
+		\item \textbf{code/run\_svm\_pegasos.py}: Pegasos 风格的 SVM 实验驱动与可视化辅助脚本。
+		\item \textbf{code/hyperparam\_search.py}: 针对经典模型（Logistic/SVM）的超参搜索与汇总。
+	\end{itemize}
+	\item \textbf{评估与绘图}
+	\begin{itemize}
+		\item \textbf{code/eval\_svm\_validation.py}: 在训练/验证/测试拆分上评估手写 SVM，进行阈值校准，并与 sklearn 基线比较。
+		\item \textbf{code/eval\_utils.py}: 评估指标与工具函数（准确率、精确率、召回、F1、混淆矩阵等）。
+		\item \textbf{code/plots.py}: 绘图聚合入口，读取结果中的 JSON 汇总与训练历史，生成论文用图（损失曲线、混淆矩阵、top‑weights 等）。
+	\end{itemize}
+	\item \textbf{工程文件与输出}
+	\begin{itemize}
+		\item \textbf{code/main.py}: 主流程脚本：构建 TF‑IDF → 训练/评估 → 生成图像。
+		\item \textbf{code/results/}: 实验的 JSON 汇总与按 epoch 的训练历史，为绘图与论文提供确定性输入。
+		\item \textbf{pyproject.toml}: 依赖声明，使用虚拟环境安装所需依赖。
+	\end{itemize}
+\end{itemize}
+
+
+% 使用外部文件引用展示代码，便于保持源码与报告一致。
+\section{主要代码}
+
+\subsection{数据加载与 TF-IDF 向量化}
+\lstinputlisting[style=cleanpython]{code/data_utils.py}
+
+\subsection{核心模型实现（逻辑回归 / SVM / 简易 RNN）}
+\lstinputlisting[style=cleanpython]{code/models.py}
+
+\subsection{主运行脚本与超参数搜索}
+\lstinputlisting[style=cleanpython]{code/main.py}
+\lstinputlisting[style=cleanpython]{code/hyperparam_search.py}
+
+\subsection{SVM：Pegasos 训练脚本与验证}
+\lstinputlisting[style=cleanpython]{code/run_svm_pegasos.py}
+\lstinputlisting[style=cleanpython]{code/eval_svm_validation.py}
+
+\subsection{序列模型：训练与网格搜索}
+\lstinputlisting[style=cleanpython]{code/train_seq_torch.py}
+\lstinputlisting[style=cleanpython]{code/seq_grid_search.py}
+
+\subsection{评估与绘图工具}
+\lstinputlisting[style=cleanpython]{code/plots.py}
+

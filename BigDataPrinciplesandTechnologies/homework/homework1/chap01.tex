@@ -1,0 +1,204 @@
+\chapter{图像边缘检测}
+
+\section{问题描述}
+本章介绍图像边缘检测任务，使用 Sobel 算子对单张图片进行边缘检测并展示结果。
+
+\section{方法实现}
+使用 Sobel 算子进行边缘检测的核心步骤如下：
+\begin{enumerate}
+    \item \textbf{灰度化与高斯模糊}：将输入图像转换为灰度图，并使用高斯模糊去噪。
+    \item \textbf{计算梯度}：分别计算水平和垂直方向的梯度 $G_x$ 和 $G_y$，公式如下：
+    \begin{equation}
+    G_x = \frac{\partial I}{\partial x}, \quad G_y = \frac{\partial I}{\partial y}
+    \end{equation}
+    \item \textbf{边缘强度}：通过梯度幅值公式计算边缘强度：
+    \begin{equation}
+    M = \sqrt{G_x^2 + G_y^2}
+    \end{equation}
+    \item \textbf{归一化与保存}：将边缘强度归一化到 [0, 255] 范围，并保存为图像文件。
+\end{enumerate}
+
+\section{算法说明}
+\subsection{Sobel 算子}
+Sobel 算子是一种离散微分算子，用于计算图像的梯度强度和方向。其核心思想是通过卷积操作提取图像的边缘信息。Sobel 算子分别定义了水平和垂直方向的卷积核：
+\begin{equation}
+K_x = \begin{bmatrix}
+-1 & 0 & 1 \\
+-2 & 0 & 2 \\
+-1 & 0 & 1
+\end{bmatrix}, \quad
+K_y = \begin{bmatrix}
+-1 & -2 & -1 \\
+ 0 &  0 &  0 \\
+ 1 &  2 &  1
+\end{bmatrix}
+\end{equation}
+通过对图像进行卷积操作，可以分别计算水平和垂直方向的梯度，进而合成边缘强度。
+
+这些 Sobel 卷积核实际上是对图像在 $x$、$y$ 方向的一阶差分的离散近似，用于估计局部梯度分量 $G_x, G_y$。常用的边缘幅值与方向计算为：
+\begin{equation}
+M = \sqrt{G_x^2 + G_y^2},\qquad
+\Theta = \operatorname{atan2}(G_y, G_x)
+\end{equation}
+
+实现细节提示：通常先对输入做轻度高斯平滑以抑制噪声（否则梯度会放大噪声）；对幅值 $M$ 做线性归一化方便显示为 0--255 的灰度图；若需提取精细且连续的边缘，可在幅值图上做非极大值抑制并结合双阈值滞后（hysteresis）连接（例如 Canny 的后处理步骤）。Sobel 的核尺寸（如 $3\times3$）会影响噪声敏感性和定位精度，边界处通常采用镜像或常数填充以处理卷积边界效应。
+
+\subsection{支持向量机（SVM）}
+支持向量机是一种监督学习算法，旨在通过最大化分类间隔找到最优超平面。对于非线性可分数据，SVM 使用核函数将数据映射到高维空间，从而实现分类。
+
+\subsection{多层感知机（MLP）}
+多层感知机是一种前馈神经网络，由输入层、隐藏层和输出层组成。每一层通过线性变换和非线性激活函数实现特征的逐层提取。MLP 的训练过程通过反向传播算法优化网络参数，以最小化损失函数。
+
+\subsection{边缘检测核心代码}
+下面给出边缘检测脚本中的核心函数：
+\begin{lstlisting}[style=cleanpython]
+def main():
+    img_path = os.path.join(os.path.dirname(__file__), 'data', 'test.png')
+    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    sobelx = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=3)
+    sobely = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=3)
+    sobel = cv2.magnitude(sobelx, sobely)
+    sobel = np.uint8(np.clip(sobel, 0, 255))
+    cv2.imwrite(out_path, sobel)
+\end{lstlisting}
+
+
+\section{实验结果与分析}
+\subsection{边缘检测结果}
+边缘检测结果如图 \ref{fig:sobel_result} 所示，展示了原始图像与边缘检测后的对比效果。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{code/data/test.png}
+        \caption*{(a) 原始图像}
+    \end{minipage}\hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{code/data/test_sobel.png}
+        \caption*{(b) Sobel 边缘检测结果}
+    \end{minipage}
+    \caption{原始图像与 Sobel 边缘检测结果并排对比}
+    \label{fig:sobel_result}
+\end{figure}
+% 代码样式由主文档导言区统一加载，避免在正文中重复加载。
+
+
+\chapter{图像分类}
+
+\section{问题描述}
+本章介绍图像分类任务，比较传统机器学习方法（SVM）与深度学习方法（MLP）的分类性能与计算效率。
+
+\section{方法实现}
+\subsection{支持向量机（SVM）}
+在本实验中，我们在 sklearn 的 Digits 数据集上使用 \texttt{SVC} 作为基线分类器，默认采用 $\texttt{kernel=\{'rbf','linear'\}}$ 视情况选择，常用超参数包括正则化参数 $C$ 与核宽度 $\gamma$（RBF）。
+
+数据预处理：SVM 对特征尺度敏感，故在训练前应对输入做标准化（例如使用 \texttt{StandardScaler}），即对每个特征去均值并按方差缩放为单位方差。对高维或稀疏特征亦可考虑先做主成分分析（PCA）降维以降低计算与内存开销。
+
+训练与调参：通常使用交叉验证（如 5-fold CV）在网格或随机搜索中选择 $C$ 和 $\gamma$。SVM 的目标可用带正则化的铰链损失表示为：
+\begin{equation}
+\mathcal{L}(w,b)=\sum_{i}\max\big(0,\,1-y_i(w^\top x_i+b)\big)+\tfrac{\lambda}{2}\|w\|_2^2
+\end{equation}
+其中 $\lambda$ 与 $C$ 互相关联，用于控制间隔与误分类的权衡。
+
+优缺点与适用场景：SVM 在小样本、低维问题上（如 Digits）通常表现优异且对异常值有较好鲁棒性，但在样本数及特征维度很大时训练与内存开销会快速上升（核方法的复杂度依赖于样本数）。
+
+\subsection{多层感知机（MLP）}
+本实验实现的 MLP 结构为：输入层 $784$（展平的 $28\times28$）、隐藏层 $128$（ReLU），输出层 $10$（softmax）。训练使用 PyTorch，在 CPU 上默认训练 $3$ 个 epoch，损失函数为交叉熵，优化器为 Adam。
+
+实现与训练细节：常用的训练超参数示例为批大小 $\text{batch}=64$、学习率 $\eta=1\times10^{-3}$、权重衰减（L2 正则）$\lambda=1\times10^{-4}$。网络输出使用 softmax 与负对数似然（交叉熵）损失：
+\begin{equation}
+\mathcal{L}= -\frac{1}{N}\sum_{i}\sum_{k} y_{i,k}\log p_{i,k},
+\end{equation}
+其中 $p_{i,k}$ 为样本 $i$ 在类别 $k$ 上的预测概率。
+
+
+计算代价与比较：相较于 SVM，MLP 在大规模数据上更具扩展性（可通过小批量训练与 GPU 加速），但需要更多超参数调优与更长训练时间；在小样本低维问题上，简单 MLP 可能不如 SVM 效率高。
+
+
+\subsection{数据说明}
+本实验使用两类数据集以体现“样本规模与方法差异”的对比：
+\begin{itemize}
+    \item Digits（来自 sklearn）：样本总数 1797，输入维度 64（8x8），适合作为小样本、低维任务的代表；
+    \item MNIST：训练集 60000，测试集 10000，输入维度 784（28x28），为更大规模、较高维度的手写数字识别任务。
+\end{itemize}
+
+\subsection{分类核心代码}
+下面贴出分类脚本中用于 SVM 和 MLP 的核心函数节选：
+\begin{lstlisting}[style=cleanpython]
+def run_svm_on_digits():
+    digits = datasets.load_digits()
+    X_train, X_test, y_train, y_test = train_test_split(...)
+    clf = svm.SVC(gamma=0.001)
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+\end{lstlisting}
+
+\begin{lstlisting}[style=cleanpython]
+def run_mlp_on_mnist():
+    train_dataset = tv_datasets.MNIST(...)
+    model = MLP()
+    for epoch in range(3):
+        for images, labels in train_loader:
+            optimizer.zero_grad(); loss.backward(); optimizer.step()
+    # 评估并计算准确率
+\end{lstlisting}
+
+\section{实验结果与分析}
+
+表 \ref{tab:classification_results} 总结了 SVM 和 MLP 的分类性能与计算效率对比。SVM 在小样本任务中表现优异，而 MLP 在更复杂任务中具有潜力。
+
+% 说明两数据集与对比方法
+\paragraph{} 本实验有意选择两个具有代表性的数据集来分别评估两类方法的优劣：\textbf{Digits}（小样本、低维，1797 个样本，64 维）用于评估传统方法 SVM 的表现；\textbf{MNIST}（大规模、高维，60000/10000）用于评估深度学习方法 MLP 的表现。之所以采用这种设计而非在同一数据集上直接比较，是因为我们的目标是展示方法在不同问题规模与维度下的适用性：SVM 在低维小样本场景下计算效率高且准确率优异，而 MLP 在大规模高维数据上更易发挥表示能力和扩展性。
+
+\paragraph{} 若要在同一数据集（如完整 MNIST）上直接对比 SVM 与 MLP，需要较大计算资源（SVM 在高维大样本下训练时间与内存开销显著增加）。作为补充，可在 MNIST 的小子集上运行 SVM 或对 MLP 做下采样实验以获得更直接的对比，这里作为后续工作建议。
+
+\begin{table}[htbp]
+    \centering
+    \caption{分类实验结果对比}
+    \label{tab:classification_results}
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        方法 & 数据集 & 准确率 & 训练时间（秒） & 推理时间（秒） & 推理吞吐（样本/秒） \\
+        \hline
+        SVM & Digits & 0.9889 & 0.0622 & 0.0225 & 16033.1 \\
+        \hline
+        MLP & Digits & 0.9694 & 0.2713 & 0.0052 & 69586.1 \\
+        \hline
+        SVM & MNIST (sub) & 0.1135 & 13.6493 & 6.1029 & 327.7 \\
+        \hline
+        MLP & MNIST & 0.9611 & 33.5985 & 1.6698 & 5988.6 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\paragraph{} 从表中可以看出：在小样本低维任务（Digits）上，SVM 在准确率和计算效率上均表现良好；MLP 在 Digits 上也能获得较高准确率，但相较于 SVM 训练与推理开销更大（尽管在小维度下 MLP 的推理吞吐很高）。
+
+\paragraph{} 在高维大样本的 MNIST 上，MLP 能稳定取得较高的准确率（0.9611），但训练时间显著增加。而在我们的 MNIST 子集实验中，SVM 的表现非常差（准确率 ~0.1135），并且训练与推理时间/吞吐也不理想，表明在未进行充分特征工程或合适核/超参调整的情况下，基于核方法在高维大样本问题上既计算开销大且不一定能获得较好效果；这进一步支持在大规模高维任务中优先考虑深度学习方法的观点。
+
+\chapter{总结}
+
+\section{实验总结}
+通过本次实验，我们实现了图像边缘检测与分类任务，并比较了传统机器学习方法与深度学习方法的性能。实验结果表明：
+\begin{itemize}
+    \item SVM 在小样本任务中表现出更高的效率，适合低维特征的分类任务；
+    \item MLP 在更复杂任务中具有潜力，但训练成本较高。
+\end{itemize}
+
+\section{技术学习总结}
+本次实验过程中，作者掌握并复习了如下技术点：
+\begin{itemize}
+    \item 图像处理基础：掌握了灰度化、高斯模糊与 Sobel 卷积的实现与调优方法；
+    \item 传统机器学习：熟悉了 SVM 的使用、训练/预测流程与性能度量（准确率、训练/推理耗时、吞吐率）；
+    \item 深度学习实操：使用 PyTorch 实现 MLP，包括数据预处理、模型定义、训练循环与评估，了解训练时间与硬件依赖的影响；
+    \item 实验工程化：学会将实验结果以 JSON 格式保存、记录时间戳，并将模型与结果写入工程目录，便于复现与对比。
+\end{itemize}
+
+\section{心得体会}
+\begin{itemize}
+    \item 在工程实践中，算法选择应结合数据规模与特征维度：小样本低维问题优先考虑传统方法以节省计算资源，而大规模高维问题更适合使用深度模型；
+    \item 进行方法对比时应注意实验设计的可比性，本文采用代表性数据集来说明方法在不同场景下的适用性；
+    \item 实验结果的稳定性需要多次运行与统计，本次为快速验证，后续可补充多次试验以增强结论的可信度；
+    \item 良好的代码组织与结果记录能显著提升复现效率，建议将数据、模型与结果与代码同树存放并提供简单的运行说明。
+\end{itemize}

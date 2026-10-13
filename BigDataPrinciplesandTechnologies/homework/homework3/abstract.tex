@@ -1,0 +1,25 @@
+\cabstract{
+在学习王老师的大数据原理与技术课程\cite{lecture02}后，在此报告中完成相应的课后作业。
+
+本作业围绕“聚类算法对比实验”展开，要求使用 Python 完成\textbf{两部分任务}。\textbf{K-means 与 DBSCAN 聚类算法实现}：在鸢尾花数据集上实现 K-means 和 DBSCAN 算法，调整超参数（如簇数、邻域半径）观察聚类结果变化。
+\textbf{聚类性能评估}：用准确率、轮廓系数和 Calinski-Harabasz 指数评估性能。
+
+作业提交要求：
+\begin{itemize}
+    \item 提交内容：代码与作业报告（2 页以上）
+    \item 命名格式：“学号+姓名+作业3.zip”
+    \item 提交至邮箱：BDSysu2026Spring@163.com
+    \item 截止时间：布置作业之后的下一个周日 24:00
+    \item 严禁抄袭：任何一次抄袭，平时成绩按零分处理
+\end{itemize}
+
+本次实验流程首先加载并分析鸢尾花数据集，对特征做 Z-score 标准化；其次手写实现 K-means 与 DBSCAN 并在参数网格上进行搜索（K-means 的 $k$，DBSCAN 的 $\varepsilon$ 与 $\mathrm{min\_samples}$）；对每组结果计算 Accuracy（标签对齐）、Silhouette 与 Calinski–Harabasz 指数并绘制 PCA 二维投影进行可视化；最后汇总指标与图像，比较两算法性能并给出参数选择与复现建议。
+
+实验结果表明，在鸢尾花数据集上，手写实现的 K-means 在 $k=3$ 时能够较好恢复真实类别（Accuracy = 0.8533）；DBSCAN 在 $\varepsilon=0.8$ 且 $\mathrm{min\_samples}=3$ 时取得较为平衡的结果（Accuracy 约 0.66，噪声点 4 个）。文中手工实现了两种算法并基于 Accuracy、Silhouette 与 Calinski–Harabasz 指数进行比较，结合参数扫描与可视化分析给出参数选择建议与复现性实践。% 已补充实验摘要
+}
+% 中文关键词(每个关键词之间用“，”分开,最后一个关键词不打标点符号。)
+\ckeywords{聚类算法，K-means，DBSCAN，聚类性能评估，鸢尾花数据集}
+% 英文关键词(每个关键词之间用,分开, 最后一个关键词不打标点符号。)
+\ekeywords{}
+
+
