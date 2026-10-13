@@ -1,0 +1,31 @@
+(* Expected error: MismatchedCommentException, unclosed comment; derived from BankSystem.obr by a local mutation. *)
+(* A correct Oberon-0 program covering ALL Oberon-0 syntax constructs.
+   Operators used: + - * DIV MOD = # < <= > >= & OR ~
+   Constructs: MODULE, CONST, TYPE (RECORD+ARRAY), VAR, PROCEDURE
+   (value params, VAR params), IF/THEN/ELSIF/ELSE/END, WHILE/DO/END,
+   assignment with array indexing and record field access,
+   procedure calls, Read/Write/WriteLn. *)
+MODULE BankSystem;
+  CONST
+    MaxAccounts = 50;
+    MinBalance = 100;
+    InterestRate = 5;
+    AdminCode = 9999;
+  TYPE
+    AccountRec = RECORD
+      id: INTEGER;
+      balance: INTEGER
+    END;
+    AccountArray = ARRAY 50 OF AccountRec;
+  VAR
+    accounts: AccountArray;
+    count, i, choice, amount, accId: INTEGER;
+    running, found: BOOLEAN;
+
+  PROCEDURE InitAccounts;
+    VAR k: INTEGER;
+  BEGIN
+    k := 0;
+    WHILE k < MaxAccounts DO
+      accounts[k].id := 0;
+      accounts[k].balance := 0;

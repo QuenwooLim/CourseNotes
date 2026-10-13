@@ -1,0 +1,33 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}实验目的}{1}{chapter.1}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}项目组织}{2}{chapter.2}%
+\contentsline {chapter}{\numberline {3\hspace {.3em}}实验实现}{3}{chapter.3}%
+\contentsline {section}{\numberline {3.1}语法定义的二义性分析}{3}{section.3.1}%
+\contentsline {section}{\numberline {3.2}词法分析程序的设计与实现}{4}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}词法规则}{4}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}词法分析实现}{4}{subsection.3.2.2}%
+\contentsline {section}{\numberline {3.3}算符优先关系表的构造}{5}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}优先级定义}{5}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}优先级函数实现}{5}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}结合性质处理}{6}{subsection.3.3.3}%
+\contentsline {section}{\numberline {3.4}语法分析与语义处理程序的设计与实现}{7}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}算符优先分析核心算法}{7}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}重载运算符的处理}{8}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}类型推导与兼容性检查}{8}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}预定义函数的处理}{9}{subsection.3.4.4}%
+\contentsline {subsection}{\numberline {3.4.5}三元运算符的处理}{9}{subsection.3.4.5}%
+\contentsline {section}{\numberline {3.5}自定义测试用例设计与覆盖}{9}{section.3.5}%
+\contentsline {section}{\numberline {3.6}异常处理}{10}{section.3.6}%
+\contentsline {section}{\numberline {3.7}有限状态自动机图表}{12}{section.3.7}%
+\contentsline {chapter}{\numberline {4\hspace {.3em}}实验结果与分析}{13}{chapter.4}%
+\contentsline {section}{\numberline {4.1}编译结果}{13}{section.4.1}%
+\contentsline {section}{\numberline {4.2}GUI界面基本功能}{14}{section.4.2}%
+\contentsline {section}{\numberline {4.3}自动回归测试结果分析}{16}{section.4.3}%
+\contentsline {section}{\numberline {4.4}手动计算测试}{19}{section.4.4}%
+\contentsline {chapter}{\numberline {5\hspace {.3em}}自我评分参照}{20}{chapter.5}%
+\contentsline {chapter}{\numberline {6\hspace {.3em}}实验总结}{21}{chapter.6}%
+\contentsline {section}{\numberline {6.1}技术总结}{21}{section.6.1}%
+\contentsline {section}{\numberline {6.2}心得体会}{21}{section.6.2}%
+\contentsline {chapter}{参考文献}{23}{chapter*.17}%
+\contentsline {chapter}{\numberline {附录 A\hspace {.3em}}附录代码}{24}{appendix.A}%
+\contentsline {section}{\numberline {A.1}Calculator.java 代码}{24}{section.A.1}%

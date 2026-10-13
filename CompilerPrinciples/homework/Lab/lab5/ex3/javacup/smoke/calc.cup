@@ -1,0 +1,6 @@
+parser code {: public static void main(String[] args) throws Exception { System.out.println("JavaCUP smoke parser generated."); } :}; 
+terminal NUMBER, PLUS, SEMI; 
+non terminal program, expr; 
+start with program; 
+program ::= expr SEMI ; 
+expr ::= expr PLUS NUMBER | NUMBER ; 

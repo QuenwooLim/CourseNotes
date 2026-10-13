@@ -1,0 +1,11 @@
+\contentsline {paragraph}{\textbf {Keywords:}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}Exercise 12}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Exercise 12.1}{1}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Problem}{1}{subsection.1.1.1}%
+\contentsline {subsection}{\numberline {1.1.2}Solution}{1}{subsection.1.1.2}%
+\contentsline {subsubsection}{\numberline {1.1.2.1}Dominators of All Nodes}{1}{subsubsection.1.1.2.1}%
+\contentsline {subsubsection}{\numberline {1.1.2.2}Back Edges}{2}{subsubsection.1.1.2.2}%
+\contentsline {subsubsection}{\numberline {1.1.2.3}Natural Loops}{2}{subsubsection.1.1.2.3}%
+\contentsline {paragraph}{Natural loop for back edge $(4, 3)$:}{2}{paragraph*.3}%
+\contentsline {paragraph}{Natural loop for back edge $(5, 2)$:}{2}{paragraph*.4}%
+\contentsline {chapter}{References}{3}{chapter*.6}%

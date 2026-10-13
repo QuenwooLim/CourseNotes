@@ -1,0 +1,7 @@
+(* 变异类型：词法错误 - 整数常量与标识符之间无空白分隔 *)
+MODULE BankSystem;
+  VAR x, y: INTEGER;
+BEGIN
+  x := 25id;
+  y := x
+END BankSystem.

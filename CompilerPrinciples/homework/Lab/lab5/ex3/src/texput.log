@@ -1,0 +1,21 @@
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2026.6.2)  15 JUN 2026 17:35
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**main.tex
+
+! Emergency stop.
+<*> main.tex
+            
+*** (job aborted, file error in nonstop mode)
+
+ 
+Here is how much of TeX's memory you used:
+ 2 strings out of 477756
+ 14 string characters out of 5843519
+ 291877 words of memory out of 5000000
+ 20747 multiletter control sequences out of 15000+600000
+ 469259 words of font info for 28 fonts, out of 8000000 for 9000
+ 264 hyphenation exceptions out of 8191
+ 0i,0n,0p,1b,6s stack positions out of 5000i,500n,10000p,200000b,80000s
+No pages of output.

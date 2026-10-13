@@ -1,0 +1,7 @@
+(* 变异类型：语义错误 - 类型不兼容（INTEGER与BOOLEAN运算） *)
+MODULE BankSystem;
+  VAR x, y: INTEGER;
+BEGIN
+  x := 10;
+  y := x & TRUE
+END BankSystem.

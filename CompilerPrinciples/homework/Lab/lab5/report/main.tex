@@ -1,0 +1,44 @@
+﻿\documentclass{packages/sysuthesis} % 默认使用电子版（不填充空白页）。如果需要双面打印版，请注释掉本行并启用下一行
+\usepackage{packages/sysucode}  % 在论文中使用代码
+\usepackage{xurl}
+\usepackage[most]{tcolorbox} % 支持附录中的问答彩色框
+\pgfplotsset{compat=1.18,compat/show suggested version=false} % 固定兼容版本并关闭提示信息
+\setlength{\headheight}{13pt} % 消除 fancyhdr 的 headheight 告警
+\input{information}     % 论文相关信息
+\input{abstract}     % 摘要内容
+\input{chap00_style} % 共享的代码样式定义（必须在导言区）
+
+\begin{document}
+
+\frontmatter
+\pagenumbering{Roman}
+\makeUndergraduateCover
+
+\makecabstract
+\newpage
+\maketableofcontents
+\mainmatter
+
+\input{chap00}     % 总体实验目的 + 项目组织
+\newclearpage
+\input{chap01}     % 实验一：Oberon-0 语言
+\newclearpage
+\input{chap02}     % 实验二：JFlex 词法分析
+\newclearpage
+\input{chap03}     % 实验三：JavaCUP 语法分析
+\newclearpage
+\input{chap04}     % 实验四：递归下降分析
+\newclearpage
+\input{chap05}     % 实验五：实验总结
+\newclearpage
+
+\backmatter
+\makereferences
+
+{
+    \appendix
+    \input{appendix1}
+    \newclearpage
+}
+
+\end{document}

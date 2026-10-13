@@ -1,0 +1,6 @@
+(* 变异类型：词法错误 - 标识符长度超过24个字符 *)
+MODULE BankSystem;
+  VAR thisIsAVeryLongIdentifierName: INTEGER;
+BEGIN
+  thisIsAVeryLongIdentifierName := 100
+END BankSystem.

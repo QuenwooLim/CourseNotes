@@ -1,0 +1,12 @@
+\contentsline {paragraph}{\textbf {Keywords:}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}Exercise 1.1}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Problem}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Solution}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}Problem 1}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Problem 2}{2}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}Problem 3}{3}{subsection.1.2.3}%
+\contentsline {subsection}{\numberline {1.2.4}Problem 4}{5}{subsection.1.2.4}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}Exercise 1.2}{6}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Problem}{6}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Solution}{6}{section.2.2}%
+\contentsline {chapter}{References}{7}{chapter*.3}%

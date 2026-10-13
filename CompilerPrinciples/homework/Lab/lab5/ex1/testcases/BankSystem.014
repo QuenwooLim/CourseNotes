@@ -1,0 +1,7 @@
+(* 变异类型：词法错误 - 整数常量超过12位数字上限 *)
+MODULE BankSystem;
+  CONST HugeNumber = 1234567890123;
+  VAR x: INTEGER;
+BEGIN
+  x := HugeNumber
+END BankSystem.

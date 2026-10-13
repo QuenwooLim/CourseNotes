@@ -1,0 +1,7 @@
+(* 变异类型：词法错误 - 非法符号 @ *)
+MODULE Bank$ys$em;
+  CONST MaxAccounts = 50;
+  VAR count: INTEGER;
+BEGIN
+  count := 0
+END BankSystem.

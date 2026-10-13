@@ -1,0 +1,46 @@
+\chapter*{实验目的}
+
+本实验旨在设计并实现一个面向 Oberon-0 语言的逆向工程工具 ROSE（Reverse Oberon Software Engineering），通过完整的词法分析、语法分析和语法制导翻译过程，深入理解和掌握编译原理中的核心技术。实验分为四个子实验：
+
+\begin{itemize}
+  \item \textbf{实验一：熟悉 Oberon-0 语言定义}。通过编写正确的 Oberon-0 源程序及其变异程序，深入理解 Oberon-0 语言的词法、语法和语义定义，讨论保留字与关键字的区别以及文法的二义性问题。
+  \item \textbf{实验二：利用 JFlex 自动生成词法分析程序}。编写 JFlex 输入源文件 \texttt{oberon.flex}，自动生成词法分析程序，比较三种 lex 族工具。
+  \item \textbf{实验三：利用 JavaCUP 自动生成语法分析程序}。编写 JavaCUP 输入源文件 \texttt{oberon.cup}，实现调用图自动生成，比较 yacc 族工具。
+  \item \textbf{实验四：手工编写递归下降预测分析程序}。设计翻译模式，编写递归下降分析程序，实现流程图自动生成，比较自顶向下与自底向上策略。
+\end{itemize}
+
+
+\chapter*{项目组织}
+
+本实验项目的 ROSE 软装置提供了预定义的调用图 API（\texttt{callgraph} 包）和流程图 API（\texttt{flowchart} 包），基于开源项目 JGraph。软装置不包含异常类的完整实现（参见 Notation.md），需学生自行完善。
+
+\section*{目录组织}
+
+\begin{itemize}
+  \item \textbf{ex1/}：实验一结果目录。
+    \begin{itemize}
+    \item \texttt{testcases/BankSystem.obr}：正确的 Oberon-0 源程序，覆盖全部语法构造。
+    \item \texttt{testcases/BankSystem.001--022}：22 个变异程序（14 个直接构造 + 8 个 derived 派生），首行注释标注期望错误类型和变异来源。
+    \end{itemize}
+  \item \textbf{ex2/}：实验二结果目录（JFlex 词法分析）。
+    \begin{itemize}
+    \item \texttt{src/oberon.flex}：JFlex 输入源文件，自动生成 \texttt{OberonScanner.java}（NFA 263 → DFA 105）。
+    \item \texttt{src/exceptions/}：自行完善的 14 个异常类三层继承体系（软装置标记为 [PENDING]）。
+    \item \texttt{bin/}、\texttt{doc/}、\texttt{jflex/}：字节码、javadoc 文档、JFlex 1.8.2 工具包。
+    \item \texttt{gen.bat}、\texttt{build.bat}、\texttt{run.bat}、\texttt{test.bat}：生成、构建、运行和测试脚本。
+    \end{itemize}
+  \item \textbf{ex3/}：实验三结果目录（语法分析 + 调用图）。
+    \begin{itemize}
+    \item \texttt{src/oberon.cup}：JavaCUP 输入源文件，经 JavaCUP 0.11b 生成 \texttt{Parser.java} + \texttt{Sym.java}（190 状态，0 冲突）。
+    \item \texttt{src/ScannerAdapter.java}：适配 OberonScanner Token 到 CUP Symbol 接口。
+    \item \texttt{src/Scope.java}：链式作用域，支持嵌套过程的正向名称查找。
+    \item \texttt{bin/}、\texttt{doc/}、\texttt{javacup/}：字节码、javadoc 文档、JavaCUP 0.11b 工具包。
+    \end{itemize}
+  \item \textbf{ex4/}：实验四结果目录（递归下降 + 流程图）。
+    \begin{itemize}
+    \item \texttt{src/OberonParser.java}：手工编写的递归下降预测分析器，含翻译模式设计和 flowchart API 集成。
+    \item \texttt{src/OberonScanner.java}、\texttt{src/Token.java}：复用实验二的词法分析器。
+    \item \texttt{bin/}、\texttt{doc/}：字节码、javadoc 文档。
+    \item \texttt{build.bat}、\texttt{run.bat}、\texttt{test.bat}：构建、运行和测试脚本。
+    \end{itemize}
+\end{itemize}

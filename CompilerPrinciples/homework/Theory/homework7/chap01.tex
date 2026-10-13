@@ -1,0 +1,712 @@
+
+% 简洁风格：浅色背景 + 细边框 + 行号 + 自动换行
+\definecolor{codebg}{RGB}{248,249,250}
+\definecolor{codeframe}{RGB}{220,223,228}
+\definecolor{codekw}{RGB}{25,85,145}
+\definecolor{codecm}{RGB}{90,125,90}
+\definecolor{codestr}{RGB}{136,44,136}
+
+\lstdefinestyle{cleancpp}{
+	language=C++,
+	basicstyle=\ttfamily\small,
+	keywordstyle=\bfseries\color{codekw},
+    commentstyle=\color{codecm},
+	stringstyle=\color{codestr},
+	backgroundcolor=\color{codebg},
+	frame=single,
+	rulecolor=\color{codeframe},
+	framesep=6pt,
+	numbers=left,
+	numberstyle=\scriptsize\color{gray},
+	numbersep=8pt,
+	breaklines=true,
+	breakatwhitespace=false,
+	showstringspaces=false,
+}
+\chapter{Exercise 7}
+
+% ---------------- Exercise 7.1 ----------------
+\section{Exercise 7.1}
+\subsection{Problem}
+Consider the grammar
+\[
+\begin{aligned}
+S &\to (\,S\,R \;\mid\; a, \\
+R &\to ,\,S\,R \;\mid\; )
+\end{aligned}
+\]
+
+Try to construct an SLR(1) parsing table for the grammar, and check whether there are conflicts in the parsing table.
+
+\subsection{Solution}
+
+No conflicts are found in the SLR(1) parsing table, so the grammar is SLR(1).
+
+% --- FIRST/FOLLOW and numbered productions (from sketch) ---
+
+\begin{center}
+\begin{tabular}{r l}
+0 & $S'\to S$ \\
+1 & $S\to (\,S\,R$ \\
+2 & $S\to a$ \\
+3 & $R\to ,\,S\,R$ \\
+4 & $R\to )$
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{ll}
+\(\mathrm{FIRST}(S)\) & = \(\{(,\;a\}\) \\
+\(\mathrm{FIRST}(R)\) & = \(\{\texttt{,},\;)\}\) \\
+\(\mathrm{FOLLOW}(S)\) & = \(\{\$,\;\texttt{,},\;)\}\) \\
+\(\mathrm{FOLLOW}(R)\) & = \(\{\$,\;\texttt{,},\;)\}\)
+\end{tabular}
+\end{center}
+
+% DFA: LR(0) 状态自动机（根据手绘草图与解析表）
+\begin{figure}[htbp]
+\centering
+\tikzset{lrstate/.style={draw,rectangle,rounded corners,inner sep=6pt,font=\small}}
+\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto]
+	% nodes
+	\node[lrstate] (I0) at (0,0) {\begin{tabular}{l}$I_0:$\\ $S'\to\cdot S$ \\ $S\to\cdot(\,S\,R$ \\ $S\to\cdot a$\end{tabular}};
+	\node[lrstate] (I1) at (0,-3) {\begin{tabular}{l}$I_1:$\\ $S'\to S\cdot$\end{tabular}};
+	\node[lrstate] (I2) at (3,-2) {\begin{tabular}{l}$I_2:$\\ $S\to a\cdot$\end{tabular}};
+	\node[lrstate] (I3) at (3,1.5) {\begin{tabular}{l}$I_3:$\\ $S\to(\,\cdot S\,R$ \\ $S\to\cdot(\,S\,R$ \\ $S\to\cdot a$\end{tabular}};
+	\node[lrstate] (I4) at (6,1.5) {\begin{tabular}{l}$I_4:$\\ $S\to(\,S\,\cdot R$ \\ $R\to\cdot,\,S\,R$ \\ $R\to\cdot)$\end{tabular}};
+	\node[lrstate] (I5) at (6,-1.5) {\begin{tabular}{l}$I_5:$\\ $R\to,\,\cdot S\,R$ \\ $S\to\cdot(\,S\,R$ \\ $S\to\cdot a$\end{tabular}};
+	\node[lrstate] (I6) at (9,3.4) {\begin{tabular}{l}$I_6:$\\ $S\to(\,S\,R\,\cdot$\end{tabular}};
+	\node[lrstate] (I7) at (9,1.6) {\begin{tabular}{l}$I_7:$\\ $R\to )\cdot$\end{tabular}};
+	\node[lrstate] (I8) at (9,-0.8) {\begin{tabular}{l}$I_8:$\\ $R\to,\,S\,\cdot R$ \\ $R\to\cdot,\,S\,R$ \\ $R\to\cdot)$\end{tabular}};
+	\node[lrstate] (I9) at (9,-3.6) {\begin{tabular}{l}$I_9:$\\ $R\to,\,S\,R\,\cdot$\end{tabular}};
+
+	% transitions (terminals)
+	\path (I0) edge[bend left] node{(} (I3);
+	\path (I0) edge[bend right] node[swap]{a} (I2);
+	\path (I3) edge[loop above] node{(} (I3);
+	\path (I3) edge node{a} (I2);
+	\path (I3) edge node{S} (I4);
+	\path (I4) edge node{,} (I5);
+	\path (I4) edge node{)} (I7);
+	\path (I5) edge[bend left] node{(} (I3);
+	\path (I5) edge node{a} (I2);
+	\path (I5) edge[bend left=20] node{S} (I8);
+	\path (I8) edge[bend left=20] node{,} (I5);
+	\path (I8) edge node{)} (I7);
+
+	% goto (nonterminals)
+	% make I0->I1 a solid (normal) arrow per request
+	\path (I0) edge node{S} (I1);
+	% I3->I4 and I5->I8 are already drawn as solid transitions above,
+	% so remove duplicated dashed arrows to avoid double drawing.
+	\path (I4) edge node{R} (I6);
+	\path (I8) edge node{R} (I9);
+
+\end{tikzpicture}
+\caption{Canonical LR(0) DFA (states $I_0$--$I_9$) for Exercise 7.1.}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{c|ccccc|cc}
+State & \multicolumn{5}{c|}{ACTION} & \multicolumn{2}{c}{GOTO} \\
+ & ( & , & a & ) & \$ & S & R \\
+\hline
+0 & \texttt{S3} &  & \texttt{S2} &  &  & 1 &  \\
+1 &  &  &  &  & \texttt{acc} &  &  \\
+2 &  & \texttt{r2} &  & \texttt{r2} & \texttt{r2} &  &  \\
+3 & \texttt{S3} &  & \texttt{S2} &  &  & 4 &  \\
+4 &  & \texttt{S5} &  & \texttt{S7} &  &  & 6 \\
+5 & \texttt{S3} &  & \texttt{S2} &  &  & 8 &  \\
+6 &  & \texttt{r1} &  & \texttt{r1} & \texttt{r1} &  &  \\
+7 &  & \texttt{r4} &  & \texttt{r4} & \texttt{r4} &  &  \\
+8 & & \texttt{S5} &  & \texttt{S7} &  &  &  \\
+9 &  & \texttt{r3} &  & \texttt{r3} & \texttt{r3} &  &  \\
+\end{tabular}
+\caption{SLR(1) parsing table for Exercise 7.1 }
+\end{table}
+
+
+% ---------------- Exercise 7.2 ----------------
+\section{Exercise 7.2}
+\subsection{Problem}
+Consider the grammar
+\[
+\begin{aligned}
+S &\to S\,a\,b \;\mid\; a\,R, \\
+R &\to S \;\mid\; a.
+\end{aligned}
+\]
+
+Is this grammar SLR(1)? Explain why or why not.
+
+\subsection{Solution}
+
+% FIRST/FOLLOW and numbered productions for Exercise 7.2
+\begin{center}
+\begin{tabular}{r l}
+0 & $S'\to S$ \\
+1 & $S\to S\,a\,b$ \\
+2 & $S\to a\,R$ \\
+3 & $R\to S$ \\
+4 & $R\to a$
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{ll}
+\(\mathrm{FIRST}(S)\) & = \(\{a\}\) \\
+\(\mathrm{FIRST}(R)\) & = \(\{a\}\) \\
+\(\mathrm{FOLLOW}(S)\) & = \(\{a,\;\$\}\) \\
+\(\mathrm{FOLLOW}(R)\) & = \(\{a,\;\$\}\)
+\end{tabular}
+\end{center}
+
+
+% DFA: LR(0) 状态自动机（根据手绘草图）
+\begin{figure}[htbp]
+\centering
+\tikzset{lrstate/.style={draw,rectangle,rounded corners,inner sep=6pt,font=\small}}
+\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto]
+	\node[lrstate] (I0) at (0,0) {\begin{tabular}{l}$I_0:$\\ $S'\to\cdot S$ \\ $S\to\cdot S\,a\,b$ \\ $S\to\cdot a\,R$\end{tabular}};
+	\node[lrstate] (I1) at (3,3.2) {\begin{tabular}{l}$I_1:$\\ $S'\to S\cdot$ \\ $S\to S\cdot a\,b$\end{tabular}};
+	\node[lrstate] (I2) at (3,0) {\begin{tabular}{l}$I_2:$\\ $S\to a\cdot R$ \\ $R\to\cdot S$ \\ $R\to\cdot a$ \\ $S\to\cdot S\,a\,b$ \\ $S\to\cdot a\,R$\end{tabular}};
+	\node[lrstate] (I3) at (6,3.4) {\begin{tabular}{l}$I_3:$\\ $S\to S\,a\cdot b$\end{tabular}};
+	\node[lrstate] (I5) at (9,3.4) {\begin{tabular}{l}$I_5:$\\ $S\to S\,a\,b\cdot$\end{tabular}};
+	\node[lrstate] (I4) at (6,1.6) {\begin{tabular}{l}$I_4:$\\ $R\to S\cdot$ \\ $S\to S\cdot a\,b$\end{tabular}};
+	\node[lrstate] (I6) at (6,-2) {\begin{tabular}{l}$I_6:$\\ $R\to a\cdot$ \\ $S\to a\cdot R$ \\ $R\to\cdot S$ \\ $R\to\cdot a$ \\ $S\to\cdot S\,a\,b$ \\ $S\to\cdot a\,R$\end{tabular}};
+	\node[lrstate] (I7) at (9,0) {\begin{tabular}{l}$I_7:$\\ $S\to a\,R\cdot$\end{tabular}};
+
+	% transitions
+	\path (I0) edge node{S} (I1);
+	\path (I0) edge node[swap]{a} (I2);
+	\path (I1) edge node{a} (I3);
+	\path (I3) edge node{b} (I5);
+	\path (I2) edge node{S} (I4);
+	\path (I2) edge node{a} (I6);
+	\path (I2) edge node{R} (I7);
+	\path (I4) edge node{a} (I3);
+	\path (I6) edge[bend left] node{S} (I4);
+	\path (I6) edge[loop below] node{a} (I6);
+	\path (I6) edge node{R} (I7);
+
+\end{tikzpicture}
+\caption{Canonical LR(0) DFA (states $I_0$--$I_7$) for Exercise 7.2.}
+\end{figure}
+
+\newpage
+\paragraph{结论}
+In state $I_4$ (and also in $I_6$), there exist both shift and reduce actions for input $a$ (for example, $\texttt{S3}$ and $\texttt{r3}$ conflict in $I_4$), therefore the grammar is not SLR(1).
+% ---------------- Exercise 7.3 ----------------
+\newpage
+\section{Exercise 7.3}
+\subsection{Problem}
+Consider the grammar
+\[
+\begin{aligned}
+S &\to A, \\
+A &\to B\,A \;\mid\; \varepsilon, \\
+B &\to a\,B \;\mid\; b.
+\end{aligned}
+\]
+
+(1) Prove that the grammar is an LR(1) grammar.
+
+(2) Construct an LR(1) parsing table for the grammar.
+
+(3) Show the detailed parsing procedure for the sentence \textbf{abab}, following the style in the lecture slides.
+
+\subsection{Solution}
+
+\textbf{Conclusion}:  
+By construction of the LR(1) automaton and parsing table, and verification via parsing trace, the grammar is \textbf{LR(1)}
+
+The grammar is LR(1), as confirmed by the absence of conflicts in the LR(1) parsing table.
+
+\begin{center}
+\begin{tabular}{r l}
+0 & $S' \to S$ \\
+1 & $S \to A$ \\
+2 & $A \to B\,A$ \\
+3 & $A \to \varepsilon$ \\
+4 & $B \to a\,B$ \\
+5 & $B \to b$
+\end{tabular}
+\end{center}
+
+
+% --- FIRST/FOLLOW and numbered productions ---
+\begin{center}
+\begin{tabular}{ll}
+$\mathrm{FIRST}(S)$ & = $\{\texttt{a},\;\texttt{b},\;\varepsilon\}$ \\
+$\mathrm{FIRST}(A)$ & = $\{\texttt{a},\;\texttt{b},\;\varepsilon\}$ \\
+$\mathrm{FIRST}(B)$ & = $\{\texttt{a},\;\texttt{b}\}$ \\
+\end{tabular}
+\end{center}
+% ==============================
+% Figure 1: LR(1) DFA (8 states)
+% ==============================
+\begin{figure}[htbp]
+\centering
+\tikzset{lrstate/.style={draw,rectangle,rounded corners,inner sep=2pt,font=\footnotesize}}
+\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=1.4cm,scale=0.92,every node/.style={transform shape}]
+	% I0
+	\node[lrstate] (I0) {
+		\begin{tabular}{l}
+		$I_0:$\\
+		$S' \to \cdot S,\$ $\\
+		$S \to \cdot A,\$ $\\
+		$A \to \cdot B A,\$ $\\
+		$A \to \cdot \varepsilon,\$ $\\
+		$B \to \cdot a B, a/b/\$/\varepsilon $\\
+		$B \to \cdot b, a/b/\$/\varepsilon $
+		\end{tabular}
+	};
+
+	% I1 (S'→S·)
+	\node[lrstate, right=of I0, yshift=-0.6cm] (I1) {
+		\begin{tabular}{l}
+		$I_1:$\\
+		$S' \to S\cdot,\$ $
+		\end{tabular}
+	};
+
+	% I2 (S→A·)
+	\node[lrstate, above right=of I0] (I2) {
+		\begin{tabular}{l}
+		$I_2:$\\
+		$S \to A\cdot,\$ $
+		\end{tabular}
+	};
+
+	% I3 (A→B·A, $; A→·BA, $; A→·ε, $; B→·aB, a/b/$; B→·b, a/b/$)
+	\node[lrstate, below right=of I0, yshift=0.6cm] (I3) {
+		\begin{tabular}{l}
+		$I_3:$\\
+		$A \to B\cdot A,\$ $\\
+		$A \to \cdot B A,\$ $\\
+		$A \to \cdot \varepsilon,\$ $\\
+		$B \to \cdot a B, a/b/\$/\varepsilon $\\
+		$B \to \cdot b, a/b/\$/\varepsilon $
+		\end{tabular}
+	};
+
+	% I4 (A→ε·, $)
+	\node[lrstate, right=of I3, yshift=-0.8cm] (I4) {
+		\begin{tabular}{l}
+		$I_4:$\\
+		$A \to \varepsilon\cdot,\$ $
+		\end{tabular}
+	};
+
+	% I5 (B→a·B, a/b/$; B→·aB, a/b/$; B→·b, a/b/$)
+	\node[lrstate, right=of I2] (I5) {
+		\begin{tabular}{l}
+		$I_5:$\\
+		$B \to a\cdot B, a/b/\$/\varepsilon $\\
+		$B \to \cdot a B, a/b/\$/\varepsilon $\\
+		$B \to \cdot b, a/b/\$/\varepsilon $
+		\end{tabular}
+	};
+
+	% I6 (B→b·, a/b/$)
+	\node[lrstate, below=of I5, xshift=0.6cm] (I6) {
+		\begin{tabular}{l}
+		$I_6:$\\
+		$B \to b\cdot, a/b/\$/\varepsilon $
+		\end{tabular}
+	};
+
+	% I7 (A→BA·, $)
+	\node[lrstate, right=of I3, yshift=0.6cm] (I7) {
+		\begin{tabular}{l}
+		$I_7:$\\
+		$A \to B A\cdot,\$ $
+		\end{tabular}
+	};
+
+	% I8 (B→aB·, a/b/$)
+	\node[lrstate, right=of I5] (I8) {
+		\begin{tabular}{l}
+		$I_8:$\\
+		$B \to a B\cdot, a/b/\$/\varepsilon $
+		\end{tabular}
+	};
+
+	% Transitions
+	% Transitions
+	\path (I0) edge node{S} (I1);
+	\path (I0) edge node{A} (I2);
+	\path (I0) edge node{B} (I3);
+	\path (I0) edge node{a} (I5);
+	\path (I0) edge node{b} (I6);
+	\path (I0) edge[out=-90,in=220,looseness=1.2] node{$\varepsilon$} (I4);
+
+	\path (I3) edge node{A} (I7);
+	\path (I3) edge node{a} (I5);
+	\path (I3) edge node{b} (I6);
+	\path (I3) edge[out=-90,in=180,looseness=1.2] node{$\varepsilon$} (I4);
+
+	\path (I5) edge node{B} (I8);
+	\path (I5) edge node{b} (I6);
+
+	% Note: removed I8->I5 and I8->I6 to make I5->I8 a single directed B edge.
+	% Note: I4 has only reduce action; no outgoing edges.
+\end{tikzpicture}
+\caption{Canonical LR(1) DFA for the extended grammar (states $I_0$--$I_8$).}
+\end{figure}
+
+% ==============================
+% Table: LR(1) Parsing Table
+% ==============================
+\begin{table}[htbp]
+\centering
+\label{tab:lr1-table}
+\begin{tabular}{c|cccc|ccc}
+State & \multicolumn{4}{c|}{ACTION} & \multicolumn{3}{c}{GOTO} \\
+      & a & b & $\varepsilon$ & \$ & S & A & B \\
+\hline
+0 & S5 & S6 & S7 &  & 1 & 2 & 3 \\
+1 &    &    &    & acc &  &  &  \\
+2 &    &    &    & r1 &  &  &  \\
+3 & S5 & S6 & S4 &  &  & 7 & 3 \\
+4 &    &    &    & r3 &  &  &  \\
+5 & S5 & S6 &    &  &  &  & 8 \\
+6 & r5 & r5 & r5 & r5 &  &  &  \\
+7 &    &    &    & r2 &  &  &  \\
+8 & r4 & r4 & r4 & r4 &  &  &  \\
+\end{tabular}
+\caption{LR(1) parsing table}
+\end{table}
+
+% Explanation of actions:
+% - S5/S6/S7: shift to state 5/6/7
+% - r1: reduce by (1) $S \to A$
+% - r2: reduce by (2) $A \to B A$
+% - r3: reduce by (3) $A \to \varepsilon$
+% - r4: reduce by (4) $B \to a B$
+% - r5: reduce by (5) $B \to b$
+% - acc: accept
+
+% ==============================
+% Parsing trace for "abab$"
+% ==============================
+\begin{table}[htbp]
+\centering
+\label{tab:parse-trace}
+\begin{tabular}{c|c|c|c|c|c|c}
+Step & Symbol & State & Input & Reference & Action & Output \\
+\hline
+1 & \$ & 0 & abab\$ & $a[0,a]=S5$ & shift & \\
+2 & \$ a & 05 & bab\$ & $a[5,b]=S6$ & shift & \\
+3 & \$ ab & 056 & ab\$ & $a[6,\varepsilon]=r5$ $g[5,B]=8$  & reduce & $B \to b$ \\
+4 & \$ aB & 058 & ab\$ & $a[8,a]=r4$ $g[0,B]=3$  & reduce &  $B \to aB$ \\
+5 & \$ aB a & 03 & ab\$ & $a[3,a]=S5$ & shift & \\
+6 & \$ aB ab & 035 & b\$ & $a[5,b]=S6$ & shift &  \\
+7 & \$ aB aB & 0356 & \$ & $a[6,\$]=r5$ $g[5,B]=8$  & reduce & $B \to b$ \\
+8 & \$ aB AB & 0358 & \$ & $a[8,\$]=r4$ $g[3,B]=3$  & reduce & $B \to aB$ \\
+9 & \$ aB AB & 033 & $\varepsilon$ \$ & $a[3,\varepsilon]=S4$ & shift &  \\
+10 & \$ aB A & 0334 & \$ & $a[4,\varepsilon]=13$ $g[3,A]=7$  & reduce & $A \to \varepsilon$ \\
+11 & \$ aB A & 0337 & \$ & $a[7,\$]=r2$ $g[3,A]=7$  & reduce & $A \to BA$  \\
+12 & \$ aB & 037 & \$ &  $a[7,\$]=r2$ $g[0,A]=2$  & reduce & $A \to BA$ \\
+13 & \$ aB & 02 & \$ & $a[2,\$]=r1$ $g[0,S]=1$  & reduce & $S \to A$ \\
+14 & \$ S & 01 & \$ & $a[1,\$]=acc$ & accept & \\
+\end{tabular}
+\caption{Parsing steps for input \texttt{abab\$}}
+\end{table}
+
+\medskip
+
+% ---------------- Exercise 7.4 ----------------
+\section{Exercise 7.4*}
+\subsection{Problem}
+Consider the grammar (from DBv2, ex.4.7.4):
+\[
+\begin{aligned}
+S &\to A\,a \;\mid\; b\,A\,c \;\mid\; d\,c \;\mid\; b\,d\,a, \\
+A &\to d.
+\end{aligned}
+\]
+
+Show that the grammar is LALR(1) but not SLR(1).
+
+\subsection{Solution}
+
+\textbf{Conclusion}:
+% --- First image: LR(1) automaton analysis and conclusion ---
+In the above LR(1) transition diagram, there are no compatible (mergeable) core-equivalent item sets, and no shift--reduce or reduce--reduce conflicts exist; therefore, the grammar is LALR(1).
+% --- Second image: SLR(1) conflict analysis and conclusion ---
+For state $I_4$, a shift--reduce conflict exists:  
+$\mathrm{FOLLOW}(A) = \{a, c\}$ and $A \to d$,  
+so $\mathrm{ACTION}[4, a] = \mathrm{r}5$, while $S \to d \cdot c$ implies $\mathrm{ACTION}[4, a] = \mathrm{S}8$.  
+Hence, the grammar is \textbf{not} SLR(1).
+
+\textbf{It is LALR(1), but not SLR(1).}
+
+The grammar is LR(1), and the canonical LR(1) automaton consists of 11 states ($I_0$ to $I_{11}$), as shown below.
+
+% --- FIRST/FOLLOW and numbered productions (from sketch) ---
+
+\begin{center}
+\begin{tabular}{r l}
+0 & $S' \to S$ \\
+1 & $S \to A\,a$ \\
+2 & $S \to b\,A\,C$ \\
+3 & $S \to d\,c$ \\
+4 & $S \to b\,d\,a$ \\
+5 & $A \to d$
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{ll}
+$\mathrm{FIRST}(S)$ & = $\{\texttt{b},\;\texttt{d}\}$ \\
+$\mathrm{FIRST}(A)$ & = $\{\texttt{d}\}$ \\
+$\mathrm{FOLLOW}(S)$ & = $\{\$\}$ \\
+$\mathrm{FOLLOW}(A)$ & = $\{\texttt{a},\;\texttt{c}\}$
+\end{tabular}
+\end{center}
+
+% DFA: LR(1) 状态自动机（根据手绘草图精确还原）
+\begin{figure}[htbp]
+\centering
+\tikzset{lrstate/.style={draw,rectangle,rounded corners,inner sep=2pt,font=\footnotesize}}
+\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=1.4cm,scale=0.92,every node/.style={transform shape}]
+	% Nodes (positions manually adjusted to match hand-drawn layout)
+	\node[lrstate] (I0) {
+		\begin{tabular}{l}
+		$I_0:$\\
+		$S' \to \cdot S,\$ $\\
+		$S \to \cdot A\,a,\$ $\\
+		$S \to \cdot b\,A\,C,\$ $\\
+		$S \to \cdot d\,c,\$ $\\
+		$S \to \cdot b\,d\,a,\$ $\\
+		$A \to \cdot d,a $
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I0] (I1) {
+		\begin{tabular}{l}
+		$I_1:$\\
+		$S' \to S\cdot,\$ $
+		\end{tabular}
+	};
+
+	\node[lrstate, above right=of I0] (I2) {
+		\begin{tabular}{l}
+		$I_2:$\\
+		$S \to A\cdot a,\$ $
+		\end{tabular}
+	};
+
+	\node[lrstate, below right=of I0] (I3) {
+		\begin{tabular}{l}
+		$I_3:$\\
+		$S \to b\cdot A\,C,\$ $\\
+		$S \to b\cdot d\,a,\$ $\\
+		$A \to \cdot d,a,c $
+		\end{tabular}
+	};
+
+	\node[lrstate, below right=of I0, yshift=1.6cm] (I4) {
+		\begin{tabular}{l}
+		$I_4:$\\
+		$S \to d\cdot c,\$ $\\
+		$A \to d\cdot,a $
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I2] (I5) {
+		\begin{tabular}{l}
+		$I_5:$\\
+		$S \to A\,a\cdot,\$ $
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I3] (I6) {
+		\begin{tabular}{l}
+		$I_6:$\\
+		$S \to b\,A\cdot C,\$ $\\
+		$A \to d\cdot,a,c $
+		\end{tabular}
+	};
+
+	\node[lrstate, below=of I6] (I7) {
+		\begin{tabular}{l}
+		$I_7:$\\
+		$S \to b\,d\cdot a,\$ $\\
+		$A \to d\cdot,a,c $
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I6] (I9) {
+		\begin{tabular}{l}
+		$I_9:$\\
+		$S \to b\,A\,C\cdot,\$ $
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I7] (I10) {
+		\begin{tabular}{l}
+		$I_{10}:$\\
+		$S \to b\,d\,a\cdot,\$ $
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I4, yshift=0.6cm] (I8) {
+		\begin{tabular}{l}
+		$I_8:$\\
+		$S \to d\,c\cdot,\$ $
+		\end{tabular}
+	};
+
+	% Transitions (terminals)
+	\path (I0) edge node{S} (I1);
+	\path (I0) edge node{A} (I2);
+	\path (I0) edge node{b} (I3);
+	\path (I0) edge node{d} (I4);
+
+	\path (I2) edge node{a} (I5);
+
+	\path (I3) edge node{A} (I6);
+	\path (I3) edge node{d} (I7);
+
+	\path (I4) edge node{c} (I8);
+
+	\path (I6) edge node{C} (I9);
+
+	\path (I7) edge node{a} (I10);
+
+	% Note: In hand-drawn diagram, I3 also has transition on 'A' to I6 and 'd' to I7 — already drawn.
+	% Also, I6 has no outgoing terminal except via nonterminal C → I9; similarly I7 → I10 on 'a'.
+
+	% Optional: add dashed arrows for clarity if needed, but original is solid — keep solid.
+
+\end{tikzpicture}
+\caption{Canonical LR(1) DFA (states $I_0$--$I_{10}$) for Exercise 7.4.}
+\end{figure}
+
+
+% ==============================
+% 第一幅图：LR(1) 自动机（已提供，此处略去重复）
+% ==============================
+
+% ==============================
+% 第二幅图：SLR(1) 自动机（核心项目集，无 lookahead）
+% ==============================
+\begin{figure}[htbp]
+\centering
+\tikzset{lrstate/.style={draw,rectangle,rounded corners,inner sep=2pt,font=\footnotesize}}
+\begin{tikzpicture}[->,>=stealth,shorten >=1pt,auto,node distance=1.4cm,scale=0.92,every node/.style={transform shape}]
+	% Nodes for SLR(1) — core items only (no lookahead)
+	\node[lrstate] (I0) {
+		\begin{tabular}{l}
+		$I_0:$\\
+		$S' \to \cdot S$\\
+		$S \to \cdot A a$\\
+		$S \to \cdot b A C$\\
+		$S \to \cdot d c$\\
+		$S \to \cdot b d a$\\
+		$A \to \cdot d$
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I0] (I1) {
+		\begin{tabular}{l}
+		$I_1:$\\
+		$S' \to S \cdot$
+		\end{tabular}
+	};
+
+	\node[lrstate, above right=of I0] (I2) {
+		\begin{tabular}{l}
+		$I_2:$\\
+		$S \to A \cdot a$
+		\end{tabular}
+	};
+
+	\node[lrstate, below right=of I0] (I3) {
+		\begin{tabular}{l}
+		$I_3:$\\
+		$S \to b \cdot A C$\\
+		$S \to b \cdot d a$\\
+		$A \to \cdot d$
+		\end{tabular}
+	};
+
+	\node[lrstate, below=of I0, xshift=-1.2cm, yshift=0.6cm] (I4) {
+		\begin{tabular}{l}
+		$I_4:$\\
+		$S \to d \cdot c$\\
+		$A \to d \cdot$
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I2] (I5) {
+		\begin{tabular}{l}
+		$I_5:$\\
+		$S \to A a \cdot$
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I3] (I6) {
+		\begin{tabular}{l}
+		$I_6:$\\
+		$S \to b A \cdot C$
+		\end{tabular}
+	};
+
+	\node[lrstate, below=of I6] (I7) {
+		\begin{tabular}{l}
+		$I_7:$\\
+		$A \to d \cdot$\\
+		$S \to b d \cdot a$ 
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I6] (I9) {
+		\begin{tabular}{l}
+		$I_9:$\\
+		$S \to b A C \cdot$
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I7] (I10) {
+		\begin{tabular}{l}
+		$I_{10}:$\\
+		$S \to b d a \cdot$
+		\end{tabular}
+	};
+
+	\node[lrstate, right=of I4, yshift=-1.9cm] (I8) {
+		\begin{tabular}{l}
+		$I_8:$\\
+		$S \to d c \cdot$
+		\end{tabular}
+	};
+
+	% Transitions (terminals and nonterminals)
+	\path (I0) edge node{S} (I1);
+	\path (I0) edge node{A} (I2);
+	\path (I0) edge node{b} (I3);
+	\path (I0) edge node{d} (I4);
+
+	\path (I2) edge node{a} (I5);
+
+	\path (I3) edge node{A} (I6);
+	\path (I3) edge node{d} (I7);  % note: in SLR(1), A→d· is in I4, but here I3 has A→·d, so d leads to closure of A→d·
+
+	\path (I4) edge node{c} (I8);
+
+	\path (I6) edge node{C} (I9);
+
+	\path (I7) edge node{a} (I10);
+
+	% Critical: In SLR(1), state I4 contains:
+	%   S → d·c   (shift on c)
+	%   A → d·    (reduce by [5] on FOLLOW(A) = {a,c})
+	% So on input 'c', both shift (to I8) and reduce (by A→d) are possible → conflict!
+	% (Conflict annotation removed; handled in text.)
+\end{tikzpicture}
+\caption{SLR(1) DFA (core items only). State $I_4$ has a shift-reduce conflict on symbol \texttt{c} (since $\texttt{c} \in \mathrm{FOLLOW}(A)$ and $S \to d\cdot c$ requires shift on \texttt{c}).}
+\end{figure}

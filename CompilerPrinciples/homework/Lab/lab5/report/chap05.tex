@@ -1,0 +1,74 @@
+\chapter{实验总结}
+
+\section{自我评分参照}
+
+参照实验评价标准，各项完成情况如下：
+
+\begin{table}[htbp]
+    \centering
+    \caption{实验自我评分参照}
+    \label{tab:self-eval}
+    \begin{tabular}{|p{5.5cm}|c|p{8cm}|}
+    \hline
+    \textbf{评分项目} & \textbf{权重(\%)} & \textbf{对应章节} \\
+    \hline
+    \quad \textbf{1、熟悉新语言} & 10 & - \\
+    \hline
+    \quad 一个正确的Oberon-0源程序 & 2 & \S1.1 BankSystem.obr \\
+    \quad 变异程序 & 4 & \S1.2 22个变异程序（含8个derived） \\
+    \quad Oberon-0语言特点讨论 & 1 & \S1.3 保留字vs关键字/表达式差异 \\
+    \quad Oberon-0文法二义性讨论 & 2 & \S1.4 无二义性证明 \\
+    \quad 文档组织及readme文件等 & 1 & ex1/readme.txt \\
+    \hline
+    \quad \textbf{2、使用JFlex工具} & 20 & - \\
+    \hline
+    \quad 词法规则的正则定义式 & 4 & \S2.2 正则定义式+关键实现细节 \\
+    \quad JFlex输入源文件的正确性 & 8 & \S2.4 oberon.flex+NFA/DFA数据 \\
+    \quad 生成Scanner的运行与测试 & 4 & \S2.4.3 683 token+6种错误检出 \\
+    \quad 不同lex族工具差异比较 & 2 & \S2.5 JFlex/JLex/Flex对比 \\
+    \quad 文档组织及readme文件等 & 2 & ex2/readme.txt+脚本+javadoc \\
+    \hline
+    \quad \textbf{3、绘制Call Graph} & 40 & - \\
+    \hline
+    \quad JavaCUP输入源文件的正确性 & 20 & \S3.3 oberon.cup→Parser.java \\
+    \quad 生成Parser的运行与测试 & 12 & \S3.3.3 调用图10过程/35边 \\
+    \quad 两种yacc族工具差异比较 & 4 & \S3.4 JavaCUP vs Bison/JavaCC \\
+    \quad 文档组织及readme文件等 & 4 & ex3/readme.txt+脚本+javadoc \\
+    \hline
+    \quad \textbf{4、绘制Flowchart} & 40 & - \\
+    \hline
+    \quad Oberon-0语言的翻译模式 & 12 & \S4.1 翻译模式表+文法改造 \\
+    \quad 语法分析和翻译程序的源代码 & 16 & \S4.2 OberonParser.java \\
+    \quad 程序的运行与测试 & 6 & \S4.2.3 8过程流程图+错误检测 \\
+    \quad 面向对象设计与编码风格 & 4 & \S5.2 单一职责/组合/适配器模式 \\
+    \quad 文档组织及readme文件等 & 2 & ex4/readme.txt+脚本+javadoc \\
+    \hline
+    \quad \textbf{5、其他} & 10 & - \\
+    \hline
+    \quad 实验心得 & 10 & \S5.3 ROSE项目心得体会 \\
+    \hline
+    \textbf{合计} & \textbf{120} & - \\
+    \hline
+    \end{tabular}
+\end{table}
+
+\section{知识点与技术总结}
+
+\begin{enumerate}
+    \item \textbf{词法分析}：正则表达式足以描述词法模式，但长度限制、上下文依赖等约束需语义动作补充。JFlex 的状态机制（\%state）优雅地处理了注释等上下文相关词法。
+    \item \textbf{语法分析——自顶向下}：递归下降将 BNF 产生式直接映射为递归方法，继承属性=参数、综合属性=返回值、语义动作嵌入自然。Oberon-0 的 $\{\}$ 和 $[]$ 构造天然消除左递归，使文法到代码的映射极为直接。
+    \item \textbf{语法分析——自底向上}：JavaCUP 用紧凑的规格文件（120 行）描述完整文法，自动生成 190 个状态的 LALR 分析器。相比递归下降，开发效率更高但调试难度更大。
+    \item \textbf{语法制导翻译}：翻译模式设计是"语法识别"与"语义处理"衔接的关键。callgraph 和 flowchart API 的使用展示了如何在产生式归约/展开时调用预定义 API 构造设计图。
+    \item \textbf{面向对象设计}：14 个异常类的三层继承体系、ScannerAdapter 适配器模式、两阶段调用图构建（先收集后连接）、flowchart API 的组合模式——这些实践将编译技术与软件工程原则融为一体。
+    \item \textbf{工具链}：JFlex（词法）→ JavaCUP / 手工递归下降（语法）→ callgraph + flowchart API（图形输出），形成了完整的逆向工程工具链。
+\end{enumerate}
+
+\section{实验心得体会}
+
+ROSE 项目的四个实验让我从零开始完整经历了一个小型编译器前端的设计与实现过程。从实验一的 Oberon-0 语言学习开始，经过实验二的 JFlex 词法分析器自动生成，到实验三的 JavaCUP LALR 语法分析器与调用图生成，最后在实验四中手工编写递归下降分析器并生成流程图——每一步都加深了我对编译原理核心概念的理解。
+
+最深刻的体会来自实验三与实验四的对比。使用 JavaCUP 自动生成分析器时，120 行规格文件即描述了完整的 Oberon-0 文法——这种"声明式"的开发方式效率极高，但当生成的 LALR 分析表出现问题时，调试几乎无从下手。而手工递归下降虽然代码量更大（约 600 行），但每个递归方法对应一个非终结符，调试时只需在对应方法中设置断点、观察向前看符号，一切尽在掌控。两种范式的优劣只有亲身体验才能深刻理解。
+
+Oberon-0 语言设计的简洁与严谨也给了我很大启发。Wirth 通过 IF-END 显式闭合结构从根本上消除了悬挂 else 问题，通过四层表达式文法将运算符优先级自然编码在语法中，通过 $\{\}$ 和 $[]$ 扩展使文法天然适用于递归下降分析——这些设计决策使得 Oberon-0 成为教学和实验的理想语言，也让我对"好的语言设计"有了更具体的认知。
+
+最后，软件工程方面的收获同样宝贵。14 个异常类的三层继承体系、ScannerAdapter 适配器模式、两阶段构建策略、javadoc 文档生成——这些实践让我认识到，编译技术不仅是一门理论深厚的学科，也是一个对软件工程能力要求极高的系统工程领域。

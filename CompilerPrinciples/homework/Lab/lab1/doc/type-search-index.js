@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"<Unnamed>","l":"CommandLineUI"},{"p":"<Unnamed>","l":"PersonalTaxApp"},{"p":"<Unnamed>","l":"TaxBracket"},{"p":"<Unnamed>","l":"TaxCalculator"},{"p":"<Unnamed>","l":"TaxConfig"}];updateSearchResults();

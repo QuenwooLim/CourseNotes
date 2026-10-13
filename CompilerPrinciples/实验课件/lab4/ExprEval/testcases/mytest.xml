@@ -1,0 +1,348 @@
+ <?xml version="1.0"?>
+<!-- Extended test cases for ExprEval — covers edge cases from the specification -->
+<test-case-definitions>
+
+<test-case>
+	<id>C101</id>
+	<description>Right-associative power.</description>
+	<input>2 ^ 4 ^ 3</input>
+	<output>1.8446744073709552E19</output>
+</test-case>
+
+<test-case>
+	<id>C102</id>
+	<description>Unary minus with arithmetic.</description>
+	<input>2.5 + -2.4</input>
+	<output>0.1</output>
+</test-case>
+
+<test-case>
+	<id>C103</id>
+	<description>Double unary minus.</description>
+	<input>5 - -2.5</input>
+	<output>7.5</output>
+</test-case>
+
+<test-case>
+	<id>C104</id>
+	<description>Unary minus with power (unary has higher precedence).</description>
+	<input>-3 ^ 2</input>
+	<output>9</output>
+</test-case>
+
+<test-case>
+	<id>C105</id>
+	<description>Right-associative ternary.</description>
+	<input><![CDATA[true ? 5 : false ? 1 : 0]]></input>
+	<output>5</output>
+</test-case>
+
+<test-case>
+	<id>C106</id>
+	<description>Nested ternary with arithmetic.</description>
+	<input><![CDATA[2 >= 2 ? 1.5 : 2.5]]></input>
+	<output>1.5</output>
+</test-case>
+
+<test-case>
+	<id>C107</id>
+	<description>Complex ternary nesting.</description>
+	<input><![CDATA[max(-1, 0) > 0 ? 5 : 3 >= 0 ? 4 : 5]]></input>
+	<output>4</output>
+</test-case>
+
+<test-case>
+	<id>E140</id>
+	<description>Logical NOT result cannot be final (boolean).</description>
+	<input><![CDATA[!(5 < 4)]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E141</id>
+	<description>Boolean operation result cannot be final.</description>
+	<input><![CDATA[!(true & false)]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>C110</id>
+	<description>Nested functions.</description>
+	<input>max(min(32, 7), max(6, 4))</input>
+	<output>7</output>
+</test-case>
+
+<test-case>
+	<id>C111</id>
+	<description>Complex arithmetic with parentheses.</description>
+	<input>20 ^ ((3 - 1) * 2 - 2)</input>
+	<output>400</output>
+</test-case>
+
+<test-case>
+	<id>E101</id>
+	<description>Empty expression (spaces only).</description>
+	<input>   </input>
+	<exception>EmptyExpressionException</exception>
+</test-case>
+
+<test-case>
+	<id>E103</id>
+	<description>Boolean as final result (true).</description>
+	<input>true</input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E104</id>
+	<description>Boolean as final result (false).</description>
+	<input>false</input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E105</id>
+	<description>Boolean as final result from comparison.</description>
+	<input><![CDATA[5 > 3]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E106</id>
+	<description>Boolean as final result from logic.</description>
+	<input><![CDATA[true | false]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E107</id>
+	<description>Ternary/paren mismatch (TrinaryOperationException).</description>
+	<input><![CDATA[5 ? (8 : 8)]]></input>
+	<exception>TrinaryOperationException</exception>
+</test-case>
+
+<test-case>
+	<id>E108</id>
+	<description>Extra colon in ternary.</description>
+	<input><![CDATA[false ? 9 : true ? 1 : 3 : 5]]></input>
+	<exception>TrinaryOperationException</exception>
+</test-case>
+
+<test-case>
+	<id>E109</id>
+	<description>Missing true-branch in ternary.</description>
+	<input><![CDATA[true ? : 5]]></input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E110</id>
+	<description>Missing false-branch in ternary.</description>
+	<input><![CDATA[3 > 2.5 * 1.5 ? 9 :]]></input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E111</id>
+	<description>Nested ternary with missing operand.</description>
+	<input><![CDATA[7 > 0 ? 7 <= 0 ? : 6 : 5]]></input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E112</id>
+	<description>Ternary/paren mismatch with complex condition.</description>
+	<input><![CDATA[3.14 * 2 >= 2.5 * 3 ? (6 : 7) + 8]]></input>
+	<exception>TrinaryOperationException</exception>
+</test-case>
+
+<test-case>
+	<id>E113</id>
+	<description>Missing operand in ternary with paren.</description>
+	<input><![CDATA[2 + ( ? 4 : 5)]]></input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E114</id>
+	<description>Numeric condition in ternary.</description>
+	<input><![CDATA[12 ? 34 : 56]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E115</id>
+	<description>Boolean in true-branch of ternary.</description>
+	<input><![CDATA[true ? 42.5 > 5 * 8 : 15]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E116</id>
+	<description>Boolean in arithmetic (power).</description>
+	<input><![CDATA[4 ^ (32.5 > 65)]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E117</id>
+	<description>Boolean in function argument.</description>
+	<input><![CDATA[sin(32.5 > 65)]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E118</id>
+	<description>Numeric in logical OR.</description>
+	<input><![CDATA[32.5 | 65]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E119</id>
+	<description>Boolean in addition.</description>
+	<input><![CDATA[true + 5]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E120</id>
+	<description>Numeric in logical AND.</description>
+	<input><![CDATA[5 & 76]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E121</id>
+	<description>Boolean in max function.</description>
+	<input><![CDATA[max(54, true)]]></input>
+	<exception>TypeMismatchedException</exception>
+</test-case>
+
+<test-case>
+	<id>E122</id>
+	<description>Missing operator between parenthesized expressions.</description>
+	<input>(1+2)(3-4)-5</input>
+	<exception>MissingOperatorException</exception>
+</test-case>
+
+<test-case>
+	<id>E123</id>
+	<description>Missing operator after function call.</description>
+	<input>cos(0.5)12.3E+4</input>
+	<exception>MissingOperatorException</exception>
+</test-case>
+
+<test-case>
+	<id>E124</id>
+	<description>sin with zero arguments.</description>
+	<input>sin()</input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E125</id>
+	<description>cos with trailing comma.</description>
+	<input>cos(3.14, )</input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E126</id>
+	<description>min with zero arguments.</description>
+	<input>min()</input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E127</id>
+	<description>min with leading comma.</description>
+	<input>min(, 1.8)</input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E128</id>
+	<description>max with trailing comma.</description>
+	<input>max(3.14, )</input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E129</id>
+	<description>max with empty middle argument.</description>
+	<input>max(17, , 87)</input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E130</id>
+	<description>Illegal decimal: no fraction digits.</description>
+	<input>3.e3 + 1</input>
+	<exception>IllegalDecimalException</exception>
+</test-case>
+
+<test-case>
+	<id>E131</id>
+	<description>Illegal decimal: double decimal point.</description>
+	<input>3.3e3.3 + 1</input>
+	<exception>IllegalDecimalException</exception>
+</test-case>
+
+<test-case>
+	<id>E132</id>
+	<description>Illegal decimal: decimal point in exponent.</description>
+	<input>1 + 3.3E.3 + 2</input>
+	<exception>IllegalDecimalException</exception>
+</test-case>
+
+<test-case>
+	<id>E133</id>
+	<description>Illegal decimal: trailing decimal point.</description>
+	<input>min(4., 7)</input>
+	<exception>IllegalDecimalException</exception>
+</test-case>
+
+<test-case>
+	<id>E134</id>
+	<description>Illegal decimal: missing integer part.</description>
+	<input>.11 + 2</input>
+	<exception>IllegalDecimalException</exception>
+</test-case>
+
+<test-case>
+	<id>E135</id>
+	<description>Illegal decimal: letter after exponent.</description>
+	<input>12.3Emax(4, 5, 6)</input>
+	<exception>IllegalDecimalException</exception>
+</test-case>
+
+<test-case>
+	<id>E136</id>
+	<description>Illegal identifier in expression.</description>
+	<input>5 / v4 + 1</input>
+	<exception>IllegalIdentifierException</exception>
+</test-case>
+
+<test-case>
+	<id>E137</id>
+	<description>Illegal symbol (@).</description>
+	<input><![CDATA[(5 @ 4) ? 7 : 8]]></input>
+	<exception>IllegalSymbolException</exception>
+</test-case>
+
+<test-case>
+	<id>E138</id>
+	<description>Function call missing left parenthesis.</description>
+	<input>max5, 6, 8)</input>
+	<exception>FunctionCallException</exception>
+</test-case>
+
+<test-case>
+	<id>E139</id>
+	<description>Function call missing left parenthesis (sin).</description>
+	<input>sin5, 3)</input>
+	<exception>FunctionCallException</exception>
+</test-case>
+
+</test-case-definitions>

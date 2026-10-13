@@ -1,0 +1,33 @@
+﻿\documentclass{packages/sysuthesis} % 默认使用电子版（不填充空白页）。如果需要双面打印版，请注释掉本行并启用下一行
+\usepackage{packages/sysucode}  % 在论文中使用代码
+\usepackage{xurl}
+\usepackage[most]{tcolorbox} % 支持附录中的问答彩色框
+\pgfplotsset{compat=1.18,compat/show suggested version=false} % 固定兼容版本并关闭提示信息
+\setlength{\headheight}{13pt} % 消除 fancyhdr 的 headheight 告警
+\input{information}     % 论文相关信息
+\input{abstract}     % 摘要内容
+
+\begin{document}
+
+\frontmatter
+\pagenumbering{Roman}
+\makeUndergraduateCover    
+
+\makecabstract                       
+\newpage
+\maketableofcontents        
+\mainmatter
+
+\include{chap01}
+\newclearpage
+
+\backmatter
+\makereferences
+
+{
+    \appendix
+    \include{appendix1}
+    \newclearpage
+}
+
+\end{document}

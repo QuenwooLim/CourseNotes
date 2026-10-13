@@ -1,0 +1,23 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}实验目的}{1}{chapter.1}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}项目组织}{2}{chapter.2}%
+\contentsline {chapter}{\numberline {3\hspace {.3em}}实验内容实现}{3}{chapter.3}%
+\contentsline {section}{\numberline {3.1}静态成员与非静态成员}{3}{section.3.1}%
+\contentsline {section}{\numberline {3.2}消除程序中的尾递归}{4}{section.3.2}%
+\contentsline {section}{\numberline {3.3}扩展错误处理功能}{5}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}错误判断}{5}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}错误准确划分与精细分类}{5}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}精确定位}{6}{subsection.3.3.3}%
+\contentsline {subsection}{\numberline {3.3.4}实现出错后的容错恢复 (Error Recovery)}{6}{subsection.3.3.4}%
+\contentsline {section}{\numberline {3.4}程序的文档化注释}{6}{section.3.4}%
+\contentsline {section}{\numberline {3.5}JUnit 单元测试的设计}{7}{section.3.5}%
+\contentsline {chapter}{\numberline {4\hspace {.3em}}实验结果与分析}{8}{chapter.4}%
+\contentsline {section}{\numberline {4.1}基础功能实现结果}{8}{section.4.1}%
+\contentsline {section}{\numberline {4.2}消除尾递归性能对比}{10}{section.4.2}%
+\contentsline {section}{\numberline {4.3}JUnit 单元测试}{10}{section.4.3}%
+\contentsline {section}{\numberline {4.4}出错恢复用例执行端照}{11}{section.4.4}%
+\contentsline {chapter}{\numberline {5\hspace {.3em}}自我评分参照}{13}{chapter.5}%
+\contentsline {chapter}{\numberline {6\hspace {.3em}}实验总结}{14}{chapter.6}%
+\contentsline {section}{\numberline {6.1}技术总结}{14}{section.6.1}%
+\contentsline {section}{\numberline {6.2}心得体会}{14}{section.6.2}%
+\contentsline {chapter}{参考文献}{16}{chapter*.13}%

@@ -1,0 +1,32 @@
+This is XeTeX, Version 3.141592653-2.6-0.999993 (TeX Live 2022/dev/Debian) (preloaded format=xelatex 2026.6.2)  15 JUN 2026 17:35
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**/workspace/homework/Compiler_Principle/lab5/report/main.tex
+(/workspace/homework/Compiler_Principle/lab5/report/main.tex
+LaTeX2e <2021-11-15> patch level 1
+L3 programming layer <2022-01-21>
+
+! LaTeX Error: File `packages/sysuthesis.cls' not found.
+
+Type X to quit or <RETURN> to proceed,
+or enter new name. (Default extension: cls)
+
+Enter file name: 
+! Emergency stop.
+<read *> 
+         
+l.2 \usepackage
+               {packages/sysucode}  % 在论文中使用代码^^M
+*** (cannot \read from terminal in nonstop modes)
+
+ 
+Here is how much of TeX's memory you used:
+ 24 strings out of 477756
+ 565 string characters out of 5843519
+ 291877 words of memory out of 5000000
+ 20763 multiletter control sequences out of 15000+600000
+ 469259 words of font info for 28 fonts, out of 8000000 for 9000
+ 264 hyphenation exceptions out of 8191
+ 19i,0n,29p,167b,17s stack positions out of 5000i,500n,10000p,200000b,80000s
+No pages of output.

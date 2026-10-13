@@ -1,0 +1,6 @@
+(* 变异类型：语义错误 - 模块END后的标识符与模块名不匹配 *)
+MODULE BankSystem;
+  VAR x: INTEGER;
+BEGIN
+  x := 100
+END WrongName.

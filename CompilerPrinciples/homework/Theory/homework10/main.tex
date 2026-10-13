@@ -1,0 +1,49 @@
+﻿\documentclass{packages/sysuthesis} % 默认使用电子版（不填充空白页）。如果需要双面打印版，请注释掉本行并启用下一行
+\usepackage{packages/sysucode}  % 在论文中使用代码
+\usepackage[most]{tcolorbox} % 支持附录中的问答彩色框
+\usepackage{tikz}
+\usetikzlibrary{positioning} % ← 关键！必须加这一行
+\pgfplotsset{compat=1.18,compat/show suggested version=false} % 固定兼容版本并关闭提示信息
+\setlength{\headheight}{13pt} % 消除 fancyhdr 的 headheight 告警
+\input{information}     % 论文相关信息
+\input{abstract}     % 摘要内容
+
+% 取消chapter之间的换页
+\makeatletter
+\renewcommand{\chapter}{\if@openright\@afterindentfalse\@afterheading\fi\secdef\@chapter\@schapter}
+\makeatother
+
+\begin{document}
+% 论文前置部分
+\frontmatter
+\pagenumbering{Roman}
+\makeUndergraduateCover    % 封面
+
+\makeeabstract                       
+\newpage
+% \maketableofcontents        % 目录
+
+% 论文主体部分
+\mainmatter
+% 引言
+
+% 正文
+\include{chap01}
+\newclearpage
+% \include{content/chap02}
+% \newclearpage
+
+% 结语
+
+% 附录部分
+\backmatter
+% 参考文献. 因不需要纳入章节目录, 故放入附录部分
+% 实际上参考文献是属于论文主体部分
+\makereferences
+
+% 附录
+% \appendix
+% \include{appendix1}
+
+% \include{content/ack}    % 致谢
+\end{document}

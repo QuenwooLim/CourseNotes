@@ -1,0 +1,179 @@
+
+% 简洁风格：浅色背景 + 细边框 + 行号 + 自动换行
+\definecolor{codebg}{RGB}{248,249,250}
+\definecolor{codeframe}{RGB}{220,223,228}
+\definecolor{codekw}{RGB}{25,85,145}
+\definecolor{codecm}{RGB}{90,125,90}
+\definecolor{codestr}{RGB}{136,44,136}
+
+\lstdefinestyle{cleancpp}{
+	language=C++,
+	basicstyle=\ttfamily\small,
+	keywordstyle=\bfseries\color{codekw},
+    commentstyle=\color{codecm},
+	stringstyle=\color{codestr},
+	backgroundcolor=\color{codebg},
+	frame=single,
+	rulecolor=\color{codeframe},
+	framesep=6pt,
+	numbers=left,
+	numberstyle=\scriptsize\color{gray},
+	numbersep=8pt,
+	breaklines=true,
+	breakatwhitespace=false,
+	showstringspaces=false,
+	keepspaces=true,
+	tabsize=4,
+	columns=fullflexible
+}
+
+\chapter{Exercise 5.1}
+
+\section{Problem}
+
+Given the following grammar:
+
+\[
+S \to (L) \;|\; a
+\]
+\[
+L \to L , S \;|\; S
+\]
+
+Tasks:
+\begin{enumerate}
+	\item Construct an LL(1) parsing table for the grammar. (Note: you must eliminate the left recursion first.)
+	\item Draw the detailed process of the parsing of the sentence ``(a, (a, a))", follow the style in the previous slides.
+\end{enumerate}
+
+\section{Solution}
+
+\subsection{Step 1: Eliminate left recursion}
+
+The nonterminal $L$ is left-recursive. We rewrite $L$ as:
+
+\[
+S \to (L) \;|\; a
+\]
+\[
+L \to S L'
+\]
+\[
+L' \to , S L' \;|\; \epsilon
+\]
+
+\subsection{Step 2: FIRST and FOLLOW sets}
+
+\begin{itemize}
+    \item $\text{FIRST}(S) = \{ (, a \}$
+    \item $\text{FIRST}(L) = \text{FIRST}(S) = \{ (, a \}$
+    \item $\text{FIRST}(L') = \{ ,, \epsilon \}$
+    \item $\text{FOLLOW}(S) = \{ ,, ), \$ \}$ (Note: $S$ is followed by $L'$ which starts with ',' or ends $L$, and $L$ is followed by ')')
+    \item $\text{FOLLOW}(L) = \{ ) \}$
+    \item $\text{FOLLOW}(L') = \text{FOLLOW}(L) = \{ ) \}$
+\end{itemize}
+
+\subsection{Step 3: LL(1) Parsing Table}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+Nonterminal & ( & ) & a & , & \$ \\ \hline
+$S$ & $S \to (L)$ & & $S \to a$ & & \\ \hline
+$L$ & $L \to SL'$ & & $L \to SL'$ & & \\ \hline
+$L'$ & & $L' \to \epsilon$ & & $L' \to ,SL'$ & \\ \hline
+\end{tabular}
+\end{table}
+
+
+\subsection{Step 4: Parsing process for ``(a, (a, a))"}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|l|r|l|l|}
+\hline
+Stack & Input & Action & Output \\\hline
+\$S & (a, (a, a)) & derive & $S \to (L)$  \\
+\$ ) L ( & (a, (a, a)) & match ( & \\
+\$ ) L & a, (a, a)) & derive & $L \to SL'$ \\
+\$ ) L' S & a, (a, a)) & derive & $S \to a$ \\
+\$ ) L' a & a, (a, a)) & match a & \\
+\$ ) L' & , (a, a)) & derive & $L' \to ,SL'$ \\
+\$ ) L' S , & , (a, a)) & match , & \\
+\$ ) L' S & (a, a)) & derive & $S \to (L)$  \\
+\$ ) L' ) L ( & (a, a)) & match ( & \\
+\$ ) L' ) L & a, a)) & derive & $L \to SL'$ \\
+\$ ) L' ) L' S & a, a)) & derive & $S \to a$ \\
+\$ ) L' ) L' a & a, a)) & match a & \\
+\$ ) L' ) L' & , a)) & derive & $L' \to ,SL'$ \\
+\$ ) L' ) L' S , & , a)) & match , & \\
+\$ ) L' ) L' S & a)) & derive & $S \to a$ \\
+\$ ) L' ) L' a & a)) & match a & \\
+\$ ) L' ) L' & )) & derive & $L' \to \epsilon$ \\
+\$ ) L' ) & )) & match ) & \\
+\$ ) L' & ) & derive & $L' \to \epsilon$  \\
+\$ ) & ) & match ) & \\\hline
+\end{tabular}
+\end{table}
+
+\chapter{Exercise 5.2**}
+
+\section{Problem}
+
+Given the following grammar:
+
+\[
+A \to B \;|\; BC
+\]
+\[
+B \to a B \;|\; \epsilon
+\]
+\[
+C \to a b
+\]
+
+Tasks:
+\begin{enumerate}
+    \item Left factor the grammar.
+    \item After left factoring, is the grammar an LL(1) grammar? or is it an LL(k) grammar? and why? (Note: you may try the input string ``ab".)
+\end{enumerate}
+
+\section{Solution}
+
+\subsection{Step 1: Left factoring}
+
+The production $A \to B \;|\; BC$ has a common prefix $B$. We factor it as:
+
+\[
+A \to B A'
+\]
+\[
+A' \to C \;|\; \epsilon
+\]
+\[
+B \to a B \;|\; \epsilon
+\]
+\[
+C \to a b
+\]
+
+\subsection{Step 2: Analysis}
+
+Grammar after left-factoring:
+\[
+A\to B A',\quad A'\to C\mid\epsilon,\quad B\to aB\mid\epsilon,\quad C\to ab.
+\]
+
+Proof:
+
+\textbf{Not LL(1): }
+
+Consider the input string ``ab''. On seeing the first symbol `a' we cannot decide with only one-symbol lookahead whether to use $B\to aB$ or $B\to\epsilon$: if $B\to\epsilon$ then $A\Rightarrow B A'\Rightarrow C\Rightarrow ab$ matches ``ab'', but if $B\to aB$ the sentential form will contain an extra `a' and cannot produce ``ab''. Thus a FIRST-set conflict exists, so the grammar is not LL(1).
+
+\textbf{LL(2): }
+
+With two-symbol lookahead the choice is unambiguous: if the next two symbols are ``ab'' choose $B\to\epsilon$ (so $A'\to C\to ab$); if they are ``aa'' choose $B\to aB$ to consume the extra `a'. Therefore a predictive parser with $k=2$ has no conflicts, so the grammar is LL(2).
+
+Conclusion: the grammar is not LL(1) but is LL(2).
+

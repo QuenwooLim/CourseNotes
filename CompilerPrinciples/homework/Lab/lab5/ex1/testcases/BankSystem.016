@@ -1,0 +1,146 @@
+(* Expected error: MissingRightParenthesisException; derived from BankSystem.obr by a local mutation. *)
+(* A correct Oberon-0 program covering ALL Oberon-0 syntax constructs.
+   Operators used: + - * DIV MOD = # < <= > >= & OR ~
+   Constructs: MODULE, CONST, TYPE (RECORD+ARRAY), VAR, PROCEDURE
+   (value params, VAR params), IF/THEN/ELSIF/ELSE/END, WHILE/DO/END,
+   assignment with array indexing and record field access,
+   procedure calls, Read/Write/WriteLn. *)
+MODULE BankSystem;
+  CONST
+    MaxAccounts = 50;
+    MinBalance = 100;
+    InterestRate = 5;
+    AdminCode = 9999;
+  TYPE
+    AccountRec = RECORD
+      id: INTEGER;
+      balance: INTEGER
+    END;
+    AccountArray = ARRAY 50 OF AccountRec;
+  VAR
+    accounts: AccountArray;
+    count, i, choice, amount, accId: INTEGER;
+    running, found: BOOLEAN;
+
+  PROCEDURE InitAccounts;
+    VAR k: INTEGER;
+  BEGIN
+    k := 0;
+    WHILE k < MaxAccounts DO
+      accounts[k].id := 0;
+      accounts[k].balance := 0;
+      k := k + 1
+    END
+  END InitAccounts;
+
+  PROCEDURE FindAccount(id: INTEGER; VAR index: INTEGER; VAR found: BOOLEAN);
+    VAR j: INTEGER;
+  BEGIN
+    found := FALSE; j := 0;
+    WHILE (j < count) & ~found DO
+      IF accounts[j].id = id THEN
+        found := TRUE;
+        index := j
+      ELSE
+        j := j + 1
+      END
+    END
+  END FindAccount;
+
+  PROCEDURE Deposit(accIndex: INTEGER; amt: INTEGER);
+  BEGIN
+    accounts[accIndex].balance := accounts[accIndex].balance + amt;
+    Write(accounts[accIndex].balance); WriteLn
+  END Deposit;
+
+  PROCEDURE Withdraw(accIndex: INTEGER; amt: INTEGER);
+    VAR newBalance: INTEGER;
+  BEGIN
+    newBalance := accounts[accIndex].balance - amt;
+    IF newBalance >= MinBalance THEN
+      accounts[accIndex].balance := newBalance;
+      Write(accounts[accIndex].balance); WriteLn
+    ELSE
+      Write(0); WriteLn
+    END
+  END Withdraw;
+
+  PROCEDURE ApplyInterest(accIndex: INTEGER);
+    VAR bal, interest: INTEGER;
+  BEGIN
+    bal := accounts[accIndex].balance;
+    interest := bal * InterestRate DIV 100;
+    accounts[accIndex].balance := bal + interest;
+    Write(interest); WriteLn
+  END ApplyInterest;
+
+  PROCEDURE CreateAccount(newId: INTEGER; VAR ok: BOOLEAN);
+  BEGIN
+    IF (count < MaxAccounts) & (newId # 0) THEN
+      accounts[count].id := newId;
+      accounts[count].balance := 0;
+      count := count + 1;
+      ok := TRUE
+    ELSE
+      ok := FALSE
+    END
+  END CreateAccount;
+
+  PROCEDURE CheckOverdraft(accIndex: INTEGER; VAR result: INTEGER);
+    VAR bal, temp: INTEGER;
+  BEGIN
+    bal := accounts[accIndex].balance;
+    temp := -bal;
+    IF bal <= 0 THEN
+      result := temp
+    ELSIF bal > 1000 THEN
+      result := bal MOD 10
+    ELSE
+      result := 0
+    END
+  END CheckOverdraft;
+
+BEGIN
+  count := 0; running := TRUE;
+  InitAccounts;
+  WHILE running DO
+    Read(choice);
+    IF (choice = 1) OR (choice = AdminCode) THEN
+      Read(accId);
+      i := 0;
+      CreateAccount(accId, found);
+      IF found THEN
+        Write(1; WriteLn
+      ELSE
+        Write(-1); WriteLn
+      END
+    ELSIF choice = 2 THEN
+      Read(accId); Read(amount);
+      FindAccount(accId, i, found);
+      IF found & (amount > 0) THEN
+        Deposit(i, amount)
+      ELSE
+        Write(0); WriteLn
+      END
+    ELSIF choice = 3 THEN
+      Read(accId); Read(amount);
+      FindAccount(accId, i, found);
+      IF found & (amount > 0) & (amount <= accounts[i].balance) THEN
+        Withdraw(i, amount)
+      ELSE
+        Write(0); WriteLn
+      END
+    ELSIF choice = 4 THEN
+      Read(accId);
+      FindAccount(accId, i, found);
+      IF found THEN
+        ApplyInterest(i)
+      ELSE
+        Write(0); WriteLn
+      END
+    ELSE
+      running := FALSE
+    END
+  END;
+  Write(count); WriteLn
+END BankSystem.

@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!-- Simple test cases for EvalExpr -->
+<test-case-definitions>
+
+<test-case>
+	<id>C001</id>
+	<description>A simple expression.</description>
+	<input>9 - 3 * 2</input>
+	<output>3</output>
+</test-case>
+
+<test-case>
+	<id>C002</id>
+	<description>Expression with arithmetic operations.</description>
+	<input>2.25E+2 - (55.5 + 4 * (10 / 2) ^ 2)</input>
+	<output>69.5</output>
+</test-case>
+
+<test-case>
+	<id>C003</id>
+	<description>Expression with arithmetic operations.</description>
+	<input>65 / 5 - 130e-1</input>
+	<output>0.0</output>
+</test-case>
+
+<test-case>
+	<id>E001</id>
+	<description>Left parenthesis expected.</description>
+	<input>(2 + 3) ^ 3) - ((1 + 1)</input>
+	<exception>MissingLeftParenthesisException</exception>
+</test-case>
+
+<test-case>
+	<id>E002</id>
+	<description>Right parenthesis expected.</description>
+	<input>((2 + 3) ^ ((3 - 1) + 1)</input>
+	<exception>MissingRightParenthesisException</exception>
+</test-case>
+
+<test-case>
+	<id>E003</id>
+	<description>Operator expected.</description>
+	<input>(1 + 2) ^ (3 - 4)  5</input>
+	<exception>MissingOperatorException</exception>
+</test-case>
+
+<test-case>
+	<id>E004</id>
+	<description>Operand expected.</description>
+	<input>(1 + 2) ^ (3 - ) + 5</input>
+	<exception>MissingOperandException</exception>
+</test-case>
+
+<test-case>
+	<id>E005</id>
+	<description>Divided by 0.</description>
+	<input>4 / (12 - 3 * 4) + 1</input>
+	<exception>DividedByZeroException</exception>
+</test-case>
+
+</test-case-definitions>

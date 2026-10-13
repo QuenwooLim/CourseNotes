@@ -1,0 +1,23 @@
+\contentsline {paragraph}{\textbf {关键词：}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}Exercise 1.1}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Problem}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Solution}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}Problem 1}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Problem 2}{1}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}Problem 3}{2}{subsection.1.2.3}%
+\contentsline {subsection}{\numberline {1.2.4}Problem 4}{2}{subsection.1.2.4}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}Exercise 1.2}{3}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Problem}{3}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Solution}{3}{section.2.2}%
+\contentsline {chapter}{参考文献}{4}{chapter*.3}%
+\contentsline {chapter}{\numberline {附录 A\hspace {.3em}}实验细节}{5}{appendix.A}%
+\contentsline {section}{\numberline {A.1}实验截图}{5}{section.A.1}%
+\contentsline {subsection}{\numberline {A.1.1}截图a示例}{5}{subsection.A.1.1}%
+\contentsline {subsection}{\numberline {A.1.2}截图b示例}{5}{subsection.A.1.2}%
+\contentsline {section}{\numberline {A.2}代码}{6}{section.A.2}%
+\contentsline {subsection}{\numberline {A.2.1}算法A代码}{6}{subsection.A.2.1}%
+\contentsline {subsection}{\numberline {A.2.2}算法B代码}{6}{subsection.A.2.2}%
+\contentsline {section}{\numberline {A.3}Use of AI}{7}{section.A.3}%
+\contentsline {subsection}{\numberline {A.3.1}Model Development Assistance}{7}{subsection.A.3.1}%
+\contentsline {subsection}{\numberline {A.3.2}Data Processing and Analysis}{7}{subsection.A.3.2}%
+\contentsline {subsection}{\numberline {A.3.3}Conclusion on AI Usage}{8}{subsection.A.3.3}%

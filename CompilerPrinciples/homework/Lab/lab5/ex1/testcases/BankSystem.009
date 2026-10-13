@@ -1,0 +1,7 @@
+(* 变异类型：语法错误 - 缺少操作数（二元运算缺少右操作数） *)
+MODULE BankSystem;
+  VAR x, y: INTEGER;
+BEGIN
+  x := y + ;
+  y := x
+END BankSystem.

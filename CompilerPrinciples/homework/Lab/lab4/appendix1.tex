@@ -1,0 +1,32 @@
+\chapter{附录代码}
+\section{Calculator.java 代码}
+
+\definecolor{codebg}{RGB}{248,249,250}
+\definecolor{codeframe}{RGB}{220,223,228}
+\definecolor{codekw}{RGB}{25,85,145}
+\definecolor{codecm}{RGB}{90,125,90}
+\definecolor{codestr}{RGB}{136,44,136}
+% Java代码风格
+\lstdefinestyle{cleanjava}{
+  language=Java,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{codekw},
+  commentstyle=\itshape\color{codecm},
+  stringstyle=\color{codestr},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  numbers=left,
+  numberstyle=\scriptsize\color{gray},
+  numbersep=8pt,
+  breaklines=true,
+  breakatwhitespace=false,
+  showstringspaces=false,
+  keepspaces=true,
+  tabsize=4,
+  columns=fullflexible
+}
+
+\lstinputlisting[style=cleanjava,caption={Calculator.java},label={lst:calculator}]{./code/ExprEval/src/parser/Calculator.java}
+

@@ -1,0 +1,18 @@
+register alice 123
+register bob 456
+add alice 123 bob 2026-04-09_10:00 2026-04-09_11:00 TeamMeeting
+register alice 000
+add alice 123 charlie 2026-04-09_12:00 2026-04-09_13:00 InvalidOther
+add alice 123 bob 2026/04/09 12:00 2026/04/09 13:00 BadTimeFormat
+add bob 456 alice 2026-04-09_14:00 2026-04-09_14:00 ZeroLength
+add bob 456 alice 2026-04-09_10:30 2026-04-09_11:30 OverlapMeeting
+query bob wrongpwd 2026-04-09_00:00 2026-04-10_00:00
+delete bob 456 TeamMeeting
+creator）
+delete alice 123 NonExist
+nonexist.txt）
+batch nonexist.txt
+query alice 123 2026-04-09_00:00 2026-04-10_00:00
+delete alice 123 TeamMeeting
+clear alice 123
+quit

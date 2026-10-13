@@ -1,0 +1,8 @@
+(* Variant type: Lexical error - unclosed comment missing matching close delimiter *)
+MODULE BankSystem;
+  CONST MaxAccounts = 50;
+  (* This comment is never closed
+  VAR count: INTEGER;
+BEGIN
+  count := 0
+END BankSystem.

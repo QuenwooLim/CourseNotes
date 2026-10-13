@@ -1,0 +1,18 @@
+\contentsline {paragraph}{\textbf {Keywords:}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}Exercise 4.1}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Problem}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Solution}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}Eliminate left recursion}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Draw the transition diagrams for the grammar}{1}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}Predictive recursive-descent procedures (pseudocode)}{2}{subsection.1.2.3}%
+\contentsline {subsection}{\numberline {1.2.4}Procedure call sequence for the input ``(a,(a,a))"}{3}{subsection.1.2.4}%
+\contentsline {chapter}{\numberline {2\hspace {.3em}}Exercise 4.2}{4}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Problem}{4}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Solution}{4}{section.2.2}%
+\contentsline {chapter}{\numberline {3\hspace {.3em}}Exercise 4.3}{4}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Problem}{4}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Solution}{5}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Eliminate Left Recursion}{5}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Left Factoring}{5}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}FIRST and FOLLOW Sets}{5}{subsection.3.2.3}%
+\contentsline {chapter}{References}{6}{chapter*.3}%

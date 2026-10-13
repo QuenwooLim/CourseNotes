@@ -1,0 +1,7 @@
+(* 变异类型：语法错误 - 缺少左括号 *)
+MODULE BankSystem;
+  VAR x, y: INTEGER;
+BEGIN
+  x := y + 1);
+  y := x
+END BankSystem.

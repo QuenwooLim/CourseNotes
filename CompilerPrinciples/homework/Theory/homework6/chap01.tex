@@ -1,0 +1,91 @@
+
+% 简洁风格：浅色背景 + 细边框 + 行号 + 自动换行
+\definecolor{codebg}{RGB}{248,249,250}
+\definecolor{codeframe}{RGB}{220,223,228}
+\definecolor{codekw}{RGB}{25,85,145}
+\definecolor{codecm}{RGB}{90,125,90}
+\definecolor{codestr}{RGB}{136,44,136}
+
+\lstdefinestyle{cleancpp}{
+	language=C++,
+	basicstyle=\ttfamily\small,
+	keywordstyle=\bfseries\color{codekw},
+    commentstyle=\color{codecm},
+	stringstyle=\color{codestr},
+	backgroundcolor=\color{codebg},
+	frame=single,
+	rulecolor=\color{codeframe},
+	framesep=6pt,
+	numbers=left,
+	numberstyle=\scriptsize\color{gray},
+	numbersep=8pt,
+	breaklines=true,
+	breakatwhitespace=false,
+	showstringspaces=false,
+	keepspaces=true,
+	tabsize=4,
+	columns=fullflexible
+}
+
+\chapter{Exercise 6.1}
+
+\section{Problem}
+
+Consider the grammar:
+\[
+S \to (L) \;|\; a
+\]
+\[
+L \to L , S \;|\; S
+\]
+
+We have the following operator-precedence relations for the grammar:
+
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{|c|c|c|c|c|c|}
+		\hline
+		& a & ( & ) & , & \$ \\
+		\hline
+		a & & & $>$ & $>$ & $>$ \\
+		\hline
+		( & $<$ & $<$ & $\equiv$ & $<$ & \\
+		\hline
+		) & & & $>$ & $>$ & $>$ \\
+		\hline
+		, & $<$ & $<$ & $>$ & $>$ & \\
+		\hline
+		\$ & $<$ & $<$ & & & \\
+		\hline
+	\end{tabular}
+\end{table}
+
+Show the detailed process of the parsing of the sentence \textbf{(a, (a, a))}, follow the style in the previous slides.
+
+\section{Solution}
+
+\begin{table}[htbp]
+	\centering
+	\begin{tabular}{|l|l|l|l|}
+	\hline
+	Stack & Input & Action & Output \\\hline
+	\$ & (a, (a, a)) \$ & Shift \texttt{(} & \\
+	\$ ( & a, (a, a)) \$ & Shift \texttt{a} & \\
+	\$ ( a & , (a, a)) \$ & Reduce & $S \to a$ \\
+	\$ ( S & , (a, a)) \$ & Shift \texttt{,} & \\
+	\$ ( S , & (a, a)) \$ & Shift \texttt{(} & \\
+	\$ ( S , ( & a, a) ) \$ & Shift \texttt{a} & \\
+	\$ ( S , ( a & , a) ) \$ & Reduce & $S \to a$ \\
+	\$ ( S , ( S & , a) ) \$ & Shift \texttt{,} & \\
+	\$ ( S , ( S , & a) ) \$ & Shift \texttt{a} & \\
+	\$ ( S , ( S , a & ) ) \$ & Reduce & $S \to a$ \\
+	\$ ( S , ( S , S & ) ) \$ & Reduce & $L \to S, S$ \\
+	\$ ( S , ( L & ) ) \$ & Shift \texttt{)} & \\
+	\$ ( S , ( L ) & ) \$ & Reduce & $S \to (L)$ \\
+	\$ ( S , S & ) \$ & Reduce & $L \to S, S$ \\
+	\$ ( L & ) \$ & Shift \texttt{)} & \\
+	\$ ( L ) & \$ & Reduce & $S \to (L)$ \\
+	\$ S & \$ & Accept & \\\hline
+	\end{tabular}
+\end{table}
+

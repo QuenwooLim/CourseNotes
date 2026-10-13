@@ -1,0 +1,6 @@
+(* 变异类型：语法错误 - 缺少运算符（两个表达式之间缺少运算符） *)
+MODULE BankSystem;
+  VAR x, y, z: INTEGER;
+BEGIN
+  x := y z
+END BankSystem.

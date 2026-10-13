@@ -1,0 +1,117 @@
+\chapter{实验细节}
+
+\section{实验截图}
+
+\subsection{截图a示例}
+
+截图a说明了aaa
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{image/exercise1_1.png}
+\end{figure}
+
+\subsection{截图b示例}
+
+截图b说明了bbb
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{image/exercise1_1.png}
+\end{figure}
+
+\section{代码}
+
+核心算法代码展示
+
+% 简洁风格：浅色背景 + 细边框 + 行号 + 自动换行
+\definecolor{codebg}{RGB}{248,249,250}
+\definecolor{codeframe}{RGB}{220,223,228}
+\definecolor{codekw}{RGB}{25,85,145}
+\definecolor{codecm}{RGB}{90,125,90}
+\definecolor{codestr}{RGB}{136,44,136}
+
+\lstdefinestyle{cleancpp}{
+	language=C++,
+	basicstyle=\ttfamily\small,
+	keywordstyle=\bfseries\color{codekw},
+	commentstyle=\itshape\color{codecm},
+	stringstyle=\color{codestr},
+	backgroundcolor=\color{codebg},
+	frame=single,
+	rulecolor=\color{codeframe},
+	framesep=6pt,
+	numbers=left,
+	numberstyle=\scriptsize\color{gray},
+	numbersep=8pt,
+	breaklines=true,
+	breakatwhitespace=false,
+	showstringspaces=false,
+	keepspaces=true,
+	tabsize=4,
+	columns=fullflexible
+}
+
+\subsection{算法A代码}
+
+\lstinputlisting[
+	style=cleancpp,
+	caption={算法A: demo.cpp},
+	label={lst:demo-cpp-a}
+]{code/demo.cpp}
+
+\subsection{算法B代码}
+
+\lstinputlisting[
+	style=cleancpp,
+	caption={算法B: demo.cpp},
+	label={lst:demo-cpp-b}
+]{code/demo.cpp}
+
+
+\section{Use of AI}
+
+This section documents the interactions between the author and AI assistant during the development of this MCM/ICM paper. The conversations are presented in a question-and-answer format to demonstrate how AI was utilized for various aspects of the research.
+
+\subsection{Model Development Assistance}
+
+\begin{tcolorbox}[title=\textbf{Question: How to optimize the UAV path planning algorithm?}, colback=blue!2!white, colframe=blue!30!black, fonttitle=\bfseries, breakable]
+I'm working on a UAV path planning algorithm for wildfire monitoring. The current approach uses a grid-based method, but I'm encountering issues with computational efficiency when scaling to larger areas. What optimization techniques would you recommend?
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=\textbf{AI Response}, colback=green!2!white, colframe=green!30!black, fonttitle=\bfseries, breakable]
+For UAV path planning optimization in wildfire scenarios, consider these approaches:
+
+1. \textbf{Hybrid algorithms}: Combine genetic algorithms with simulated annealing for better convergence
+2. \textbf{Multi-resolution grids}: Use coarse grids for initial planning, then refine locally
+3. \textbf{Dynamic programming}: Implement Dijkstra's algorithm with priority queues
+4. \textbf{Parallel processing}: Divide the search space for concurrent computation
+
+The key is to balance exploration and exploitation while considering real-time constraints.
+\end{tcolorbox}
+
+\subsection{Data Processing and Analysis}
+
+\begin{tcolorbox}[title=\textbf{Question: Data preprocessing for wildfire detection}, colback=blue!2!white, colframe=blue!30!black, fonttitle=\bfseries, breakable]
+I have satellite imagery data for wildfire detection, but there's significant noise and missing values. What preprocessing steps should I implement before applying machine learning models?
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=\textbf{AI Response}, colback=green!2!white, colframe=green!30!black, fonttitle=\bfseries, breakable]
+Recommended preprocessing pipeline:
+
+\begin{itemize}
+\item \textbf{Missing data}: Use interpolation or k-nearest neighbors imputation
+\item \textbf{Noise reduction}: Apply Gaussian or median filters
+\item \textbf{Normalization}: Scale pixel values to [0,1] range
+\item \textbf{Feature extraction}: Consider texture features, thermal gradients
+\item \textbf{Data augmentation}: Rotate, flip, and scale images for robustness
+\end{itemize}
+
+Also, implement cross-validation to ensure model generalization.
+\end{tcolorbox}
+
+\subsection{Conclusion on AI Usage}
+
+The AI assistant provided valuable support in algorithm optimization, data preprocessing guidance, mathematical formulation, and code implementation. All final decisions, analysis, and interpretations were made by the human author, with AI serving as a collaborative tool for brainstorming and technical guidance.
+
+
+\endinput

@@ -1,0 +1,318 @@
+/**
+ * JavaCUP specification for the Oberon-0 parser.
+ * Generates Parser.java and Symbol.java.
+ *
+ * Usage: java -jar java-cup-11b.jar oberon.cup
+ * Output: Parser.java, Symbol.java
+ *
+ * @author Lin Hongyu
+ * @version 2.00
+ */
+import java_cup.runtime.*;
+import exceptions.*;
+import callgraph.*;
+import java.util.*;
+
+parser code {:
+    private ScannerAdapter scanner;
+    private CallGraph callGraph;
+    private String currentModule, currentProcedure;
+    private int callSiteCounter = 0;
+    private List<Exception> errors = new ArrayList<>();
+    private Set<String> declaredProcs = new java.util.HashSet<>();
+    private List<String[]> pendingEdges = new java.util.ArrayList<>();
+
+    public Parser(ScannerAdapter s) {
+        scanner = s; callGraph = new CallGraph();
+        // Pre-register built-in procedures
+        String[] builtins = {"Read", "Write", "WriteLn"};
+        for (String bp : builtins) {
+            callGraph.addProcedure(bp, bp);
+            declaredProcs.add(bp);
+        }
+    }
+    public CallGraph getCallGraph() { return callGraph; }
+    public List<Exception> getErrors() { return errors; }
+    private void report(Exception e) { errors.add(e); }
+
+    private void addProc(String name) {
+        if (!declaredProcs.contains(name)) {
+            callGraph.addProcedure(name, name);
+            declaredProcs.add(name);
+        }
+    }
+    private void addCallSite(String callee, String stmt) {
+        String cid = "c" + (++callSiteCounter);
+        callGraph.addCallSite(cid, currentProcedure, stmt);
+        if (declaredProcs.contains(callee))
+            try { callGraph.addEdge(cid, callee); } catch(Exception e) { report(e); }
+        else
+            pendingEdges.add(new String[]{cid, callee});
+    }
+    private void resolvePending() {
+        for (String[] e : pendingEdges)
+            try { callGraph.addEdge(e[0], e[1]); } catch(Exception x) { report(x); }
+    }
+:};
+
+/* ---- Scanner interface ---- */
+scan with {: return scanner.next_token(); :};
+
+/* ---- Terminals (tokens from OberonScanner) ---- */
+terminal MODULE, END, PROCEDURE, BEGIN, CONST, TYPE, VAR;
+terminal ARRAY, OF, RECORD, IF, THEN, ELSIF, ELSE, WHILE, DO;
+terminal DIV_KW, MOD_KW, OR, RETURN;
+terminal IDENTIFIER, INTEGER_LITERAL;
+terminal PLUS, MINUS, STAR, SLASH;
+terminal EQ, NE, LT, LE, GT, GE;
+terminal AND, NOT, ASSIGN;
+terminal LPAREN, RPAREN, LBRACKET, RBRACKET;
+terminal DOT, COMMA, SEMICOLON, COLON;
+
+/* ---- Non-terminals ---- */
+non terminal module;
+non terminal String identifier;
+non terminal Integer integer;
+non terminal declarations;
+non terminal const_section, const_def_list, const_def;
+non terminal type_section, type_def_list, type_def;
+non terminal var_section, var_def_list, var_def;
+non terminal procedure_declaration, procedure_heading, procedure_body;
+non terminal formal_parameters, fp_section, fp_section_list, type;
+non terminal field_list, field_list_tail, identifier_list;
+non terminal statement_sequence, statement, while_statement, if_statement, elsif_chain;
+non terminal procedure_call, actual_parameters, expr_list, assignment;
+non terminal expression, simple_expression, term, factor, selector;
+
+/* ---- Precedence (lowest to highest) ---- */
+precedence left OR;
+precedence left AND;
+precedence left NOT;
+precedence left EQ, NE, LT, LE, GT, GE;
+precedence left PLUS, MINUS;
+precedence left STAR, SLASH, DIV_KW, MOD_KW;
+
+/* ---- Grammar Rules ---- */
+start with module;
+
+module ::=
+    MODULE identifier:id SEMICOLON
+    declarations
+    BEGIN statement_sequence
+    END identifier:id2 DOT
+    {:
+        resolvePending();
+        if (!id2.equalsIgnoreCase(id))
+            report(new SemanticException("Module name mismatch: "+id+" vs "+id2, 0, 0));
+        RESULT = id;
+    :}
+    |
+    MODULE identifier:id SEMICOLON
+    declarations
+    END identifier:id2 DOT
+    {:
+        resolvePending();
+        RESULT = id;
+    :}
+    ;
+
+/* ---- Declarations ---- */
+declarations ::=
+    /* empty */
+    |
+    declarations const_section
+    |
+    declarations type_section
+    |
+    declarations var_section
+    |
+    declarations procedure_declaration SEMICOLON
+    ;
+
+const_section ::= CONST const_def_list ;
+const_def_list ::= const_def | const_def_list const_def ;
+const_def ::= identifier:id EQ expression SEMICOLON ;
+
+type_section ::= TYPE type_def_list ;
+type_def_list ::= type_def | type_def_list type_def ;
+type_def ::= identifier:id EQ type SEMICOLON ;
+
+var_section ::= VAR var_def_list ;
+var_def_list ::= var_def | var_def_list var_def ;
+var_def ::= identifier_list COLON type SEMICOLON ;
+
+procedure_declaration ::=
+    procedure_heading:id SEMICOLON procedure_body:id2
+    {: /* name check done in procedure_body */ :}
+    ;
+
+procedure_heading ::=
+    PROCEDURE identifier:id
+    {:
+        currentProcedure = id; addProc(id); RESULT = id;
+    :}
+    |
+    PROCEDURE identifier:id formal_parameters
+    {:
+        currentProcedure = id; addProc(id); RESULT = id;
+    :}
+    ;
+
+procedure_body ::=
+    declarations BEGIN statement_sequence END identifier:id
+    {:
+        if (!id.equalsIgnoreCase(currentProcedure))
+            report(new SemanticException("Proc name mismatch: "+currentProcedure+" END "+id, 0, 0));
+        RESULT = id;
+    :}
+    |
+    declarations END identifier:id
+    {:
+        if (!id.equalsIgnoreCase(currentProcedure))
+            report(new SemanticException("Proc name mismatch: "+currentProcedure+" END "+id, 0, 0));
+        RESULT = id;
+    :}
+    ;
+
+formal_parameters ::=
+    LPAREN fp_section RPAREN
+    | LPAREN fp_section SEMICOLON fp_section_list RPAREN
+    ;
+
+fp_section_list ::=
+    fp_section
+    | fp_section_list SEMICOLON fp_section
+    ;
+
+fp_section ::=
+    VAR identifier_list COLON type
+    | identifier_list COLON type
+    ;
+
+/* ---- Types ---- */
+type ::=
+    identifier:id {: RESULT = id; :}
+    | ARRAY expression OF type
+    | RECORD field_list field_list_tail END
+    ;
+
+field_list_tail ::=
+    /* empty */
+    | SEMICOLON field_list field_list_tail
+    ;
+
+field_list ::=
+    /* empty */
+    | identifier_list COLON type
+    ;
+
+identifier_list ::=
+    identifier:id {: RESULT = id; :}
+    | identifier:id COMMA identifier_list
+    ;
+
+/* ---- Statements ---- */
+statement_sequence ::=
+    statement
+    | statement_sequence SEMICOLON statement
+    ;
+
+statement ::=
+    /* empty */
+    | assignment
+    | procedure_call
+    | if_statement
+    | while_statement
+    ;
+
+while_statement ::=
+    WHILE expression DO statement_sequence END
+    ;
+
+if_statement ::=
+    IF expression THEN statement_sequence END
+    | IF expression THEN statement_sequence ELSE statement_sequence END
+    | IF expression THEN statement_sequence elsif_chain END
+    | IF expression THEN statement_sequence elsif_chain ELSE statement_sequence END
+    ;
+
+elsif_chain ::=
+    ELSIF expression THEN statement_sequence
+    | elsif_chain ELSIF expression THEN statement_sequence
+    ;
+
+procedure_call ::=
+    identifier:id
+    {: addCallSite(id, id); :}
+    | identifier:id actual_parameters
+    {: addCallSite(id, id + "(...)"); :}
+    ;
+
+actual_parameters ::=
+    LPAREN expression RPAREN
+    | LPAREN expression COMMA expr_list RPAREN
+    ;
+
+expr_list ::=
+    expression
+    | expr_list COMMA expression
+    ;
+
+assignment ::=
+    identifier selector ASSIGN expression
+    ;
+
+/* ---- Expressions ---- */
+expression ::=
+    simple_expression:se
+    {: RESULT = se; :}
+    | simple_expression:l EQ simple_expression:r
+    {: RESULT = l; :}
+    | simple_expression:l NE simple_expression:r
+    | simple_expression:l LT simple_expression:r
+    | simple_expression:l LE simple_expression:r
+    | simple_expression:l GT simple_expression:r
+    | simple_expression:l GE simple_expression:r
+    ;
+
+simple_expression ::=
+    term:t {: RESULT = t; :}
+    | PLUS term:t {: RESULT = t; :}
+    | MINUS term:t {: RESULT = t; :}
+    | simple_expression PLUS term
+    | simple_expression MINUS term
+    | simple_expression OR term
+    ;
+
+term ::=
+    factor:f {: RESULT = f; :}
+    | term STAR factor
+    | term SLASH factor
+    | term DIV_KW factor
+    | term MOD_KW factor
+    | term AND factor
+    ;
+
+factor ::=
+    identifier selector
+    | integer
+    | LPAREN expression RPAREN
+    | NOT factor
+    ;
+
+selector ::=
+    /* empty */
+    | DOT identifier selector
+    | LBRACKET expression RBRACKET selector
+    ;
+
+/* ---- Basics ---- */
+integer ::=
+    INTEGER_LITERAL:il
+    {: RESULT = new Integer(Integer.parseInt((String)il)); :}
+    ;
+
+identifier ::=
+    IDENTIFIER:id
+    {: RESULT = (String)id; :}
+    ;

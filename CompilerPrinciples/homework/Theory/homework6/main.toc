@@ -1,0 +1,5 @@
+\contentsline {paragraph}{\textbf {Keywords:}}{II}{paragraph*.1}%
+\contentsline {chapter}{\numberline {1\hspace {.3em}}Exercise 6.1}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Problem}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Solution}{1}{section.1.2}%
+\contentsline {chapter}{References}{2}{chapter*.4}%

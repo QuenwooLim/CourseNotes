@@ -1,0 +1,76 @@
+\chapter{Exercise 9}
+
+% ---------------- Exercise 9.1 ----------------
+\section{Exercise 9.1}
+\subsection{Problem}
+Let $A$ be declared as a $[2..4] \times [1..5]$ array of integers, and each integer occupies 4 bytes.
+What is the translation result of input token string: $x := A[3,2]$?
+
+\begin{itemize}
+    \item Tips: use the translation scheme for Pascal.
+\end{itemize}
+
+\subsection{Solution}
+For Pascal arrays, the row-major offset of $A[3,2]$ is
+\[
+(3 - 2) \times 5 + (2 - 1) = 6.
+\]
+Since each integer occupies 4 bytes, the byte offset is $6 \times 4 = 24$.
+Thus the generated translation is
+\begin{align*}
+t_1 &= 3 - 2 \\
+t_2 &= t_1 \times 5 \\
+t_3 &= 2 - 1 \\
+t_4 &= t_2 + t_3 \\
+t_5 &= 4 \times t_4 \\
+t_6 &= base_A + t_5 \\
+x &= t_6
+\end{align*}
+
+% ---------------- Exercise 9.2 ----------------
+\section{Exercise 9.2}
+\subsection{Problem}
+Let $a$ be declared as a $5 \times 6$ array of integers, and each integer occupies 4 bytes.
+What is the translation result of input token string: $i = a[3][2]$?
+
+\begin{itemize}
+    \item Tips: use the translation scheme for C/C++.
+\end{itemize}
+
+\subsection{Solution}
+In C/C++, arrays are stored in row-major order.
+The byte offset of $a[3][2]$ is
+\[
+(3 \times 6 + 2) \times 4 = 80.
+\]
+So the translation result is
+\begin{align*}
+t_1 &= 3 \times 6 \\
+t_2 &= t_1 + 2 \\
+t_3 &= 4 \times t_2 \\
+t_4 &= a[t_3] \\
+i &= t_4
+\end{align*}
+
+% ---------------- Exercise 9.3 ----------------
+\section{Exercise 9.3}
+\subsection{Problem}
+What is the translation result of input token string: \texttt{x < 100 || x > 200 \&\& x != y}?
+
+\begin{itemize}
+    \item Tips: use the translation scheme for boolean expressions with backpatching.
+    \item Suppose that the start position of the generated code is 100.
+\end{itemize}
+
+\subsection{Solution}
+Using short-circuit evaluation and backpatching, one valid generated code sequence is
+\begin{align*}
+100 &: \ \text{if } x < 100 \ \text{goto } \_ \\
+101 &: \ \text{goto } 102 \\
+102 &: \ \text{if } x > 200 \ \text{goto } 104 \\
+103 &: \ \text{goto } \_ \\
+104 &: \ \text{if } x \neq y \ \text{goto } \_ \\
+105 &: \ \text{goto } \_
+\end{align*}
+
+The blank targets are filled by backpatching after the true and false lists of the whole expression are known.

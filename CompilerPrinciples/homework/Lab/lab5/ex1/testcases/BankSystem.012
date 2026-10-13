@@ -1,0 +1,12 @@
+(* 变异类型：语义错误 - 过程调用参数数目不匹配 *)
+MODULE BankSystem;
+  VAR x: INTEGER;
+
+  PROCEDURE Add(a: INTEGER; b: INTEGER);
+  BEGIN
+    x := a + b
+  END Add;
+
+BEGIN
+  Add(5)
+END BankSystem.

@@ -1,0 +1,6 @@
+(* 变异类型：语法错误 - 缺少END关键字 *)
+MODULE BankSystem;
+  VAR x: INTEGER;
+BEGIN
+  x := 100
+.
